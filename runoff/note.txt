@@ -1,0 +1,19 @@
+line 4 and 5 ------> is saying Max voter can be 100 and max candidates can be 9
+
+line 9 basically representing is array with two input called max_voters and max_candidates
+
+line 12 to 17 is basically we make our own data strucutre which have name of the candidates,
+numbers of voters each candidates gets, and which ones should be eliminated.
+
+line 20 we made our own array,  in our data strucuture candidate and the array called candidates
+
+line 23 to 24 is basically we decared two variable gobally called voter_count and candidate_count and
+ it is a goball variable.
+
+line 27 to line 32 basically the photrotype of all the function we have created.
+
+also, we use int argc and argv so line 34 to line 41 its basically if didn't write more than two
+input of the terminal the its would shows error message.
+
+line 44 to 49 is basiclly saying is if candidates count get bigger than the max_candidates then
+it need to shows its error masseages and in line 44 set candidates_count to argc - 1.
