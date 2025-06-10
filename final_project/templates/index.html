@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Welcome to Prayer Times{% endblock %}
+{% block main %}
+<script src="{{ url_for('static', filename='index.js') }}"></script>
+
+<div class="container text-center">
+    <h1 class="text-center">Prayer Time</h1>
+    <header class="centered">
+        <h2>Jamat Times</h2>
+        <h3 id="current-time"></h3>
+
+        <main>
+            <form id="location-form" class="mb-4">
+                <div class="row mb-3 justify-content-center">
+                    <div class="col-md-4">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" class="form-control" id="state" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Get Prayer Times</button>
+            </form>
+            <div id="prayer-times" class="mt-4"></div>
+
+            <table id="prayer-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fajr</th>
+                        <th>Zuhr</th>
+                        <th>Asr</th>
+                        <th>Maghrib</th>
+                        <th>Isha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="fajr">05:20</td>
+                        <td id="zuhr">01:40</td>
+                        <td id="asr">05:17</td>
+                        <td id="maghrib">08:35</td>
+                        <td id="isha">09:50</td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="https://www.irvingmasjid.org/wp-content/uploads/2023/12/ICI_2024_Prayer_Times_Flier_v1.pdf" class="btn btn-link">View Monthly Timetable →</a>
+
+            <!-- JavaScript for displaying current time -->
+            <script>
+                let time = document.getElementById("current-time");
+
+                setInterval(() => {
+                    let d = new Date();
+                    time.innerHTML = d.toLocaleTimeString();
+                }, 1000);
+
+                let d = new Date();
+                time.innerHTML = d.toLocaleTimeString();
+            </script>
+        </main>
+    </header>
+</div>
+{% endblock %}
+

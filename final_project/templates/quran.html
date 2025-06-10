@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block title %}Quran Surahs{% endblock %}
+{% block main %}
+<div class="container text-center">
+    <h1 class="text-center">Quran Surahs</h1>
+    <div id="surah-list" class="mt-4">
+        <!-- Surah content will be dynamically loaded here -->
+    </div>
+</div>
+<script src="{{ url_for('static', filename='quran.js') }}"></script>
+{% endblock %}

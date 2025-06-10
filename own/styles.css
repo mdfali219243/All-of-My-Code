@@ -1,0 +1,80 @@
+.continer html { font-size: 62.5%; }
+*, *:before, *:after {
+  box-sizing: content-box;
+}
+
+.continer body {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: #333;
+  background:
+  text-align: center;
+}
+
+.continer h1 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+
+    text-align: center;
+    font-family: 'Copperplate';
+    background-color: yellow;
+    font-size: 48px;
+    color: red;
+    line-height: 1.3;
+    margin: 5rem;
+    text-transform: uppercase;
+}
+
+.continer table {
+  line-height: 1;
+  width: 100%;
+  max-width: 80rem;
+  margin: 5rem auto;
+}
+
+.continer td {
+    width: 20%;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .continer tr:first-child {
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+  }
+
+  .continer tr:last-child {
+    font-size: 2.8rem;
+  }
+
+
+  .continer h2{
+   font-family: Montserrat ;
+  }
+  .continer h3{
+    font-size: xx-large;
+    font-family: 'Times New Roman', Times, serif;
+  }
+  .continer
+  {
+    width: 100%;
+    height: 100vh;
+    background-color: lightblue;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .continer img{
+    width: 75%;
+  }
+
+
+
