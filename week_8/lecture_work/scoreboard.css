@@ -1,0 +1,39 @@
+
+table {
+    border: 2px solid black;
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+td {
+    border: 2px solid black;
+}
+.centerd
+{
+    text-align: center;
+}
+
+.team
+{
+    background-color:#DC143C
+}
+
+#score1{
+    color:red;
+}
+
+#score2{
+    color:green;
+}
+
+#add1{
+    color:red;
+    background-color:black;
+}
+
+#add2{
+    color:green;
+    background-color:black;
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Scoreboard</title>
+        <link rel="stylesheet" href="scoreboard.css">
+    </head>
+    <body>
+        <header class="centerd">
+            <h1 style="background-color:red";> Left Team vs Right Team</h1>
+            <p style= "text-decoration: underline";> Hey there! click the button to change the score</p>
+            <p id = "result"> </p>
+
+        </header>
+        <main>
+            <table>
+                <tr>
+                    <td class="team">Team 1</td>
+                    <td class="team">Team 2</td>
+                </tr>
+                <tr>
+                    <td id="score1">0</td>
+                    <td id="score2">0</td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="add1">+1</button>
+                    </td>
+                    <td>
+                        <button id="add2">+1</button>
+                    </td>
+                </tr>
+            </table>
+        </main>
+        <footer class="centerd">
+            <p>made by Foysal</p>
+        </footer>
+
+        <script>
+            let team1 = 0;
+            let team2 = 0;
+
+            document.querySelector('#add1').onclick = function() {
+                team1 = team1 + 1;
+                document.querySelector('#score1').innerHTML = team1;
+                if (team1 == 5)
+                {
+                    //alert("Team 1 Won!")
+                    //what does it means?????
+                    document.querySelector('#result').innerHTML = "team 1 Won!"
+                }
+            }
+
+            document.querySelector('#add2').onclick = function() {
+                team2 = team2 + 1;
+                document.querySelector('#score2').innerHTML = team2;
+                if (team2 == 5)
+                {
+                    document.querySelector('#result').innerHTML = "team 2 Won!"
+                }
+            }
+
+    </script>
+  </body>
+</html>
