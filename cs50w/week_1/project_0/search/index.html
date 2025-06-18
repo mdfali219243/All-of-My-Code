@@ -17,7 +17,7 @@
                 text-align: center;
             }
             .search-bar{
-                width: 336.997px;
+                width: 636.997px;
                 height: 47.9873px;
                 z-index: 100;
                 position: relative;
@@ -34,18 +34,50 @@
                 border-bottom-right-radius: 24px;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background-color: white;
+                align-items: center;
+                margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+                border: 1px solid #dfe1e5;
+                transition: box-shadow 0.3s ease-in-out;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
 
-
+            .left-top-side-button {
+                position: relative;
+                top: -250px;
+                right: -200px;
+                top: 0;
+                border: none;
+                background: none;
+                box-shadow: none;
+                outline: none;
+                margin: 20px;
+                display: flex;
+            }
+            .middle-button {
+                width: 200px;
+                height: 40px;
+                border-radius: 20px;
+                background-color: #f8f9fa;
+                border: 1px solid #dfe1e5;
+                color: #202124;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                margin-top: 10px;
             }
         </style>
     </head>
     <body>
         <form action="https://google.com/search" class=".center-box" method="get">
-            <input type="text" name="q" class="search-bar" placeholder="Search Google or type a URL">
-            <input type="submit" value="Google Search">
-            <input type="submit" value="I'm Feeling Lucky">
+            <input type="text" name="q" class="search-bar" placeholder="Search Google or type a URL" >
+            <input type="submit" value="Google Search" class="middle">
+            <input type="submit" value="I'm Feeling Lucky" class="middle">
         </form>
-        <button>Image</button>
-        <button>Advanced Search</button>
+        <button class="left-top-side-button">Image</button>
+        <button class="left-top-side-button">Advanced Search</button>
     </body>
 </html>
