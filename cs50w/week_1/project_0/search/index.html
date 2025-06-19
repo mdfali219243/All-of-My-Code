@@ -46,9 +46,6 @@
             }
 
             .left-top-side-button {
-                position: relative;
-                top: -250px;
-                right: -200px;
                 border: none;
                 background: none;
                 box-shadow: none;
@@ -68,6 +65,40 @@
                 cursor: pointer;
                 margin-top: 10px;
             }
+            .header{
+                height: 55px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                border-bottom-width: 1px;
+                border-bottom-style:solid;
+                border-bottom-color: rgb(230, 216, 216);
+            }
+            .right-section{
+                width: 180px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-right: 20px;
+                flex-shrink: 0;
+            }
+            .middle-section{
+                flex:1;
+                margin-left: 70px;
+                margin-right: 35px;
+                max-width: 500px;
+                display: flex;
+                align-items: center;
+            }
+            .left-section{
+                display: flex;
+                align-items: center;
+            }
         </style>
     </head>
     <body>
@@ -76,7 +107,15 @@
             <input type="submit" value="Google Search" class="middle">
             <input type="submit" value="I'm Feeling Lucky" class="middle">
         </form>
-        <button class="left-top-side-button">Image</button>
-        <button class="left-top-side-button">Advanced Search</button>
+        <div class="header">
+            <div class="right-section"></div>
+            <div class="middle-section"></div>
+            <div class="left-section" >
+                <button class="left-top-side-button">Image</button>
+                <button class="left-top-side-button">Advanced Search</button>
+            </div>
+            
+        </div>
+        
     </body>
 </html>
