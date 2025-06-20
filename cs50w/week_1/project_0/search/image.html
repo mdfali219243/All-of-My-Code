@@ -12,7 +12,8 @@
                 display: block;
             }
             .search-bar{
-                width: 636.997px;
+                display: flex;
+                width: 100%;
                 height: 47.9873px;
                 z-index: 100;
                 position: relative;
@@ -117,12 +118,10 @@
         </div>
         <div class="big_one d-flex flex-column align-items-center justify-content-center">
             <form action="https://google.com/search" class="center-box w-100" method="get">
-                <div id="search-button" class="w-100 d-flex justify-content-center">
-                    <input type="text" name="q" class="search-bar" placeholder="Search Google or type a URL">
-                </div>
-                <div class="center-box d-flex justify-content-center mt-3">
-                    <input type="submit" value="Google Search" class="middle-button mx-2">
-                    <input type="submit" value="I'm Feeling Lucky" class="middle-button mx-2">
+                <input type="hidden" name="tbm" value="isch">
+                <input type="text" name="q" placeholder="Search for images" class="search-bar">
+                <div style="display: flex; justify-content: center; width: 100%;">
+                    <a class="middle-button" href="index.html" style="text-align:center; display:inline-block; text-decoration:none; line-height:40px;">Google Search</a>
                 </div>
             </form>
         </div>
@@ -130,7 +129,7 @@
             <div class="right-section"></div>
             <div class="middle-section"></div>
             <div class="left-section" >
-                <button class="left-top-side-button"><a href="image.html">Image</a></button>
+                <button class="left-top-side-button"><a href="index.html">home</a></button>
                 <button class="left-top-side-button"><a href="advanced.html">Advanced Search</a></button>
             </div>
             
