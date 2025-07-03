@@ -1,0 +1,10 @@
+{% extends "encyclopedia/layout.html" %}
+
+
+{% block body %}
+<h1 style="display: flex; color: black;"> {{entry_name}} </h1>
+
+<p>{{ content }}</p>
+
+<a href="{% url 'index' %}"> Back to Home Page</a>
+{% endblock %}
