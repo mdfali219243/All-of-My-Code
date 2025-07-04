@@ -22,12 +22,5 @@ def entry_page(request, entry_name):
         }, status=404)
     
 def create_page(request):
-    if request.method == "POST":
-        return render(request, "encyclopedia/create_page.html")
-    else:
-        return render(request, "encyclopedia/create_page.html", {
-            "message": "Can not create a Page"
-        })
-
-
+    return render(request, "encyclopedia/create_page.html")
 
