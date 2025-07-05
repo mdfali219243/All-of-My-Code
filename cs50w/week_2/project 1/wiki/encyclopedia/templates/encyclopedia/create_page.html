@@ -1,11 +1,22 @@
 {% extends "encyclopedia/layout.html" %}
 
 {% block body %}
+<h1>New Page</h1>
 <form method="post">
     {% csrf_token %}
-    <input type="text" name="title" placeholder="title">
-    <input type="text" name="content">
-    <input type="submit">
-
+    <label>
+        <div>
+            Entry Title:
+        </div>
+        <input type="text" name="Entry_title" class="top-box">
+    </label>
+    <label>
+        <div class="page_description">
+            Entry Content:
+        </div>
+        <div>
+            <input type="text" name="entry_content" class="bottom_box">
+        </div>
+    </label>
 </form>
 {% endblock %}

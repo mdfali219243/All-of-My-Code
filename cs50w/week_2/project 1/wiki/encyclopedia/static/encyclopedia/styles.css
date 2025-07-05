@@ -36,3 +36,32 @@ textarea {
 .sidebar h2 {
     margin-top: 5px;
 }
+
+/* In your styles.css */
+form {
+    max-width: 100%;
+}
+
+/* Your existing styles for elements *inside* the form */
+.top-box {
+    background-color: aqua;
+    display: block;
+    position: relative;
+    width: 600px;
+    /* This is for the input field itself */
+}
+
+.bottom_box {
+    background-color: yellow;
+    /* You might want to give this a width too, or make it 100% like the label */
+    width: 50%;
+    display: block;
+    position: relative;
+}
+
+.page_description {
+    background-color: red;
+    display: block;
+    position: relative;
+    width: 100%;
+}
