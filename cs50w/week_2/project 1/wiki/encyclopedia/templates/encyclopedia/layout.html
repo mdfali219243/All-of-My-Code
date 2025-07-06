@@ -16,9 +16,9 @@
             <div class="sidebar col-lg-2 col-md-3">
                 <h2>Wiki</h2>
                 <img src="{% static 'encyclopedia/Wikipedia-logo.png' %}" alt="My image">
-                <form>
+                <form action="{% url 'search' %}" method="get"> {# <--- IMPORTANT: Add action and method #}
                     <input class="search" type="text" name="q" placeholder="Search Encyclopedia">
-
+                    <input type="submit" value="Search"> {# <--- IMPORTANT: Add the submit button #}
                 </form>
                 <div>
                     <a href="{% url 'index' %}">Home</a>
@@ -27,7 +27,7 @@
                     <a href="/create_page/">Create New Page</a>
                 </div>
                 <div>
-                    Random Page
+                    <a href="/random/">Random Page</a>
                 </div>
                 {% block nav %}
                 {% endblock %}

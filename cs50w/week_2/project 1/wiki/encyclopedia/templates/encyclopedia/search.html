@@ -1,0 +1,22 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+Search Results for "{{ query }}"
+{% endblock %}
+
+{% block body %}
+<h1>Search Results for "{{ query }}"</h1>
+
+{% if entries %}
+<ul>
+    {% for entry_name in entries %}
+    <li><a href="{% url 'entry_page' entry_name=entry_name %}"></a>{{ entry_name }}</li>
+    {% endfor %}
+</ul>
+
+{% else %}
+<p>No entries Found matching "{{query}}"</p>
+<p>Would you like to <a href="{% url 'create_new_page' %}">create a new page</a> for "{{ query }}"?</p>
+{% endif %}
+
+{% endblock %}
