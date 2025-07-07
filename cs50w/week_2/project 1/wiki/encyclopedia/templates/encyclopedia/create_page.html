@@ -2,10 +2,10 @@
 
 {% block body %}
 <h1>New Page</h1>
-<form method="post">
+<form method="post" class="form_p">
     {% csrf_token %}
     <label>
-        <div>
+        <div class="title">
             Entry Title:
         </div>
         <input type="text" name="title" class="top-box">

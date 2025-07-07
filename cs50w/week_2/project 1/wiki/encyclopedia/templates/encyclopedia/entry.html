@@ -5,13 +5,9 @@
 {% endblock %}
 
 {% block body %}
-<h1>{{ title }}</h1>
-<p>
-    {# Add an edit link here later as per your requirements #}
-    <a href="{% url 'edit_entry' entry_name=title %}">Edit this Page</a>
-    <span>Edit functionality coming soon!</span> {# Or just remove the line completely #}
-</p>
+
 <div class="entry-content">
-    {{ content|safe }} {# IMPORTANT: Use |safe to render HTML #}
+    {{ content|safe }}
 </div>
+<a href="{% url 'edit_entry' entry_name=title %}" class="button-design">Edit Page</a>
 {% endblock %}
