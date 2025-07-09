@@ -73,3 +73,9 @@ def create_listing(request):
     return render(request, "auctions/creatListing.html", {
         "categories": categories_list 
     })
+
+def active_listings(request):
+    listing = Listing.objects.all()
+    return render(request, "auctions/index.html", {
+        "listings": listing
+    })
