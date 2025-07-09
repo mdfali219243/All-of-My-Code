@@ -4,10 +4,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Categories, Listing
+from .models import User, Category, Listing
 
 
 def index(request):
+
     return render(request, "auctions/index.html")
     
 
@@ -64,12 +65,65 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
-def categories(request):
+def categories_view(request):
     pass
 
 
 def create_listing(request):
-    categories_list = Categories.objects.all()
+    if request.method == "POST":
+        title = request.POST["title"]
+        description = request.POST["description"]
+        starting_bid = request.POST["starting_bid"]
+        category = request.POST["category"]
+        image_url = request.POST["image_url"]
+
+        if not all([title, description, starting_bid, category]):
+            return render(request, "auctions/creatListing.html", {
+                "message": "All fields are required."
+            })
+        
+
+        try:
+            starting_bid = float(starting_bid)
+            if starting_bid <= 0:
+                raise ValueError("Starting bid must be greater than zero.")
+        except ValueError:
+            categories_list = Category.objects.all()
+            return render(request, "auctions/creatListing.html", {
+                "message": "Starting bid must be a positive number.",
+                "categories": categories_list
+            })
+        selected_category = None
+        if category:
+            try:
+                selected_category = Category.objects.get(name=category)
+            except Category.DoesNotExist:
+                categories_list = Category.objects.all()
+                return render(request, "auctions/creatListing.html", {
+                    "message": "Category does not exist.",
+                    "categories": categories_list
+                })
+            
+        # Create the listing
+        listing = Listing(
+            title=title,
+            description=description,
+            starting_bid=starting_bid,
+            category=selected_category,
+            image_url=image_url,
+            is_active=True,
+        )
+        listing.save()
+        return HttpResponseRedirect(reverse("index"))
+    
+
+    else: 
+        categories_list = Category.objects.all() 
+        return render(request, "auctions/creatListing.html", {
+            "categories": categories_list
+        })
+
+
     return render(request, "auctions/creatListing.html", {
         "categories": categories_list 
     })

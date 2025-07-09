@@ -6,7 +6,7 @@ class User(AbstractUser):
     pass
 
 
-class Categories(models.Model):
+class Category(models.Model):
     categories = models.CharField(max_length=64)
 
     def __str__(self): 
@@ -17,7 +17,7 @@ class Listing(models.Model):
     description = models.TextField(max_length=1000)
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.URLField(max_length=200, blank=True, null=True)
-    categories = models.ForeignKey(Categories, on_delete=models.CASCADE, related_name="product_type", blank=True, null=True)
+    categories = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="product_type", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_listings")
     is_active = models.BooleanField(default=True)
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="won_listing")

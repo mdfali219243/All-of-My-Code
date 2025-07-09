@@ -3,39 +3,46 @@
 {% block body %}
 <h1>Create Listing</h1>
 
+{# Optional: Display messages from the view, like validation errors #}
+{% if message %}
+<div class="alert alert-danger">{{ message }}</div>
+{% endif %}
+
 <form action="{% url 'create_listing' %}" method="post">
     {% csrf_token %}
 
-    <label for="id_item_name">
+    <label for="id_title"> {# Changed for from id_item_name to id_title #}
         Title:
-        <input type="text" id="id_item_name" name="item_name" placeholder="Enter title for your listing" required>
+        <input type="text" id="id_title" name="title" placeholder="Enter title for your listing" required> {# Changed
+        name from item_name to title #}
     </label>
     <br>
 
-    <label for="id_item_description">
+    <label for="id_description"> {# Changed for from id_item_description to id_description #}
         Description:
-        <textarea id="id_item_description" name="item_description" placeholder="Provide a detailed description" rows="5"
-            required></textarea>
+        <textarea id="id_description" name="description" placeholder="Provide a detailed description" rows="5"
+            required></textarea> {# Changed name from item_description to description #}
     </label>
     <br>
 
-    <label for="id_item_bid">
+    <label for="id_starting_bid"> {# Changed for from id_item_bid to id_starting_bid #}
         Starting Bid:
-        <input type="number" id="id_item_bid" name="item_bid" min="0" step="0.01" placeholder="e.g., 10.00" required>
+        <input type="number" id="id_starting_bid" name="starting_bid" min="0.01" step="0.01" placeholder="e.g., 10.00"
+            required> {# Changed name from item_bid to starting_bid, and min to 0.01 #}
     </label>
     <br>
 
     <label for="id_category">
         Category:
-        <select id="id_category" name="category" required>
-            <option value="">Choose a category</option>
+        <select id="id_category" name="category"> {# Removed 'required' if category is optional in model #}
+            <option value="">Choose a category (optional)</option> {# Added empty value for optional selection #}
             {% for category_obj in categories %}
-            <option value="{{ category_obj.id }}">{{ category_obj.categories }}</option>
+            <option value="{{ category_obj.id }}">{{ category_obj.name }}</option> {# Changed category_obj.categories to
+            category_obj.name #}
             {% endfor %}
         </select>
     </label>
     <br>
-
 
     <label for="id_image_url">
         Image URL (optional):
