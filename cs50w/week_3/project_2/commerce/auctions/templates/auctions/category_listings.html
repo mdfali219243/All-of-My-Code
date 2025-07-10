@@ -1,13 +1,13 @@
+{# auctions/category_listings.html #}
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-<h2>Active Listings</h2>
+<h1>Listings in Category: {{ category.name }}</h1> {# Display the category name #}
 
-{% if listings %} {# Checks if the 'listings' variable is not empty #}
+{% if listings %}
 <ul class="listings">
-    {% for listing in listings %} {# Loops through each listing in the 'listings' QuerySet #}
+    {% for listing in listings %}
     <li>
-        {# FIXED: Changed 'listing' to 'listing_detail' to match urls.py #}
         <a href="{% url 'listing_detail' listing.id %}">
             {% if listing.image_url %}
             <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="listing-thumbnail">
@@ -17,9 +17,7 @@
 
             <div class="listing-info">
                 <h3>{{ listing.title }}</h3>
-                {# Assuming your Listing model has a get_current_bid method or property #}
                 <p>Current Bid: ${{ listing.get_current_bid }}</p>
-                {# This line already looks correct, using listing.category.name #}
                 <p>Category: {{ listing.category.name|default:"N/A" }}</p>
             </div>
         </a>
@@ -27,7 +25,7 @@
     {% endfor %}
 </ul>
 {% else %}
-<p>No active listings available at the moment.</p> {# Message if there are no active listings #}
+<p>No active listings found in this category.</p>
 {% endif %}
 
 {% endblock %}

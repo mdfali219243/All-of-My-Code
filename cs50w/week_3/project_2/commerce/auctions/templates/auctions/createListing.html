@@ -3,7 +3,7 @@
 {% block body %}
 <h1>Create Listing</h1>
 
-{# Display messages (like validation errors from views.py) #}
+
 {% if message %}
 <div class="alert alert-danger">{{ message }}</div>
 {% endif %}
@@ -34,10 +34,9 @@
 
     <div class="form-group">
         <label for="category">Category:</label>
-        <select class="form-control" name="category" id="category" required> {# Added 'required' attribute here #}
-            <option value="">Select a category</option> {# IMPORTANT: value="" for default selection #}
+        <select class="form-control" name="category" id="category" required>
+            <option value="">Select a category</option>
             {% for category in categories %}
-            {# Use category.id for the value and category.name for the display text #}
             <option value="{{ category.id }}">{{ category.name }}</option>
             {% endfor %}
         </select>
