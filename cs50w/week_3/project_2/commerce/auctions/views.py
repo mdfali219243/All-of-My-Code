@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Category, Listing, Bid, Comment
+from .models import User, Category, Listing, Bid, Comment, Watchlist
 
 
 def index(request):
@@ -177,3 +177,12 @@ def listing_detail(request, listing_id):
         "listing": listing,
     }
     return render(request, "auctions/listing_detail.html", context)
+
+def watchlist_view(request):
+    watchlist = Watchlist.objects.filter(user=request.user)
+    listings = [item.listing for item in watchlist]
+    
+    return render(request, "auctions/watchlist.html", {
+        "watchlist": watchlist,
+        "listings": listings
+    })

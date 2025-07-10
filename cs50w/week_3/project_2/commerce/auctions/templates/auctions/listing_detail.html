@@ -19,6 +19,29 @@
     <p><strong>Seller:</strong> {{ listing.created_by.username }}</p>
     {# Remember our previous fix: use 'create_at' not 'created_at' for the field name #}
     <p><strong>Listed On:</strong> {{ listing.create_at }}</p>
+    <p><strong>Status:</strong> {{ listing.get_status_display }}</p>
+</div>
+<div class="listing-actions">
+    <h3>Actions</h3>
+    <div class="actions">
+        <button class="btn btn-primary">Place Bid</button>
+        <button class="btn btn-secondary">Add to Watchlist</button>
+        <button class="btn btn-info">Comment</button>
+        {# Add more actions as needed #}
+    </div>
+
+    <div class="comments">
+        <h3>Comments</h3>
+        {# Assuming comments is a list of comment objects related to the listing #}
+        {% for comment in listing.comments.all %}
+        <div class="comment">
+            <p><strong>{{ comment.user.username }}:</strong> {{ comment.text }}</p>
+            <p><em>{{ comment.created_at }}</em></p>
+        </div>
+        {% empty %}
+        <p>No comments yet.</p>
+        {% endfor %}
+    </div>
 
     {# Add logic for bidding, comments, watching, etc. here #}
 </div>

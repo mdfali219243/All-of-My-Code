@@ -22,12 +22,9 @@ class Listing(models.Model):
     description = models.TextField(max_length=1000)
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.URLField(max_length=200, blank=True, null=True)
-    # Renamed 'categories' (ForeignKey) to 'category' (singular) for consistency
-    # Changed related_name to 'listings' to be more descriptive for Category.listings
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_listings")
     is_active = models.BooleanField(default=True)
-    # Made 'winner' nullable, as a listing won't have a winner at creation
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="won_listing", blank=True, null=True)
     create_at = models.DateTimeField(auto_now_add=True)
 
@@ -65,4 +62,13 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.listing.title} at {self.timestamp.strftime('%Y-%m-%d %H:%M')}" # Added formatting for timestamp
+        return f"Comment by {self.user.username} on {self.listing.title} at {self.timestamp.strftime('%Y-%m-%d %H:%M')}" #
+    
+
+class Watchlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchlisted_by")
+    name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.user.username} watching {self.listing.title}"
