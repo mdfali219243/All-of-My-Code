@@ -1,4 +1,3 @@
-{# auctions/watchlist.html #}
 {% extends "auctions/layout.html" %}
 
 {% block title %}My Watchlist{% endblock %}
@@ -6,9 +5,9 @@
 {% block body %}
 <h1>My Watchlist</h1>
 
-{% if listings %} {# Check if the 'listings' list is not empty #}
+{% if listings %}
 <div class="row">
-    {% for listing in listings %} {# Loop through each listing in the list #}
+    {% for listing in listings %}
     <div class="col-md-4 mb-4">
         <div class="card">
             {% if listing.image_url %}

@@ -1,11 +1,9 @@
-{# auctions/listing_detail.html #}
 {% extends "auctions/layout.html" %}
 
 {% block body %}
 <h2>{{ listing.title }}</h2>
 
 {% if user.is_authenticated and user != listing.created_by %}
-{# Watchlist Form #}
 <form action="{% url 'toggle_watchlist' listing.id %}" method="post" class="mb-3">
     {% csrf_token %}
     {% if is_on_watchlist %}
@@ -15,7 +13,6 @@
     {% endif %}
 </form>
 
-{# Bid Form #}
 <div class="card mb-3">
     <div class="card-header">
         Place Your Bid
@@ -50,12 +47,11 @@
 <p><strong>Listed by:</strong> {{ listing.created_by.username }}</p>
 <p><strong>Date Posted:</strong> {{ listing.create_at|date:"M d, Y H:i" }}</p>
 
-<hr> {# Separator for comments section #}
+<hr>
 
 <h3>Comments</h3>
 
 {% if user.is_authenticated %}
-{# Comment Input Form #}
 <div class="card mb-3">
     <div class="card-header">
         Add a Comment
@@ -75,10 +71,9 @@
 <p>Please <a href="{% url 'login' %}">log in</a> to add comments.</p>
 {% endif %}
 
-{# Display Existing Comments #}
-{% if listing.comments.all %} {# Access comments via the related_name on Listing model #}
+{% if listing.comments.all %}
 <ul class="list-group">
-    {% for comment in listing.comments.all|dictsort:"timestamp" reversed %} {# Sort by newest first #}
+    {% for comment in listing.comments.all|dictsort:"timestamp" reversed %}
     <li class="list-group-item mb-2">
         <p class="mb-1"><strong>{{ comment.user.username }}</strong> on {{ comment.timestamp|date:"M d, Y H:i" }}</p>
         <p>{{ comment.text }}</p>
