@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal, InvalidOperation
 
 from .models import User, Category, Listing, Bid, Comment, Watchlist
 
@@ -76,15 +77,13 @@ def categories_view(request):
 
 def category_listings_view(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
-    listings = Listing.objects.filter(category=category, is_active=True).order_by("-create_at") # <-- FIX THIS LINE
+    listings = Listing.objects.filter(category=category, is_active=True).order_by("-create_at") 
     return render(request, "auctions/category_listings.html", {
         "category": category,
         "listings": listings
     })
 @login_required
 def create_listing(request):
-    print(f"DEBUG: create_listing view accessed by method: {request.method}")
-
     if request.method == "POST":
         print("DEBUG: Inside POST block of create_listing.")
 
@@ -94,22 +93,17 @@ def create_listing(request):
         image_url = request.POST.get("image_url")
         category_id_str = request.POST.get("category")
 
-        print(f"DEBUG: Form data received - Title: '{title}', Category ID: '{category_id_str}', Bid: '{starting_bid_str}', Image URL: '{image_url}'")
-
         category_instance = None
         if category_id_str:
             try:
                 category_instance = Category.objects.get(pk=category_id_str)
-                print(f"DEBUG: Successfully found category instance: {category_instance.name} (ID: {category_instance.id})")
             except Category.DoesNotExist:
-                print(f"DEBUG: Category with ID '{category_id_str}' DOES NOT EXIST in database. Rendering error.")
                 categories_list = Category.objects.all().order_by('name')
                 return render(request, "auctions/createListing.html", {
                     "message": "Invalid category selected. Please choose from the list.",
                     "categories": categories_list
                 })
         else:
-            print("DEBUG: No category selected. Rendering error.")
             categories_list = Category.objects.all().order_by('name')
             return render(request, "auctions/createListing.html", {
                 "message": "Please select a category for your listing.",
@@ -119,7 +113,6 @@ def create_listing(request):
         try:
             starting_bid = float(starting_bid_str)
             if starting_bid < 0:
-                print(f"DEBUG: Invalid starting bid '{starting_bid_str}'. Rendering error.")
                 raise ValueError
         except (ValueError, TypeError):
             categories_list = Category.objects.all().order_by('name')
@@ -129,10 +122,8 @@ def create_listing(request):
             })
 
         if not request.user.is_authenticated:
-            print("DEBUG: User not authenticated. Redirecting to login.")
             return redirect(reverse("login"))
 
-        print("DEBUG: Attempting to create Listing object...")
         try:
             listing = Listing(
                 title=title,
@@ -144,18 +135,15 @@ def create_listing(request):
                 category=category_instance
             )
             listing.save()
-            print(f"DEBUG: Listing '{listing.title}' (ID: {listing.id}) SAVED successfully!")
             return redirect("index")
 
         except IntegrityError as e:
-            print(f"ERROR: IntegrityError when saving listing: {e}")
             categories_list = Category.objects.all().order_by('name')
             return render(request, "auctions/createListing.html", {
                 "message": f"A database error occurred: {e}",
                 "categories": categories_list
             })
         except Exception as e:
-            print(f"ERROR: An unexpected error occurred during listing save: {e}")
             categories_list = Category.objects.all().order_by('name')
             return render(request, "auctions/createListing.html", {
                 "message": f"An unexpected error occurred: {e}",
@@ -170,19 +158,127 @@ def create_listing(request):
         })
 
 
+
+
+
+
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
+    
+    is_on_watchlist = False
+    if request.user.is_authenticated:
+        is_on_watchlist = Watchlist.objects.filter(user=request.user, listing=listing).exists()
 
     context = {
         "listing": listing,
+        "is_on_watchlist": is_on_watchlist, 
     }
     return render(request, "auctions/listing_detail.html", context)
 
+@login_required 
+def toggle_watchlist(request, listing_id):
+    print(f"DEBUG: toggle_watchlist accessed for listing_id: {listing_id}, method: {request.method}")
+
+    if request.method == "POST":
+        listing = get_object_or_404(Listing, pk=listing_id)
+        user = request.user
+
+        print(f"DEBUG: User attempting toggle: {user.username}, Listing: {listing.title} (ID: {listing.id})")
+
+
+        watchlist_item = Watchlist.objects.filter(user=user, listing=listing)
+
+        if watchlist_item.exists():
+            # Item is on watchlist, so remove it
+            print(f"DEBUG: Watchlist item for {user.username} and {listing.title} EXISTS. Deleting...")
+            watchlist_item.delete()
+            # if messages: messages.success(request, f"{listing.title} removed from your watchlist.")
+            print(f"DEBUG: Item deleted. Remaining watchlist items for user '{user.username}': {Watchlist.objects.filter(user=user).count()}")
+        else:
+            # Item is not on watchlist, so add it
+            print(f"DEBUG: Watchlist item for {user.username} and {listing.title} NOT FOUND. Creating...")
+            Watchlist.objects.create(user=user, listing=listing)
+            # if messages: messages.success(request, f"{listing.title} added to your watchlist.")
+            print(f"DEBUG: Item created. Total watchlist items for user '{user.username}': {Watchlist.objects.filter(user=user).count()}")
+
+        # Redirect back to the listing detail page
+        return redirect(reverse("listing_detail", args=[listing.id]))
+    
+    # If a GET request somehow hits this endpoint, redirect to index
+    print("DEBUG: toggle_watchlist accessed with GET method. Redirecting to index.")
+    return redirect(reverse("index"))
+
+@login_required 
 def watchlist_view(request):
-    watchlist = Watchlist.objects.filter(user=request.user)
-    listings = [item.listing for item in watchlist]
+    print(f"DEBUG: watchlist_view accessed by user: {request.user.username}")
+
+    watchlist_items = Watchlist.objects.filter(user=request.user)
+    
+    listings = [item.listing for item in watchlist_items] 
+    
+    print(f"DEBUG: Listings extracted for watchlist: {[l.title for l in listings]}")
     
     return render(request, "auctions/watchlist.html", {
-        "watchlist": watchlist,
-        "listings": listings
+        "listings": listings # Pass this list of Listing objects to the template
     })
+
+@login_required 
+def place_bid(request, listing_id):
+    print(f"DEBUG: place_bid accessed for listing_id: {listing_id}, method: {request.method}")
+
+    listing = get_object_or_404(Listing, pk=listing_id)
+
+    if request.method == "POST":
+        bid_amount_str = request.POST.get('amount') 
+
+        print(f"DEBUG: Received bid amount string: '{bid_amount_str}'")
+
+        try:
+            new_bid_amount = Decimal(bid_amount_str) 
+        except (InvalidOperation, TypeError):
+            print("DEBUG: Invalid bid amount received.")
+            return redirect(reverse("listing_detail", args=[listing.id]))
+
+        # Ensure bid is positive
+        if new_bid_amount <= 0:
+            return redirect(reverse("listing_detail", args=[listing.id]))
+
+        current_bid = listing.get_current_bid() #
+
+        if new_bid_amount <= current_bid:
+            print(f"DEBUG: Bid {new_bid_amount} is not higher than current bid {current_bid}.")
+        elif request.user == listing.created_by:
+            print(f"DEBUG: User cannot bid on their own listing.")
+        else:
+            Bid.objects.create(
+                user=request.user,
+                listing=listing,
+                amount=new_bid_amount
+            )
+            print(f"DEBUG: Bid ${new_bid_amount} placed by {request.user.username} on {listing.title}")
+    return redirect(reverse("listing_detail", args=[listing.id]))
+
+
+@login_required # Only logged-in users can add comments
+def add_comment(request, listing_id):
+    print(f"DEBUG: add_comment accessed for listing_id: {listing_id}, method: {request.method}")
+
+    listing = get_object_or_404(Listing, pk=listing_id)
+
+    if request.method == "POST":
+        comment_text = request.POST.get('comment_text', '').strip() 
+
+
+        print(f"DEBUG: Received comment text: '{comment_text}' for listing {listing.title}")
+
+        if comment_text: 
+            Comment.objects.create(
+                user=request.user,
+                listing=listing,
+                text=comment_text
+            )
+            print(f"DEBUG: Comment by {request.user.username} added to {listing.title}")
+        else:
+            print("DEBUG: Comment text was empty.")
+
+    return redirect(reverse("listing_detail", args=[listing.id]))

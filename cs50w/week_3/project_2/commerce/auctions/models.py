@@ -21,6 +21,8 @@ class Listing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=1000)
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
+    # NEW FIELD: Winning Threshold
+    winning_threshold = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
     image_url = models.URLField(max_length=200, blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_listings")
@@ -33,14 +35,13 @@ class Listing(models.Model):
 
     def get_current_bid(self):
         # Correctly uses 'item_bids' from Bid model's related_name
-        if self.item_bids.exists():
-            return self.item_bids.order_by('-amount').first().amount
-        return self.starting_bid
+        # Using aggregate to get the max amount or None if no bids
+        from django.db.models import Max # Import Max here if not at top of file
+        highest_bid = self.item_bids.aggregate(Max('amount'))['amount__max']
+        return highest_bid if highest_bid is not None else self.starting_bid
 
     def get_bid_count(self):
-        # Corrected to use 'item_bids' from Bid model's related_name
         return self.item_bids.count()
-
 
 class Bid(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids_placed")
@@ -66,9 +67,11 @@ class Comment(models.Model):
     
 
 class Watchlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist_items")
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchlisted_by")
-    name = models.CharField(max_length=64, unique=True)
+
+    class Meta:
+        unique_together = ('user', 'listing')
 
     def __str__(self):
-        return f"{self.name} - {self.user.username} watching {self.listing.title}"
+        return f"{self.user.username} watches {self.listing.title}"

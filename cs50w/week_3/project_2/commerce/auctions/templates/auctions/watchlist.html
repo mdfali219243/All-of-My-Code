@@ -1,20 +1,35 @@
+{# auctions/watchlist.html #}
 {% extends "auctions/layout.html" %}
 
-{% block title %}
-Watchlist
-{% endblock %}
+{% block title %}My Watchlist{% endblock %}
 
 {% block body %}
-<h1>Watchlist</h1>
-{% if watchlist %}
-<ul>
-    {% for item in watchlist %}
-    <li>
-        <a href="{% url 'listing_detail' item.listing.id %}">{{ item.listing.title }}</a>
-    </li>
+<h1>My Watchlist</h1>
+
+{% if listings %} {# Check if the 'listings' list is not empty #}
+<div class="row">
+    {% for listing in listings %} {# Loop through each listing in the list #}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            {% if listing.image_url %}
+            <img src="{{ listing.image_url }}" class="card-img-top" alt="{{ listing.title }}"
+                style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ listing.title }}</h5>
+                <p class="card-text">{{ listing.description|truncatechars:100 }}</p>
+                <p class="card-text"><strong>Current Bid:</strong> ${{ listing.get_current_bid }}</p>
+                <p class="card-text"><small class="text-muted">Posted by {{ listing.created_by.username }} on {{
+                        listing.create_at|date:"M d, Y H:i" }}</small></p>
+                <a href="{% url 'listing_detail' listing.id %}" class="btn btn-primary">View Listing</a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-</ul>
+</div>
 {% else %}
 <p>Your watchlist is empty.</p>
+<p><a href="{% url 'index' %}">Browse active listings</a> to find items to add.</p>
 {% endif %}
+
 {% endblock %}
