@@ -1,3 +1,5 @@
+# auctions/models.py (UPDATED)
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -7,50 +9,60 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    categories = models.CharField(max_length=64)
+    # Renamed 'categories' field to 'name' for clarity and consistency
+    name = models.CharField(max_length=64, unique=True)
 
-    def __str__(self): 
-        return f"Category: {self.categories}" # Access the field using self.categories
+    def __str__(self):
+        # Access the field using self.name
+        return self.name # Simplified to just return the name
+
 
 class Listing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=1000)
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.URLField(max_length=200, blank=True, null=True)
-    categories = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="product_type", blank=True, null=True)
+    # Renamed 'categories' (ForeignKey) to 'category' (singular) for consistency
+    # Changed related_name to 'listings' to be more descriptive for Category.listings
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_listings")
     is_active = models.BooleanField(default=True)
-    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="won_listing")
+    # Made 'winner' nullable, as a listing won't have a winner at creation
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="won_listing", blank=True, null=True)
     create_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f"{self.title} by {self.created_by.username}"
-    
+
     def get_current_bid(self):
-        highest_bid = self.bids.order_by('-amount').first()
-        return highest_bid if highest_bid else self.starting_bid
-    
+        # Correctly uses 'item_bids' from Bid model's related_name
+        if self.item_bids.exists():
+            return self.item_bids.order_by('-amount').first().amount
+        return self.starting_bid
+
     def get_bid_count(self):
-        return self.bids.count()
-    
+        # Corrected to use 'item_bids' from Bid model's related_name
+        return self.item_bids.count()
+
 
 class Bid(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids_placed")
-    listing= models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="item_bids")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="item_bids")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-amount', 'timestamp']
+        ordering = ['-amount', 'timestamp'] # Order by amount descending, then timestamp ascending
 
     def __str__(self):
         return f"{self.amount} bid by {self.user.username} on {self.listing.title}"
 
+
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment")
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comment")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments") # Changed related_name to 'comments' (singular)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments") # Changed related_name to 'comments' (singular)
     text = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.listing.title} at {self.timestamp}"
+        return f"Comment by {self.user.username} on {self.listing.title} at {self.timestamp.strftime('%Y-%m-%d %H:%M')}" # Added formatting for timestamp

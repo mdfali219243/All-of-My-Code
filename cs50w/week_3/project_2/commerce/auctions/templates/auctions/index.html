@@ -2,9 +2,10 @@
 
 {% block body %}
 <h2>Active Listings</h2>
-{% if listings %}
+
+{% if listings %} {# Checks if the 'listings' variable is not empty #}
 <ul class="listings">
-    {% for listing in listings %}
+    {% for listing in listings %} {# Loops through each listing in the 'listings' QuerySet #}
     <li>
         <a href="{% url 'listing' listing.id %}">
             {% if listing.image_url %}
@@ -15,16 +16,17 @@
 
             <div class="listing-info">
                 <h3>{{ listing.title }}</h3>
+                {# Assuming your Listing model has a get_current_bid method or property #}
                 <p>Current Bid: ${{ listing.get_current_bid }}</p>
                 <p>Category: {{ listing.category.name|default:"N/A" }}</p>
-                <p>Posted: {{ listing.created_at|date:"M d, Y H:i" }}</p>
+                {# <p>Category: {{ listing.category.category|default:"N/A" }}</p> #}
             </div>
         </a>
     </li>
     {% endfor %}
 </ul>
 {% else %}
-<p>No active listings available.</p>
+<p>No active listings available at the moment.</p> {# Message if there are no active listings #}
 {% endif %}
 
 {% endblock %}

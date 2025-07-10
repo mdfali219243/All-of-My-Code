@@ -1,0 +1,28 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% if listing %}
+<h2>{{ listing.title }}</h2>
+<div class="listing-details">
+    {% if listing.image_url %}
+    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="listing-image">
+    {% else %}
+    <img src="/static/auctions/placeholder.png" alt="No image available" class="listing-image">
+    {% endif %}
+
+    <p><strong>Description:</strong> {{ listing.description }}</p>
+    <p><strong>Starting Bid:</strong> ${{ listing.starting_bid }}</p>
+    {# Assuming get_current_bid is a method on your Listing model #}
+    <p><strong>Current Bid:</strong> ${{ listing.get_current_bid }}</p>
+    {# Use product_type if 'name' doesn't exist in Category model as per previous errors #}
+    <p><strong>Category:</strong> {{ listing.category.product_type|default:"N/A" }}</p>
+    <p><strong>Seller:</strong> {{ listing.created_by.username }}</p>
+    {# Remember our previous fix: use 'create_at' not 'created_at' for the field name #}
+    <p><strong>Listed On:</strong> {{ listing.create_at }}</p>
+
+    {# Add logic for bidding, comments, watching, etc. here #}
+</div>
+{% else %}
+<p>Listing not found.</p>
+{% endif %}
+{% endblock %}
