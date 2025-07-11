@@ -11,15 +11,15 @@
 </head>
 
 <body>
-    <h1>Auctions</h1>
-    <div>
+    <h1 class="center">Auctions</h1>
+    <div class="center">
         {% if user.is_authenticated %}
         Signed in as <strong>{{ user.username }}</strong>.
         {% else %}
         Not signed in.
         {% endif %}
     </div>
-    <ul class="nav">
+    <ul class="nav navbar" style="background-color: #e3f2fd;" data-bs-theme="light">
         <li class="nav-item">
             <a class="nav-link" href="{% url 'index' %}">Active Listings</a>
         </li>

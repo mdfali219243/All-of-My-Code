@@ -40,8 +40,7 @@
 
 <p>{{ listing.description }}</p>
 <p><strong>Starting Bid:</strong> ${{ listing.starting_bid }}</p>
-<p><strong>Current Bid:</strong> <span id="current-bid">${{ listing.get_current_bid }}</span> ({{ listing.get_bid_count
-    }} bids)</p>
+<p><strong>Current Bid:</strong> <span id="current-bid">${{ listing.get_current_bid }}</span>
 
 <p><strong>Category:</strong> {{ listing.category.name|default:"N/A" }}</p>
 <p><strong>Listed by:</strong> {{ listing.created_by.username }}</p>
