@@ -1,0 +1,12 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+Error
+{% endblock %}
+
+{% block body %}
+<h1 style="color: red;">Error!</h1>
+<p>{{ message }}</p>
+<p>Please go back and try again.</p>
+<p><a href="{% url 'index' %}">Return to Home</a></p>
+{% endblock %}
