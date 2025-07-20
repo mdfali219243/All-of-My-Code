@@ -1,3 +1,29 @@
 textarea {
     min-height: 400px;
 }
+
+.email {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.email:hover {
+    background-color: #e9ecef;
+}
+
+.email-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-subject {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin: 10px;
+}
