@@ -105,13 +105,13 @@ function load_mailbox(mailbox) {
         emailElement.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
             <p style="margin: 0; font-weight: bold; font-size: 1.2em;">From: ${email.sender}</p>
-            <h4 style="margin: 0; flex-grow: 1; text-align: left; ">${email.subject}</h4>
+            <h4 style="margin: 0; flex-grow: 1; text-align: left; font-size: 1.2em;">${email.subject}</h4>
             <span style="font-size: 0.8em; color: #666; white-space: nowrap;">${email.timestamp}</span>
             <button class="btn btn-sm btn-outline-primary archive-btn" data-action="${buttonAction}" data-email-id="${email.id}">${buttonText}</button>
           </div>
         `;
 
-        // Add click listener to view email details (but not when clicking archive button)
+        // Add click listener to view email details 
         emailElement.addEventListener('click', (e) => {
           if (!e.target.classList.contains('archive-btn')) {
             view_email(email.id);
@@ -143,16 +143,36 @@ function load_mailbox(mailbox) {
 
 // View email details when user clicks on an email
 function view_email(email_id) {
+  console.log('Viewing email with ID:', email_id);
+
+  // Show loading state
+  const detailView = document.querySelector('#email-detail-view');
+  detailView.style.display = 'block';
+  detailView.innerHTML = '<p>Loading email...</p>';
+
+  // Hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'none';
-  document.querySelector('#email-detail-view').style.display = 'block';
   document.querySelector('#sent-detail-view').style.display = 'none';
 
-  fetch(`/emails/${email_id}`)
-    .then(response => response.json())
+  // First, mark the email as read
+  fetch(`/emails/${email_id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      read: true
+    })
+  })
+    .then(() => {
+      // Then fetch the email details
+      return fetch(`/emails/${email_id}`);
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch email');
+      }
+      return response.json();
+    })
     .then(email => {
-      // DEBUG: Log the full email object to see what we're working with
-      console.log('Full email object:', email);
 
       // Determine button text and action based on email's archived status
       const isArchived = email.archived;
@@ -166,7 +186,11 @@ function view_email(email_id) {
       console.log('Button action will be:', buttonAction);
 
       document.querySelector('#email-detail-view').innerHTML = `
-      <button class="btn btn-sm btn-outline-primary" id="back-to-inbox">← Back to Inbox</button>
+      <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+        <button class="btn btn-sm btn-outline-primary" id="back-to-inbox">← Back to Inbox</button>
+        <button class="btn btn-sm btn-primary" id="reply-btn">Reply</button>
+        <button class="btn btn-sm btn-outline-secondary" id="reply-all-btn">Reply All</button>
+      </div>
       <div class="email-detail">
         <h2>${email.subject}</h2>
         <button class="btn btn-sm btn-outline-primary archive-btn" data-action="${buttonAction}" data-email-id="${email.id}">${buttonText}</button>
@@ -196,8 +220,15 @@ function view_email(email_id) {
           } else {
             unarchive_email(emailId);
           }
+
+          // After archiving/unarchiving, go back to inbox
+          load_mailbox('inbox');
         });
       }
+
+      // Add click listeners for reply buttons
+      document.querySelector('#reply-btn')?.addEventListener('click', () => reply_email(email, false));
+      document.querySelector('#reply-all-btn')?.addEventListener('click', () => reply_email(email, true));
     });
 }
 
@@ -249,6 +280,50 @@ function unarchive_email(email_id) {
     .catch(error => {
       console.error('Fetch error:', error);
     });
+}
+
+// Handle email reply functionality
+function reply_email(email, replyAll = false) {
+  compose_email();
+
+  const recipients = document.querySelector('#compose-recipients');
+  const subject = document.querySelector('#compose-subject');
+  const body = document.querySelector('#compose-body');
+
+  // Set the recipients
+  if (replyAll) {
+    const currentUser = document.querySelector('h2').textContent.trim();
+    const allRecipients = email.recipients.filter(r => r !== currentUser);
+    allRecipients.push(email.sender);
+    recipients.value = allRecipients.join(', ');
+  } else {
+    // For regular reply, just use the original sender
+    recipients.value = email.sender;
+  }
+
+  // Add 'Re: ' to subject if not already there
+  if (!email.subject.startsWith('Re: ')) {
+    subject.value = `Re: ${email.subject}`;
+  } else {
+    subject.value = email.subject;
+  }
+
+  // Format the original message with better spacing and attribution
+  const formattedDate = new Date(email.timestamp).toLocaleString();
+  const originalMessage = `
+
+
+-------- Original Message --------
+From: ${email.sender}
+To: ${email.recipients.join(', ')}
+Date: ${formattedDate}
+Subject: ${email.subject}
+
+${email.body.replace(/^/gm, '> ')}`;
+
+  body.value = originalMessage;
+  body.focus();
+  body.setSelectionRange(0, 0);
 }
 
 
