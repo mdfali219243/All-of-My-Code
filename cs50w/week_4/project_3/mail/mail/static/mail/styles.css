@@ -27,3 +27,12 @@ textarea {
     border-radius: 8px;
     margin: 10px;
 }
+
+.email.sender {
+    font-weight: bold;
+}
+
+.email.timestamp {
+    font-size: 0.8em;
+    color: #666;
+}
