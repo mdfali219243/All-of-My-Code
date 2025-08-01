@@ -4,12 +4,27 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Post, Follow
 
 
 def index(request):
-    return render(request, "network/index.html")
-
+    if request.user.is_authenticated:
+        followers = request.user.followers.all()
+        followers_count = followers.count()
+        following = request.user.followings.all()
+        following_count = following.count()
+        posts = Post.objects.all()
+        return render(request, "network/index.html", {
+            "posts": posts,
+            "profile": request.user,
+            "followers_count": followers_count,
+            "following_count": following_count,
+            "followers": followers,
+            "following": following,
+            "posts_count": posts.count(),
+            })
+    else:
+        return render(request, "network/login.html")
 
 def login_view(request):
     if request.method == "POST":
