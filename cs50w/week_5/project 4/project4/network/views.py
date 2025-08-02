@@ -23,6 +23,7 @@ def index(request):
             "following": following,
             "posts_count": posts.count(),
             })
+        
     else:
         return render(request, "network/login.html")
 
@@ -33,6 +34,9 @@ def profile(request):
         following = request.user.followings.all()
         following_count = following.count()
         posts = Post.objects.all()
+        import random
+        EMOJIS = ["😀", "😎", "🦄", "🐱", "🌟", "🍕", "🚀", "🐶", "🎉", "👾", "🐼", "🦊", "🐸", "🦁", "🐵", "🐧", "🐢", "🐙", "🦋", "🐞", "🦕"]
+        profile_emoji = random.choice(EMOJIS)
         return render(request, "network/profile.html", {
             "posts": posts,
             "profile": request.user,
@@ -41,6 +45,7 @@ def profile(request):
             "followers": followers,
             "following": following,
             "posts_count": posts.count(),
+            "profile_emoji": profile_emoji,
             })
     else:
         return render(request, "network/login.html")

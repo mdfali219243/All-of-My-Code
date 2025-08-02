@@ -3,12 +3,41 @@
 {% block body %}
 <div class="container">
     <div class="row">
-        <div>
-            <h1 class="header">Profile</h1>
-            <p>Username: {{ profile.username }}</p>
-            <p>Posts: {{ posts_count }}</p>
-            <p>Following: {{ following_count }}</p>
-            <p>Followers: {{ followers_count }}</p>
+        <h1 class="header">Profile</h1>
+        <div class="col-md-10 mx-auto">
+            <div class="profile-header d-flex align-items-center mb-4">
+                <span class="profile-image mr-4" style="font-size: 72px; display: flex; align-items: center; justify-content: center;">{{ profile_emoji }}</span>
+                <div class="profile-info">
+                    <div class="d-flex align-items-center mb-2">
+                        <h2 class="profile-username mr-4 mb-0">{{ profile.username }}</h2>
+                        <button class="btn btn-primary mr-2">Follow</button>
+                        <button class="btn btn-primary mr-2">Unfollow</button>
+                        <button class="btn btn-outline-secondary">Edit Profile</button>
+                    </div>
+                    <div class="profile-stats d-flex mb-2">
+                        <div class="stat mr-4"><span class="stat-count">{{ posts_count }}</span> posts</div>
+                        <div class="stat mr-4"><span class="stat-count">{{ followers_count }}</span> followers</div>
+                        <div class="stat"><span class="stat-count">{{ following_count }}</span> following</div>
+                    </div>
+                </div>
+            </div>
+            <p>Posts:</p>
+            {% for post in posts %}
+            <div class="post">
+                <p><strong>{{ post.user.username }}</strong></p>
+                <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
+                <p>{{ post.content }}</p>
+                <div class="post-actions">
+                    <button class="post-action-btn like" title="Like"><i class="fa-regular fa-heart"></i></button>
+                    <button class="post-action-btn comment" title="Comment"><i
+                            class="fa-regular fa-comment"></i></button>
+                    <button class="post-action-btn edit" title="Edit"><i
+                            class="fa-regular fa-pen-to-square"></i></button>
+                    <button class="post-action-btn delete" title="Delete"><i
+                            class="fa-regular fa-trash-can"></i></button>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
