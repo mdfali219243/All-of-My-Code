@@ -1,20 +1,26 @@
 {% extends "network/layout.html" %}
+{% load static %}
 
 {% block body %}
 <div class="container">
+    <h1 class="header">All Posts</h1>
     <div class="row">
-        <div>
-            <h1 class="header">All Posts</h1>
-            <p>Username: {{ profile.username }}</p>
-            <p>Posts: {{ posts_count }}</p>
-            <p>Following: {{ following_count }}</p>
-            <p>Followers: {{ followers_count }}</p>
+        <div class="col-md-10 mx-auto">
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="text" name="content" placeholder="What's on your mind?" class="inputStyling" required>
+                <button type="submit" class="btn btn-primary">Post</button>
+            </form>
             {% for post in posts %}
-            <div>
+            <div class="post">
+                <p><strong>{{ post.user.username }}</strong></p>
+                <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
                 <p>{{ post.content }}</p>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
+
 {% endblock %}

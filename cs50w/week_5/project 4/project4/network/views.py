@@ -26,6 +26,25 @@ def index(request):
     else:
         return render(request, "network/login.html")
 
+def profile(request):
+    if request.user.is_authenticated:
+        followers = request.user.followers.all()
+        followers_count = followers.count()
+        following = request.user.followings.all()
+        following_count = following.count()
+        posts = Post.objects.all()
+        return render(request, "network/profile.html", {
+            "posts": posts,
+            "profile": request.user,
+            "followers_count": followers_count,
+            "following_count": following_count,
+            "followers": followers,
+            "following": following,
+            "posts_count": posts.count(),
+            })
+    else:
+        return render(request, "network/login.html")
+
 def login_view(request):
     if request.method == "POST":
 
@@ -76,3 +95,5 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+

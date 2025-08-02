@@ -1,0 +1,15 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div>
+            <h1 class="header">Profile</h1>
+            <p>Username: {{ profile.username }}</p>
+            <p>Posts: {{ posts_count }}</p>
+            <p>Following: {{ following_count }}</p>
+            <p>Followers: {{ followers_count }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
