@@ -64,25 +64,50 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const likeBtn = document.getElementById("like-btn");
-    likeBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        console.log("Like button clicked");
-        const post_count = document.getElementById("post-count");
-        const like_count = document.getElementById("like-count");
-        const postId = likeBtn.dataset.postId;
-        const isLiked = likeBtn.dataset.liked;
-        const likeIcon = likeBtn.querySelector('i');
-        const csrftoken = getCookie('csrftoken');
-        if (isLiked === "true") {
-            likeIcon.classList.remove('fa-solid');
-            likeIcon.classList.add('fa-regular');
-            like_count.textContent = parseInt(like_count.textContent) - 1;
-        } else {
-            likeIcon.classList.remove('fa-regular');
-            likeIcon.classList.add('fa-solid');
-            like_count.textContent = parseInt(like_count.textContent) + 1;
-        }
-        likeBtn.dataset.liked = !isLiked;
+    // like button functionality
+    // get all like buttons
+    // add event listener to each like button
+    // send a POST request to the server to update the like count
+    // update the like count on the client side
+    // change the like button icon to solid if the user liked the post
+    // change the like button icon to regular if the user unliked the post
+    // if user liked the post then change the like button icon to solid red
+    // if user unliked the post then change the like button icon to regular white
+    const likeBtns = document.querySelectorAll(".like");
+    likeBtns.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const postId = btn.dataset.postId;
+            const csrftoken = getCookie("csrftoken");
+            fetch(`/like/${postId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
+                },
+            })
+
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then((result) => {
+                    if (result.success) {
+                        const likeCount = document.getElementById("like-count");
+                        likeCount.textContent = result.like_count;
+                        btn.dataset.liked = result.liked;
+                        if (result.liked) {
+                            btn.classList.add("liked");
+                        } else {
+                            btn.classList.remove("liked");
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.error("There was a problem with the fetch operation:", error);
+                });
+        });
     });
 });

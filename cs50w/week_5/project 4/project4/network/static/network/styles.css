@@ -191,3 +191,8 @@ body {
     color: #e0245e;
     background: rgba(224, 36, 94, 0.1);
 }
+
+.liked {
+    color: rgb(230, 0, 0);
+    background: rgba(230, 0, 0, 0.1);
+}

@@ -20,8 +20,7 @@
                     <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
                     <p>{{ post.content }}</p>
                     <div class="post-actions">
-                        <button class="post-action-btn like" title="Like" id="like-btn" data-post-id="{{ post.id }}"
-                            data-liked="{{ post.user_has_liked }}" data-likes="{{ post.likes.count }}">
+                        <button class="post-action-btn like" title="Like" id="like-btn" data-post-id="{{ post.id }}">
                             <i class="fa-regular fa-heart"></i>
                             <span id="like-count">{{ post.likes.count }}</span>
                         </button>

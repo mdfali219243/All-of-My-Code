@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 import json
 import random
 
-from .models import User, Post, Follow
+from .models import User, Post, Follow, Like
 
 def index(request):
     if request.user.is_authenticated:
@@ -171,14 +171,22 @@ def unfollow_user(request, username):
 
 @login_required
 @require_POST
-def like_post(request, user):
-    like = Like.objects.filter(post=post, user=request.user)
-    if like.exists():
-        like.delete()
-        return JsonResponse({"success": True}, status=200)
-    else:
-        Like.objects.create(post=post, user=request.user)
-        return JsonResponse({"success": True}, status=200)
-    
-
+def like_post(request, post_id):
+   # see method is POST
+   if request.method == "POST":
+      # get the post
+      post = Post.objects.get(id=post_id)
+      # get the user
+      user = request.user
+      # check if the user has liked the post
+      if user in post.likes.all():
+         # if the user has liked the post, remove the like
+         post.likes.remove(user)
+         return JsonResponse({"success": True, "like_count": post.likes.count(), "liked": False})
+      else:
+         # if the user has not liked the post, add the like
+         post.likes.add(user)
+         return JsonResponse({"success": True, "like_count": post.likes.count(), "liked": True})
+   else:
+      return JsonResponse({"success": False, "error": "POST request required."}, status=400)
     
