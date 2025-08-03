@@ -139,13 +139,21 @@ document.addEventListener("DOMContentLoaded", function () {
     // user can edit their own posts
     const editBtns = document.querySelectorAll('.edit');
     editBtns.forEach((btn) => {
+        // Only show edit button if user owns the post
+        const userId = btn.dataset.userId;
+        const isLoggedInUser = window.currentUserId && userId === String(window.currentUserId);
+        
+        if (!isLoggedInUser) {
+            btn.style.display = 'none';
+            return;
+        }
+
         btn.addEventListener('click', async function (e) {
             e.preventDefault();
             console.log('Edit button clicked for post:', this.dataset.postId);
 
             const postId = this.dataset.postId;
             const originalContent = this.dataset.content;
-            const userId = this.dataset.userId;
             const csrftoken = getCookie('csrftoken');
             const postContent = document.querySelector(`#post-content-${postId}`);
 
@@ -154,19 +162,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            // Store the original content element and its parent
+            const originalContentElement = postContent;
+            const parentElement = postContent.parentNode;
+
             // Create edit form
             const editForm = document.createElement('div');
             editForm.className = 'edit-form';
             editForm.innerHTML = `
                 <textarea class="edit-textarea" rows="3">${originalContent}</textarea>
                 <div class="edit-buttons">
-                    <button class="btn btn-primary save-edit">Save</button>
-                    <button class="btn btn-secondary cancel-edit">Cancel</button>
+                    <button type="button" class="btn btn-primary save-edit">Save</button>
+                    <button type="button" class="btn btn-secondary cancel-edit">Cancel</button>
                 </div>
             `;
 
             // Replace post content with edit form
-            postContent.parentNode.replaceChild(editForm, postContent);
+            parentElement.replaceChild(editForm, originalContentElement);
 
             // Add save/cancel handlers
             const saveBtn = editForm.querySelector('.save-edit');
@@ -214,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             cancelBtn.addEventListener('click', () => {
                 // Replace edit form with original content
-                postContent.parentNode.replaceChild(postContent, editForm);
+                parentElement.replaceChild(originalContentElement, editForm);
             });
         });
     });
