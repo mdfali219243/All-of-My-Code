@@ -229,28 +229,5 @@ def edit_post(request, post_id):
             "error": str(e)
         }, status=400)
 
-        
-
-@login_required
-@require_http_methods(["POST"])
-def delete_post(request, post_id):
-    try:
-        post = get_object_or_404(Post, id=post_id)
-        user = request.user
-        
-        if post.user != user:
-            return JsonResponse({
-                "success": False,
-                "error": "You do not have permission to delete this post."
-            }, status=403)
-        
-        post.delete()
-        
-        return JsonResponse({
-            "success": True
-        })
-    except Exception as e:
-        return JsonResponse({
-            "success": False,
-            "error": str(e)
-        }, status=400)
+def comment(request):
+    pass

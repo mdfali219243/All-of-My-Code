@@ -37,3 +37,13 @@ class Like(models.Model):
         return f"{self.user} likes {self.post}"
     class Meta:
         unique_together = ('user', 'post')
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_comments")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="post_comments")
+    content = models.TextField(max_length=1000)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.user} commented on {self.post}"
+    class Meta:
+        ordering = ["-timestamp"]

@@ -42,13 +42,13 @@
                 <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
                 <p>{{ post.content }}</p>
                 <div class="post-actions">
-                    <button class="post-action-btn like" title="Like" data-post-id="{{ post.id }}"><i class="fa-regular fa-heart"></i></button>
+                    <button class="post-action-btn like" title="Like" data-post-id="{{ post.id }}"><i
+                            class="fa-regular fa-heart"></i></button>
                     <button class="post-action-btn comment" title="Comment"><i
                             class="fa-regular fa-comment"></i></button>
-                    <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}" data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
+                    <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}"
+                        data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
                             class="fa-regular fa-pen-to-square"></i></button>
-                    <button class="post-action-btn delete" title="Delete" data-post-id="{{ post.id }}" data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
-                            class="fa-regular fa-trash-can"></i></button>
                 </div>
             </div>
             {% endfor %}
