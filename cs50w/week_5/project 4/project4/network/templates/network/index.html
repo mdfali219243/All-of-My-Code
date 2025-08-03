@@ -3,24 +3,39 @@
 
 {% block body %}
 <div class="container">
-    <h1 class="header">All Posts</h1>
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <form method="post" class="mb-4">
+            <h1 class="header" style="text-align: start;">All Posts</h1>
+            <form method="post" id="post-form" class="mb-4">
                 {% csrf_token %}
                 <input type="text" name="content" placeholder="What's on your mind?" class="inputStyling" required>
                 <button type="submit" class="btn btn-primary">Post</button>
             </form>
-            {% for post in posts %}
-            <div class="post">
-                <p><strong>{{ post.user.username }}</strong></p>
-                <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
-                <p>{{ post.content }}</p>
+            <div class="posts-container">
+                {% for post in posts %}
+                <div class="post">
+                    <a href="{% url 'profile' post.user.username %}">
+                        <p><strong>{{ post.user.username }}</strong></p>
+                    </a>
+                    <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
+                    <p>{{ post.content }}</p>
+                    <div class="post-actions">
+                        <button class="post-action-btn like" title="Like" id="like-btn" data-post-id="{{ post.id }}"
+                            data-liked="{{ post.user_has_liked }}" data-likes="{{ post.likes.count }}">
+                            <i class="fa-regular fa-heart"></i>
+                            <span id="like-count">{{ post.likes.count }}</span>
+                        </button>
+                        <button class="post-action-btn comment" title="Comment"><i
+                                class="fa-regular fa-comment"></i></button>
+                        <button class="post-action-btn edit" title="Edit"><i
+                                class="fa-regular fa-pen-to-square"></i></button>
+                        <button class="post-action-btn delete" title="Delete"><i
+                                class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
 </div>
-
-
 {% endblock %}

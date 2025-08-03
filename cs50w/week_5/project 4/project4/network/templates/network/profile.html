@@ -1,4 +1,5 @@
 {% extends "network/layout.html" %}
+{% load static %}
 
 {% block body %}
 <div class="container">
@@ -6,13 +7,26 @@
         <h1 class="header">Profile</h1>
         <div class="col-md-10 mx-auto">
             <div class="profile-header d-flex align-items-center mb-4">
-                <span class="profile-image mr-4" style="font-size: 72px; display: flex; align-items: center; justify-content: center;">{{ profile_emoji }}</span>
+                <span class="profile-image mr-4"
+                    style="font-size: 72px; display: flex; align-items: center; justify-content: center;">{{ profile_emoji }}</span>
                 <div class="profile-info">
                     <div class="d-flex align-items-center mb-2">
                         <h2 class="profile-username mr-4 mb-0">{{ profile.username }}</h2>
-                        <button class="btn btn-primary mr-2">Follow</button>
-                        <button class="btn btn-primary mr-2">Unfollow</button>
+
+                        {% if request.user.id == profile.id %}
+                        <!-- Show the Edit Profile button if the user is on their own profile -->
                         <button class="btn btn-outline-secondary">Edit Profile</button>
+                        {% elif request.user.is_authenticated %}
+                        {% if is_following %}
+                        <!-- Show the Unfollow button if the user is already following -->
+                        <button id="toggle-follow-btn" class="btn btn-outline-secondary" data-following="true"
+                            data-username="{{ profile.username }}">Unfollow</button>
+                        {% else %}
+                        <!-- Show the Follow button if the user is not following -->
+                        <button id="toggle-follow-btn" class="btn btn-primary" data-following="false"
+                            data-username="{{ profile.username }}">Follow</button>
+                        {% endif %}
+                        {% endif %}
                     </div>
                     <div class="profile-stats d-flex mb-2">
                         <div class="stat mr-4"><span class="stat-count">{{ posts_count }}</span> posts</div>

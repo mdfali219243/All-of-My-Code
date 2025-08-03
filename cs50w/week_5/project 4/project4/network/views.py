@@ -1,54 +1,86 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+import json
+import random
 
 from .models import User, Post, Follow
 
-
 def index(request):
     if request.user.is_authenticated:
-        followers = request.user.followers.all()
-        followers_count = followers.count()
-        following = request.user.followings.all()
-        following_count = following.count()
         posts = Post.objects.all()
         return render(request, "network/index.html", {
             "posts": posts,
             "profile": request.user,
-            "followers_count": followers_count,
-            "following_count": following_count,
-            "followers": followers,
-            "following": following,
-            "posts_count": posts.count(),
             })
-        
     else:
         return render(request, "network/login.html")
 
-def profile(request):
+#all posts
+@login_required
+def All_posts(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        content = data.get("content")
+        post = Post.objects.create(user=request.user, content=content)
+        return JsonResponse({
+            "user": {"username": request.user.username},
+            "timestamp": post.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "content": post.content
+        })
+    else:
+        return JsonResponse({
+            "error": "POST request required.",
+            "status": 400
+        })
+
+#profile page
+def profile(request, username):
+    # Get the user profile being viewed
+    user = get_object_or_404(User, username=username)
+
     if request.user.is_authenticated:
-        followers = request.user.followers.all()
-        followers_count = followers.count()
-        following = request.user.followings.all()
-        following_count = following.count()
-        posts = Post.objects.all()
-        import random
+        # Check if the logged-in user is following this profile
+        # This assumes your User model has a ManyToMany field named 'followers'
+        # that correctly links a user to those who follow them.
+        is_following = user.followers.filter(pk=request.user.pk).exists()
+
+        followers_count = user.followers.count()
+        following_count = user.followings.count()
+        posts = Post.objects.filter(user=user)
+        
+        # Emoji setup
         EMOJIS = ["😀", "😎", "🦄", "🐱", "🌟", "🍕", "🚀", "🐶", "🎉", "👾", "🐼", "🦊", "🐸", "🦁", "🐵", "🐧", "🐢", "🐙", "🦋", "🐞", "🦕"]
         profile_emoji = random.choice(EMOJIS)
+        
         return render(request, "network/profile.html", {
             "posts": posts,
-            "profile": request.user,
+            "profile": user,
             "followers_count": followers_count,
             "following_count": following_count,
-            "followers": followers,
-            "following": following,
             "posts_count": posts.count(),
             "profile_emoji": profile_emoji,
-            })
+            "is_following": is_following,  # <-- The new variable
+        })
     else:
+        # If the user is not authenticated, redirect them to the login page
         return render(request, "network/login.html")
+
+#following page
+@login_required
+def following(request):
+    # Get all users the current user follows
+    following_users = User.objects.filter(followers__follower=request.user)
+    # Get posts from those users
+    posts = Post.objects.filter(user__in=following_users)
+    return render(request, "network/following_posts.html", {
+        "posts": posts,
+        "profile": request.user,
+    })
 
 def login_view(request):
     if request.method == "POST":
@@ -102,3 +134,51 @@ def register(request):
         return render(request, "network/register.html")
 
 
+# New views for follow/unfollow functionality
+@login_required
+@require_POST
+def follow_user(request, username):
+    """
+    Handles a POST request to follow a user.
+    """
+    try:
+        user_to_follow = User.objects.get(username=username)
+        # Create a new Follow relationship
+        Follow.objects.get_or_create(follower=request.user, following=user_to_follow)
+        return JsonResponse({"success": True}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({"success": False, "error": "User not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@login_required
+@require_POST
+def unfollow_user(request, username):
+    """
+    Handles a POST request to unfollow a user.
+    """
+    try:
+        user_to_unfollow = User.objects.get(username=username)
+        # Delete the Follow relationship
+        Follow.objects.filter(follower=request.user, following=user_to_unfollow).delete()
+        return JsonResponse({"success": True}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({"success": False, "error": "User not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+
+@login_required
+@require_POST
+def like_post(request, user):
+    like = Like.objects.filter(post=post, user=request.user)
+    if like.exists():
+        like.delete()
+        return JsonResponse({"success": True}, status=200)
+    else:
+        Like.objects.create(post=post, user=request.user)
+        return JsonResponse({"success": True}, status=200)
+    
+
+    

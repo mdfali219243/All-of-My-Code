@@ -1,0 +1,25 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1 class="header" style="text-align: start;">Following</h1>
+            <div class="posts-container">
+                {% for post in posts %}
+                <div class="post">
+                    <p><strong>{{ post.user.username }}</strong></p>
+                    <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
+                    <p>{{ post.content }}</p>
+                    <div class="post-actions">
+                        <!-- buttons here -->
+                    </div>
+                </div>
+                {% empty %}
+                <p>No posts from users you follow yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
