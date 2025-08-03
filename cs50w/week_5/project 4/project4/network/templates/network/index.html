@@ -18,17 +18,19 @@
                         <p><strong>{{ post.user.username }}</strong></p>
                     </a>
                     <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
-                    <p>{{ post.content }}</p>
+                    <p id="post-content-{{ post.id }}">{{ post.content }}</p>
                     <div class="post-actions">
-                        <button class="post-action-btn like" title="Like" id="like-btn" data-post-id="{{ post.id }}">
+                        <button class="post-action-btn like" data-post-id="{{ post.id }}">
                             <i class="fa-regular fa-heart"></i>
-                            <span id="like-count">{{ post.likes.count }}</span>
+                            <span class="like-count">{{ post.likes.count }}</span>
                         </button>
                         <button class="post-action-btn comment" title="Comment"><i
                                 class="fa-regular fa-comment"></i></button>
-                        <button class="post-action-btn edit" title="Edit"><i
+                        <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}"
+                            data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
                                 class="fa-regular fa-pen-to-square"></i></button>
-                        <button class="post-action-btn delete" title="Delete"><i
+                        <button class="post-action-btn delete" title="Delete" data-post-id="{{ post.id }}"
+                            data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
                                 class="fa-regular fa-trash-can"></i></button>
                     </div>
                 </div>

@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 import json
 import random
@@ -168,25 +168,89 @@ def unfollow_user(request, username):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
+@login_required
+@require_http_methods(["POST"])
+def like_post(request, post_id):
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        user = request.user
+        liked = False
+        
+        if user in post.likes.all():
+            post.likes.remove(user)
+        else:
+            post.likes.add(user)
+            liked = True
+            
+        return JsonResponse({
+            "success": True,
+            "like_count": post.likes.count(),
+            "liked": liked
+        })
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=400)
+
 
 @login_required
-@require_POST
-def like_post(request, post_id):
-   # see method is POST
-   if request.method == "POST":
-      # get the post
-      post = Post.objects.get(id=post_id)
-      # get the user
-      user = request.user
-      # check if the user has liked the post
-      if user in post.likes.all():
-         # if the user has liked the post, remove the like
-         post.likes.remove(user)
-         return JsonResponse({"success": True, "like_count": post.likes.count(), "liked": False})
-      else:
-         # if the user has not liked the post, add the like
-         post.likes.add(user)
-         return JsonResponse({"success": True, "like_count": post.likes.count(), "liked": True})
-   else:
-      return JsonResponse({"success": False, "error": "POST request required."}, status=400)
-    
+@require_http_methods(["POST"])
+def edit_post(request, post_id):
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        user = request.user
+        
+        if post.user != user:
+            return JsonResponse({
+                "success": False,
+                "error": "You do not have permission to edit this post."
+            }, status=403)
+        
+        data = json.loads(request.body)
+        new_content = data.get("content")
+        
+        if not new_content:
+            return JsonResponse({
+                "success": False,
+                "error": "Content is required."
+            }, status=400)
+        
+        post.content = new_content
+        post.save()
+        
+        return JsonResponse({
+            "success": True,
+            "content": post.content
+        })
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=400)
+
+        
+
+@login_required
+@require_http_methods(["POST"])
+def delete_post(request, post_id):
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        user = request.user
+        
+        if post.user != user:
+            return JsonResponse({
+                "success": False,
+                "error": "You do not have permission to delete this post."
+            }, status=403)
+        
+        post.delete()
+        
+        return JsonResponse({
+            "success": True
+        })
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=400)

@@ -15,16 +15,16 @@ function getCookie(name) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    // Follow button functionality
     const toggleFollowBtn = document.getElementById("toggle-follow-btn");
 
     if (toggleFollowBtn) {
         toggleFollowBtn.addEventListener("click", function (e) {
             e.preventDefault();
+            console.log('Follow button clicked');
 
             const username = toggleFollowBtn.dataset.username;
             const isFollowing = toggleFollowBtn.dataset.following === "true";
-
-            // Determine the URL and new state based on the current state
             const actionUrl = isFollowing ? `/unfollow/${username}` : `/follow/${username}`;
 
             fetch(actionUrl, {
@@ -44,11 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (result.success) {
                         const newFollowingState = !isFollowing;
                         toggleFollowBtn.innerHTML = newFollowingState ? "Unfollow" : "Follow";
-
-                        // Update the data-following attribute
                         toggleFollowBtn.dataset.following = newFollowingState;
 
-                        // Optional: Change the button's class for styling
                         if (newFollowingState) {
                             toggleFollowBtn.classList.remove("btn-primary");
                             toggleFollowBtn.classList.add("btn-secondary");
@@ -59,55 +56,166 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
                 .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
+                    console.error('Follow error:', error);
                 });
         });
     }
 
-    // like button functionality
-    // get all like buttons
-    // add event listener to each like button
-    // send a POST request to the server to update the like count
-    // update the like count on the client side
-    // change the like button icon to solid if the user liked the post
-    // change the like button icon to regular if the user unliked the post
-    // if user liked the post then change the like button icon to solid red
-    // if user unliked the post then change the like button icon to regular white
-    const likeBtns = document.querySelectorAll(".like");
-    likeBtns.forEach((btn) => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            const postId = btn.dataset.postId;
-            const csrftoken = getCookie("csrftoken");
-            fetch(`/like/${postId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
-                },
-            })
+    // Like button functionality
+    const likeBtns = document.querySelectorAll('.like');
+    console.log('Found like buttons:', likeBtns.length);
+    console.log('First like button data:', likeBtns[0]?.dataset.postId);
 
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok");
-                    }
-                    return response.json();
-                })
-                .then((result) => {
-                    if (result.success) {
-                        const likeCount = document.getElementById("like-count");
-                        likeCount.textContent = result.like_count;
-                        btn.dataset.liked = result.liked;
-                        if (result.liked) {
-                            btn.classList.add("liked");
-                        } else {
-                            btn.classList.remove("liked");
-                        }
-                    }
-                })
-                .catch((error) => {
-                    console.error("There was a problem with the fetch operation:", error);
+    likeBtns.forEach((btn) => {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            console.log('Like button clicked for post:', this.dataset.postId);
+
+            if (this.classList.contains('loading')) return;
+
+            const postId = this.dataset.postId;
+            const icon = this.querySelector('i');
+            const likeCount = this.querySelector('span.like-count');
+            const csrftoken = getCookie('csrftoken');
+
+            console.log('Like button data:', {
+                postId,
+                icon: icon ? 'found' : 'not found',
+                likeCount: likeCount ? 'found' : 'not found',
+                csrftoken: csrftoken ? 'found' : 'not found'
+            });
+
+            if (!csrftoken) {
+                console.error('CSRF token not found');
+                return;
+            }
+
+            this.classList.add('loading');
+
+            try {
+                const response = await fetch(`/like/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({})
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Server response:', result);
+
+                if (result.success) {
+                    if (likeCount) {
+                        likeCount.textContent = result.like_count;
+                        console.log('Updated like count to:', result.like_count);
+                    } else {
+                        console.error('Like count element not found');
+                    }
+
+                    if (result.liked) {
+                        this.classList.add('liked');
+                        icon.classList.replace('fa-regular', 'fa-solid');
+                        console.log('Set liked state');
+                    } else {
+                        this.classList.remove('liked');
+                        icon.classList.replace('fa-solid', 'fa-regular');
+                        console.log('Set unliked state');
+                    }
+                }
+            } catch (error) {
+                console.error('Like error:', error);
+            } finally {
+                this.classList.remove('loading');
+            }
+        });
+    });
+
+    // Edit button functionality
+    // user can edit their own posts
+    const editBtns = document.querySelectorAll('.edit');
+    editBtns.forEach((btn) => {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            console.log('Edit button clicked for post:', this.dataset.postId);
+
+            const postId = this.dataset.postId;
+            const originalContent = this.dataset.content;
+            const userId = this.dataset.userId;
+            const csrftoken = getCookie('csrftoken');
+            const postContent = document.querySelector(`#post-content-${postId}`);
+
+            if (!csrftoken) {
+                console.error('CSRF token not found');
+                return;
+            }
+
+            // Create edit form
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-form';
+            editForm.innerHTML = `
+                <textarea class="edit-textarea" rows="3">${originalContent}</textarea>
+                <div class="edit-buttons">
+                    <button class="btn btn-primary save-edit">Save</button>
+                    <button class="btn btn-secondary cancel-edit">Cancel</button>
+                </div>
+            `;
+
+            // Replace post content with edit form
+            postContent.parentNode.replaceChild(editForm, postContent);
+
+            // Add save/cancel handlers
+            const saveBtn = editForm.querySelector('.save-edit');
+            const cancelBtn = editForm.querySelector('.cancel-edit');
+            const textarea = editForm.querySelector('.edit-textarea');
+
+            saveBtn.addEventListener('click', async () => {
+                const newContent = textarea.value.trim();
+                if (newContent === originalContent) {
+                    console.log('No changes made');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/edit/${postId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
+                        },
+                        body: JSON.stringify({
+                            'content': newContent,
+                            'user_id': userId,
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Server response:', result);
+
+                    if (result.success) {
+                        // Replace edit form with updated content
+                        const updatedContent = document.createElement('p');
+                        updatedContent.id = `post-content-${postId}`;
+                        updatedContent.textContent = result.content;
+                        editForm.parentNode.replaceChild(updatedContent, editForm);
+                    }
+                } catch (error) {
+                    console.error('Edit error:', error);
+                }
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                // Replace edit form with original content
+                postContent.parentNode.replaceChild(postContent, editForm);
+            });
         });
     });
 });
