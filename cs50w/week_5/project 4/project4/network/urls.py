@@ -15,7 +15,7 @@ urlpatterns = [
     path("unfollow/<str:username>", views.unfollow_user, name="unfollow"),
     path("like/<int:post_id>", views.like_post, name="like"),
     path("edit/<int:post_id>", views.edit_post, name="edit"),
-    
-
+    path("comment/<int:post_id>", views.comment, name="comment"),
+    path("api/comments/<int:post_id>", views.get_comments, name="get_comments"),
     
 ]

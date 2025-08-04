@@ -14,6 +14,39 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// Function to load comments for a post
+async function loadComments(postId) {
+    try {
+        const response = await fetch(`/api/comments/${postId}`);
+        if (!response.ok) {
+            throw new Error('Failed to load comments');
+        }
+        const comments = await response.json();
+        const commentsContainer = document.getElementById(`comments-${postId}`);
+        if (!commentsContainer) {
+            console.error('Comments container not found for post:', postId);
+            return;
+        }
+        commentsContainer.innerHTML = '';
+
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment mb-2 p-2 border rounded';
+            commentElement.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${comment.user}</strong>
+                    <small class="text-muted">${new Date(comment.timestamp).toLocaleString()}</small>
+                </div>
+                <div class="comment-content">${comment.content}</div>
+            `;
+            commentsContainer.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        alert('Failed to load comments. Please try again.');
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // Follow button functionality
     const toggleFollowBtn = document.getElementById("toggle-follow-btn");
@@ -27,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const isFollowing = toggleFollowBtn.dataset.following === "true";
             const actionUrl = isFollowing ? `/unfollow/${username}` : `/follow/${username}`;
 
+            // Fetch the follow/unfollow action
             fetch(actionUrl, {
                 method: 'POST',
                 headers: {
@@ -142,12 +176,13 @@ document.addEventListener("DOMContentLoaded", function () {
         // Only show edit button if user owns the post
         const userId = btn.dataset.userId;
         const isLoggedInUser = window.currentUserId && userId === String(window.currentUserId);
-        
+
         if (!isLoggedInUser) {
             btn.style.display = 'none';
             return;
         }
 
+        //when edit button is clicked
         btn.addEventListener('click', async function (e) {
             e.preventDefault();
             console.log('Edit button clicked for post:', this.dataset.postId);
@@ -230,4 +265,119 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     });
+
+    // Comment functionality
+    function setupCommentFunctionality() {
+        // Toggle comment section visibility
+        document.querySelectorAll('.comment').forEach(button => {
+            button.addEventListener('click', async function (e) {
+                e.preventDefault();
+                const postId = this.dataset.postId;
+                const commentSection = document.getElementById(`comment-section-${postId}`);
+
+                if (!commentSection) {
+                    console.error('Comment section not found for post:', postId);
+                    return;
+                }
+
+                // Toggle the comment section
+                if (commentSection.style.display === 'none' || !commentSection.style.display) {
+                    commentSection.style.display = 'block';
+                    // Load comments if not already loaded
+                    if (!commentSection.dataset.loaded) {
+                        await loadComments(postId);
+                        commentSection.dataset.loaded = 'true';
+                    }
+                } else {
+                    commentSection.style.display = 'none';
+                }
+            });
+        });
+
+        // Handle comment submission
+        document.querySelectorAll('.submit-comment').forEach(button => {
+            button.addEventListener('click', async function (e) {
+                e.preventDefault();
+                const formContainer = e.target.closest('.comment-form-container');
+                const postId = formContainer.dataset.postId;
+                if (!postId) {
+                    console.error('Post ID not found in form container');
+                    alert('Error: Post ID not found');
+                    return;
+                }
+
+                const textarea = formContainer.querySelector('.comment-text');
+                const content = textarea.value.trim();
+                const csrftoken = getCookie('csrftoken');
+
+                if (!content) {
+                    alert('Please enter a comment');
+                    return;
+                }
+
+                try {
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('content', content);
+
+                    const response = await fetch(`/comment/${postId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Clear the textarea and hide the form
+                        textarea.value = '';
+                        formContainer.style.display = 'none';
+                        // Instead of reloading, update the UI dynamically
+                        const commentsContainer = document.getElementById(`comments-${postId}`);
+                        const newComment = document.createElement('div');
+                        newComment.className = 'comment mb-2 p-2 border rounded';
+                        newComment.innerHTML = `
+                            <div class="d-flex justify-content-between">
+                                <strong>${result.user}</strong>
+                                <small class="text-muted">${new Date(result.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="comment-content">${result.comment}</div>
+                        `;
+                        commentsContainer.insertBefore(newComment, commentsContainer.firstChild);
+
+                        // Update comment count
+                        const commentCountElement = document.getElementById(`comment-count-${postId}`);
+                        if (commentCountElement) {
+                            const currentCount = parseInt(commentCountElement.textContent) || 0;
+                            commentCountElement.textContent = currentCount + 1;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Comment error:', error);
+                    alert('Error adding comment: ' + error.message);
+                }
+            });
+        });
+
+        // Handle cancel button
+        document.querySelectorAll('.cancel-comment').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const formContainer = e.target.closest('.comment-form-container');
+                const textarea = formContainer.querySelector('.comment-text');
+                textarea.value = '';
+                formContainer.style.display = 'none';
+            });
+        });
+    }
+
+    // Initialize comment functionality
+    setupCommentFunctionality();
 });

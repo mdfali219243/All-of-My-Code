@@ -12,7 +12,8 @@
                 <button type="submit" class="btn btn-primary">Post</button>
             </form>
             <div class="posts-container">
-                {% for post in posts %}
+                {% for post_data in posts_data %}
+                {% with post=post_data.post %}
                 <div class="post">
                     <a href="{% url 'profile' post.user.username %}">
                         <p><strong>{{ post.user.username }}</strong></p>
@@ -24,13 +25,40 @@
                             <i class="fa-regular fa-heart"></i>
                             <span class="like-count">{{ post.likes.count }}</span>
                         </button>
-                        <button class="post-action-btn comment" title="Comment"><i
-                                class="fa-regular fa-comment"></i></button>
+                        <button class="post-action-btn comment" title="Comment" data-post-id="{{ post.id }}">
+                            <i class="fa-regular fa-comment"></i>
+                            <span class="comment-count"
+                                id="comment-count-{{ post.id }}">{{ post_data.comment_count }}</span>
+                        </button>
+                        {% if post.user == user %}
                         <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}"
-                            data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
-                                class="fa-regular fa-pen-to-square"></i></button>
+                            data-content="{{ post.content }}" data-user-id="{{ post.user.id }}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="comment-section" id="comment-section-{{ post.id }}" style="display: none;">
+                        <div class="comments-container mb-3" id="comments-{{ post.id }}">
+                            {% for comment in post_data.comments %}
+                            <div class="comment mb-2 p-2 border rounded">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ comment.user.username }}</strong>
+                                    <small class="text-muted">{{ comment.timestamp|timesince }} ago</small>
+                                </div>
+                                <div class="comment-content">{{ comment.content }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="comment-form-container mb-3" data-post-id="{{ post.id }}">
+                            <textarea class="form-control comment-text mb-2" placeholder="Write a comment..."></textarea>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button class="btn btn-sm btn-secondary cancel-comment">Cancel</button>
+                                <button class="btn btn-sm btn-primary submit-comment">Comment</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                {% endwith %}
                 {% endfor %}
             </div>
         </div>

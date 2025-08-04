@@ -2,21 +2,34 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST, require_http_methods
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
 import random
 
-from .models import User, Post, Follow, Like
+from .models import User, Post, Follow, Like, Comment
 
 def index(request):
     if request.user.is_authenticated:
-        posts = Post.objects.all()
-        return render(request, "network/index.html", {
-            "posts": posts,
-            "profile": request.user,
+        # Get all posts with related user data and prefetch related comments
+        posts = Post.objects.all().order_by('-timestamp').prefetch_related('post_comments')
+        
+        # Prepare posts data with comment counts
+        posts_data = []
+        for post in posts:
+            posts_data.append({
+                'post': post,
+                'comment_count': post.post_comments.count(),
+                'comments': post.post_comments.all().order_by('-timestamp')[:10]  # Get latest 10 comments
             })
+            
+        return render(request, "network/index.html", {
+            "posts_data": posts_data,
+            "profile": request.user,
+        })
     else:
         return render(request, "network/login.html")
 
@@ -229,5 +242,64 @@ def edit_post(request, post_id):
             "error": str(e)
         }, status=400)
 
-def comment(request):
-    pass
+@login_required
+@require_http_methods(["POST"])
+def comment(request, post_id):
+    try:
+        # Handle both form data and JSON data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            comment_text = data.get('content', '').strip()
+        else:
+            comment_text = request.POST.get('content', '').strip()
+            
+        print("Comment text received:", comment_text)  # Debug log
+        
+        if not comment_text:
+            return JsonResponse({
+                "success": False,
+                "error": "Comment cannot be empty"
+            }, status=400)
+
+        post = get_object_or_404(Post, id=post_id)
+        comment = Comment.objects.create(
+            post=post, 
+            user=request.user, 
+            content=comment_text  # Changed from comment= to content=
+        )
+        
+        return JsonResponse({
+            "success": True,
+            "comment": comment.content,
+            "user": comment.user.username,
+            "timestamp": comment.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "comment_id": comment.id
+        })
+        
+    except Exception as e:
+        import traceback
+        print("Error in comment view:")
+        traceback.print_exc()
+        return JsonResponse({
+            "success": False,
+            "error": str(e),
+            "type": type(e).__name__
+        }, status=400)
+
+@csrf_exempt
+def get_comments(request, post_id):
+    if request.method == 'GET':
+        try:
+            comments = Comment.objects.filter(post_id=post_id).order_by('-timestamp')
+            comments_data = []
+            for comment in comments:
+                comments_data.append({
+                    'id': comment.id,
+                    'user': comment.user.username,
+                    'content': comment.content,
+                    'timestamp': comment.timestamp.isoformat()
+                })
+            return JsonResponse(comments_data, safe=False)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
