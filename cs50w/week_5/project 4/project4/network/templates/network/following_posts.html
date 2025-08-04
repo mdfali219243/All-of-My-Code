@@ -4,17 +4,58 @@
 <div class="container">
     <div class="row">
         <div class="col-md-10 mx-auto">
-            <h1 class="header" style="text-align: start;">Following</h1>
+            <h1 class="header">Following</h1>
             <div class="posts-container">
-                {% for post in posts %}
-                <div class="post">
+                {% for post_data in posts_data %}
+                {% with post=post_data.post %}
+                <div class="post" id="post-{{ post.id }}">
                     <p><strong>{{ post.user.username }}</strong></p>
-                    <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
-                    <p>{{ post.content }}</p>
+                    <p class="text-muted timestamp">{{ post.timestamp }}</p>
+                    <p class="post-content" id="post-content-{{ post.id }}">{{ post.content }}</p>
                     <div class="post-actions">
-                        <!-- buttons here -->
+                        <button class="post-action-btn like" title="Like" data-post-id="{{ post.id }}">
+                            <i class="fa-regular fa-heart"></i>
+                            <span class="like-count">{{ post.likes.count }}</span>
+                        </button>
+                        <button class="post-action-btn comment-toggle" title="Comment" data-post-id="{{ post.id }}">
+                            <i class="fa-regular fa-comment"></i>
+                            <span class="comment-count">{{ post_data.comment_count }}</span>
+                        </button>
+                        {% if request.user == post.user %}
+                        <button class="post-action-btn edit" title="Edit" 
+                                data-post-id="{{ post.id }}" 
+                                data-content="{{ post.content }}"
+                                data-user-id="{{ post.user.id }}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Comment Section -->
+                    <div class="comment-section" id="comment-section-{{ post.id }}" style="display: none;">
+                        <div class="comments-list" id="comments-{{ post.id }}">
+                            {% for comment in post_data.comments %}
+                            <div class="comment mb-2 p-2 border rounded">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ comment.user.username }}</strong>
+                                    <small class="text-muted">{{ comment.timestamp|date:"M d, Y H:i" }}</small>
+                                </div>
+                                <div class="comment-content">{{ comment.content }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="comment-form-container mt-3" data-post-id="{{ post.id }}">
+                            <div class="input-group">
+                                <textarea class="form-control comment-text" rows="2" placeholder="Write a comment..."></textarea>
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary submit-comment" type="button">Post</button>
+                                    <button class="btn btn-secondary cancel-comment" type="button">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                {% endwith %}
                 {% empty %}
                 <p>No posts from users you follow yet.</p>
                 {% endfor %}
@@ -22,4 +63,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script>
+        // Pass the current user ID to JavaScript
+        window.currentUserId = "{{ request.user.id }}";
+    </script>
 {% endblock %}

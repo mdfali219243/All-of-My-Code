@@ -1,14 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST, require_http_methods
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods, require_POST
+from django.db.models import Count, Q, F
 import json
 import random
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Post, Follow, Like, Comment
 
@@ -87,11 +86,28 @@ def profile(request, username):
 @login_required
 def following(request):
     # Get all users the current user follows
-    following_users = User.objects.filter(followers__follower=request.user)
-    # Get posts from those users
-    posts = Post.objects.filter(user__in=following_users)
+    # Using followings (related_name) to get the users that the current user follows
+    following_relationships = Follow.objects.filter(follower=request.user)
+    following_users = [rel.following for rel in following_relationships]
+    
+    print(f"Users you follow: {[user.username for user in following_users]}")
+    
+    # Get posts from those users with related user data and prefetch related comments
+    posts = Post.objects.filter(user__in=following_users).order_by('-timestamp').prefetch_related('post_comments')
+    print(f"Number of posts from followed users: {posts.count()}")
+    
+    # Prepare posts data with comment counts
+    posts_data = []
+    for post in posts:
+        posts_data.append({
+            'post': post,
+            'comment_count': post.post_comments.count(),
+            'comments': post.post_comments.all().order_by('-timestamp')[:10]  # Get latest 10 comments
+        })
+    
+    print(f"Prepared {len(posts_data)} posts for the template")
     return render(request, "network/following_posts.html", {
-        "posts": posts,
+        "posts_data": posts_data,
         "profile": request.user,
     })
 

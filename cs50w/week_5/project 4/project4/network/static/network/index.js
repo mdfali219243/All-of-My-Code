@@ -266,13 +266,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // Initialize comment functionality
+    setupCommentFunctionality();
+    
     // Comment functionality
     function setupCommentFunctionality() {
+        console.log('Setting up comment functionality...');
         // Toggle comment section visibility
-        document.querySelectorAll('.comment').forEach(button => {
+        const commentButtons = document.querySelectorAll('.comment-toggle');
+        console.log('Found comment toggle buttons:', commentButtons.length);
+        
+        commentButtons.forEach((button, index) => {
+            console.log(`Setting up comment button ${index + 1}:`, button);
             button.addEventListener('click', async function (e) {
+                console.log('Comment button clicked', this);
                 e.preventDefault();
                 const postId = this.dataset.postId;
+                console.log('Post ID from button:', postId);
                 const commentSection = document.getElementById(`comment-section-${postId}`);
 
                 if (!commentSection) {
@@ -368,7 +378,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Handle cancel button
         document.querySelectorAll('.cancel-comment').forEach(button => {
-            button.addEventListener('click', function (e) {
+            button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const formContainer = e.target.closest('.comment-form-container');
                 const textarea = formContainer.querySelector('.comment-text');
@@ -377,7 +387,4 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
-
-    // Initialize comment functionality
-    setupCommentFunctionality();
 });
