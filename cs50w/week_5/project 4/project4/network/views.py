@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_POST
 from django.db.models import Count, Q, F
+from django.core.paginator import Paginator
 import json
 import random
 from django.views.decorators.csrf import csrf_exempt
@@ -16,18 +17,24 @@ def index(request):
         # Get all posts with related user data and prefetch related comments
         posts = Post.objects.all().order_by('-timestamp').prefetch_related('post_comments')
         
-        # Prepare posts data with comment counts
+        # Pagination - 10 posts per page
+        paginator = Paginator(posts, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Prepare posts data with comment counts for the current page
         posts_data = []
-        for post in posts:
+        for post in page_obj:
             posts_data.append({
                 'post': post,
                 'comment_count': post.post_comments.count(),
-                'comments': post.post_comments.all().order_by('-timestamp')[:10]  # Get latest 10 comments
+                'comments': post.post_comments.all().order_by('-timestamp')[:10]
             })
             
         return render(request, "network/index.html", {
             "posts_data": posts_data,
             "profile": request.user,
+            "page_obj": page_obj
         })
     else:
         return render(request, "network/login.html")
@@ -57,26 +64,30 @@ def profile(request, username):
 
     if request.user.is_authenticated:
         # Check if the logged-in user is following this profile
-        # This assumes your User model has a ManyToMany field named 'followers'
-        # that correctly links a user to those who follow them.
         is_following = user.followers.filter(pk=request.user.pk).exists()
 
         followers_count = user.followers.count()
         following_count = user.followings.count()
-        posts = Post.objects.filter(user=user)
+        
+        # Get user's posts with pagination
+        posts = Post.objects.filter(user=user).order_by('-timestamp')
+        paginator = Paginator(posts, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
         
         # Emoji setup
         EMOJIS = ["😀", "😎", "🦄", "🐱", "🌟", "🍕", "🚀", "🐶", "🎉", "👾", "🐼", "🦊", "🐸", "🦁", "🐵", "🐧", "🐢", "🐙", "🦋", "🐞", "🦕"]
         profile_emoji = random.choice(EMOJIS)
         
         return render(request, "network/profile.html", {
-            "posts": posts,
+            "posts": page_obj,
             "profile": user,
             "followers_count": followers_count,
             "following_count": following_count,
             "posts_count": posts.count(),
             "profile_emoji": profile_emoji,
-            "is_following": is_following,  # <-- The new variable
+            "is_following": is_following,
+            "page_obj": page_obj
         })
     else:
         # If the user is not authenticated, redirect them to the login page
@@ -86,29 +97,30 @@ def profile(request, username):
 @login_required
 def following(request):
     # Get all users the current user follows
-    # Using followings (related_name) to get the users that the current user follows
     following_relationships = Follow.objects.filter(follower=request.user)
     following_users = [rel.following for rel in following_relationships]
     
-    print(f"Users you follow: {[user.username for user in following_users]}")
-    
     # Get posts from those users with related user data and prefetch related comments
     posts = Post.objects.filter(user__in=following_users).order_by('-timestamp').prefetch_related('post_comments')
-    print(f"Number of posts from followed users: {posts.count()}")
     
-    # Prepare posts data with comment counts
+    # Pagination - 10 posts per page
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Prepare posts data with comment counts for the current page
     posts_data = []
-    for post in posts:
+    for post in page_obj:
         posts_data.append({
             'post': post,
             'comment_count': post.post_comments.count(),
-            'comments': post.post_comments.all().order_by('-timestamp')[:10]  # Get latest 10 comments
+            'comments': post.post_comments.all().order_by('-timestamp')[:10]
         })
     
-    print(f"Prepared {len(posts_data)} posts for the template")
     return render(request, "network/following_posts.html", {
         "posts_data": posts_data,
         "profile": request.user,
+        "page_obj": page_obj
     })
 
 def login_view(request):

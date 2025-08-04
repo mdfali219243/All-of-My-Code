@@ -36,22 +36,34 @@
                 </div>
             </div>
             <p>Posts:</p>
-            {% for post in posts %}
-            <div class="post">
-                <p><strong>{{ post.user.username }}</strong></p>
-                <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
-                <p>{{ post.content }}</p>
-                <div class="post-actions">
-                    <button class="post-action-btn like" title="Like" data-post-id="{{ post.id }}"><i
-                            class="fa-regular fa-heart"></i></button>
-                    <button class="post-action-btn comment" title="Comment"><i
-                            class="fa-regular fa-comment"></i></button>
-                    <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}"
-                        data-content="{{ post.content }}" data-user-id="{{ post.user.id }}"><i
-                            class="fa-regular fa-pen-to-square"></i></button>
+            <div class="posts-container">
+                {% for post in posts %}
+                <div class="post">
+                    <p><strong>{{ post.user.username }}</strong></p>
+                    <p class="text-muted" style="font-size:0.9em;">{{ post.timestamp }}</p>
+                    <p>{{ post.content }}</p>
+                    <div class="post-actions">
+                        <button class="post-action-btn like" title="Like" data-post-id="{{ post.id }}">
+                            <i class="fa-regular fa-heart"></i>
+                            <span class="like-count">{{ post.likes.count }}</span>
+                        </button>
+                        <button class="post-action-btn comment" title="Comment" data-post-id="{{ post.id }}">
+                            <i class="fa-regular fa-comment"></i>
+                            <span class="comment-count">{{ post.post_comments.count }}</span>
+                        </button>
+                        {% if post.user == user %}
+                        <button class="post-action-btn edit" title="Edit" data-post-id="{{ post.id }}"
+                            data-content="{{ post.content }}" data-user-id="{{ post.user.id }}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% include 'network/includes/pagination.html' %}
             </div>
-            {% endfor %}
         </div>
     </div>
 </div>

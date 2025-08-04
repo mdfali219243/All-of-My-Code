@@ -59,6 +59,11 @@
                 {% empty %}
                 <p>No posts from users you follow yet.</p>
                 {% endfor %}
+                
+                <!-- Pagination -->
+                {% if page_obj %}
+                    {% include 'network/includes/pagination.html' %}
+                {% endif %}
             </div>
         </div>
     </div>
