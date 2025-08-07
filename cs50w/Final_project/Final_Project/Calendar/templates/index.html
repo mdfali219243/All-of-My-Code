@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div class="container">
+    <h1>Welcome to Calendar App</h1>
+    
+    {% if user.is_authenticated %}
+        <p>Hello, {{ user.username }}! You are now logged in.</p>
+        <!-- Add your calendar content here -->
+    {% else %}
+        <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'register' %}">register</a> to start using the calendar.</p>
+    {% endif %}
+    
+    <p>Calendar is a web application that allows users to create and manage events.</p>
+</div>
+{% endblock %}
