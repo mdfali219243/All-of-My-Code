@@ -1,17 +1,48 @@
 {% extends 'Calendar/layout.html' %}
+{% load static %}
 
 {% block body %}
-<div class="container">
-    <h1>Welcome to Calendar App</h1>
+<div class="main-view" class="flex flex-col flex-grow p-4 bg-white rounded-lg shadow-md">
 
-    {% if user.is_authenticated %}
-    <p>Hello, {{ user.username }}! You are now logged in.</p>
-    <!-- Add your calendar content here -->
-    {% else %}
-    <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'register' %}">register</a> to start using the
-        calendar.</p>
-    {% endif %}
+    <!-- month calendar view-->
+    <div id="monthView" class="month-view">
+        <div class="add_event"></div>
+        <div
+            class="daysOfWeekHeader grid grid-cols-7 text-center font-medium text-gray-600 border-b border-gray-200 pb-2 mb-2">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+        <!-- Month calendar grid will be populated here -->
+        <div id="monthGrid" class="month-grid">
+            <!-- Month dates will be populated by JavaScript -->
+        </div>
+    </div>
 
-    <p>Calendar is a web application that allows users to create and manage events.</p>
+    <!-- week calendar view-->
+    <div id="weekView" class="week-view"></div>
+
+    <!-- day calendar view-->
+    <div id="dayView" class="day-view"></div>
+
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+
+        function renderMonthView(date) {
+            // clear month grid
+            const monthGrid = document.getElementById('monthGrid');
+            if (monthGrid) {
+                monthGrid.innerHTML = '';
+            }
+
+        }
+    })
+
+</script>
 {% endblock %}

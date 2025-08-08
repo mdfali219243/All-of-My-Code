@@ -1,11 +1,153 @@
-.form {
+.card {
     margin: 20px;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+
+.form {
+    compose: card;
 }
 
 .text-start {
     margin-left: 20px;
     text-align: start;
+}
+
+.custom-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.custom-nav>.left-menu,
+.custom-nav>.center-menu,
+.custom-nav>.right-menu {
+    display: flex;
+    align-items: center;
+}
+
+.custom-nav>.center-menu {
+    justify-content: center;
+    flex: 1;
+}
+
+.custom-nav>.left-menu {
+    justify-content: flex-start;
+}
+
+.custom-nav>.right-menu {
+    justify-content: flex-end;
+}
+
+.left-menu {
+    background: #fdd;
+}
+
+.center-menu {
+    background: #dfd;
+}
+
+.right-menu {
+    background: #ddf;
+}
+
+.navbar {
+    width: 100%;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.navbar {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.custom-nav {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0px;
+}
+
+.daysOfWeekHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-top: 20px;
+}
+
+.daysOfWeekHeader>div {
+    border: 1px solid red;
+    padding: 0.5rem;
+}
+
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.navbar {
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
+.main-view {
+    width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.daysOfWeekHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin: 20px 0 0 0;
+    padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.navbar>.container,
+.navbar>.container-fluid {
+    padding: 0 20px;
+    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
+}
+
+.navbar-expand-lg {
+    padding: 0 !important;
+}
+
+.custom-nav {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+.body {
+    padding: 0 20px;
 }
