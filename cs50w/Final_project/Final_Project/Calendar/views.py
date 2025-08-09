@@ -9,7 +9,10 @@ from .models import User
 
 # Create your views here.
 def index(request):
-    return render(request, "Calendar/index.html")
+    if request.user.is_authenticated:
+        return render(request, "Calendar/index.html")
+    else:
+        return render(request, "Calendar/landing.html")
 
 def login_view(request):
     if request.method == "POST":
