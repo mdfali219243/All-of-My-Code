@@ -296,3 +296,7 @@ body {
 .register {
     margin: 20px;
 }
+
+.today-button {
+    margin-right: 20px;
+}
