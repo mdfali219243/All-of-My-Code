@@ -86,12 +86,78 @@ document.addEventListener('DOMContentLoaded', function () {
         // create current month days
         for (let i = 1; i <= daysInMonth; i++) {
             const dayDiv = document.createElement('div');
-            dayDiv.classList.add('calendar-day', 'text-gray-700', 'py-2');
-            dayDiv.textContent = prevMonthLastDay - i;
-            dayDiv.classList.add('non-current-month');
+            dayDiv.classList.add('calendar-day', 'month-cell', 'py-2', 'relative');
+            dayDiv.textContent = i;
+            const fullDate = new Date(year, month, i);
+            dayDiv.dataset.date = formatDateToISO(fullDate);
+
+
+            //highlight today day
+            const today = new Date();
+            if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayDiv.innerHTML = `<span class="today-highlight_for_month_week">${i}</span>`;
+                dayDiv.classList.add('today-container');
+            } else {
+                dayDiv.classList.add('text-gray-800');
+            }
+
+            // render event for month view
+            const cellDateStr = formatDateToISO(fullDate);
+            const eventsForDay = calendarEvents.filter(event => event.date === cellDateStr);
+            if (eventsForDay.length > 0) {
+                const eventsList = document.createElement('div');
+                eventsList.className = 'month-events-list';
+                eventsForDay.forEach(ev => {
+                    const evDiv = document.createElement('div');
+                    evDiv.className = 'month-event px-1 py-0.5 rounded mb-1 text-xs truncate';
+                    evDiv.style.cursor = 'pointer';
+                    evDiv.style.backgroundColor = ev.color ? `${ev.color}20` : '#e3f2fd';
+                    evDiv.style.color = ev.color || '#0d47a1';
+                    evDiv.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        openEditEventModal(ev.id);
+                    });
+                    if (ev.allDay) {
+                        evDiv.textContent = `• ${ev.title} (All Day)`;
+                    } else if (ev.startTime && ev.endTime) {
+                        evDiv.textContent = `• ${ev.title} (${ev.startTime} - ${ev.endTime})`;
+                    } else if (ev.startTime) {
+                        evDiv.textContent = `• ${ev.title} (${ev.startTime})`;
+                    } else {
+                        evDiv.textContent = `• ${ev.title}`;
+                    }
+                    eventsList.appendChild(evDiv);
+                });
+                dayDiv.appendChild(eventsList);
+            }
             if (monthGrid) {
                 monthGrid.appendChild(dayDiv);
             }
+
+        }
+
+        // creating remaining days of the month
+        const totalDaysDisplayed = startDayIndex + daysInMonth;
+        const remainingDays = 42 - totalDaysDisplayed;
+        for (let i = 1; i <= remainingDays; i++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.classList.add('calendar-day', 'text-gray-400', 'py-2');
+            dayDiv.textContent = i;
+            dayDiv.classList.add('non-current-month');
+            if (monthGrid) monthGrid.appendChild(dayDiv);
+        }
+        // adding the click event to the days of the month
+        if (monthGrid) {
+            monthGrid.querySelectorAll('.calendar-day:not(.non-current-month)').forEach(dayDiv => {
+                dayDiv.addEventListener('click', (e) => {
+                    // Only open add modal if not clicking on an event
+                    if (e.target.closest('.month-event')) return;
+                    openAddEventModal(dayDiv.dataset.date);
+                });
+            });
+
+            // Enable drag selection for month view
+            enableDragSelection(monthGrid, 'month');
         }
 
     }

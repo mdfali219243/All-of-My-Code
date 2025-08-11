@@ -300,3 +300,57 @@ body {
 .today-button {
     margin-right: 20px;
 }
+
+/* Calendar functions */
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0px;
+}
+
+.calendar-day {
+    min-height: 150px;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    padding-top: 8px;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+}
+
+.month-grid .calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.month-grid .calendar-day:nth-last-child(-n + 7) {
+    border-bottom: none;
+}
+
+.calendar-day.text-gray-400 {
+    background-color: #f9f9f9;
+    cursor: default;
+}
+
+.today-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    color: #3c4043;
+}
+
+.today-highlight_for_month_week {
+    background-color: #1a73e8;
+    color: #ffffff !important;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto;
+    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
+}
