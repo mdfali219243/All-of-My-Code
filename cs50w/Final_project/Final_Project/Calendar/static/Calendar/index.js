@@ -1,3 +1,4 @@
+let calendarEvents = [];
 document.addEventListener('DOMContentLoaded', function () {
     // Feature Menu Dropdown function
     var btn = document.getElementById('featureMenuBtn');
@@ -37,11 +38,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // month view function
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.currentUserId) {
-            renderMonthView(new Date());
-        }
-    })
+    if (window.currentUserId) {
+        renderMonthView(new Date());
+    }
+
+    function openAddEventModal(date) {
+        console.log(`TODO: Implement openAddEventModal for ${date}`);
+    }
+
+    function openEditEventModal(eventId) {
+        console.log(`TODO: Implement openEditEventModal for ${eventId}`);
+    }
+
+    function enableDragSelection(element, view) {
+        console.log(`TODO: Implement enableDragSelection for ${view} view`);
+    }
+
+    function formatDateToISO(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
     function renderMonthView(date) {
         // Show month view, hide week view

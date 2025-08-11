@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block body %}
-<div class="main-view" class="flex flex-col flex-grow p-4 bg-white rounded-lg shadow-md">
+<div class="main-view flex flex-col flex-grow p-4 bg-white rounded-lg shadow-md">
 
     <!-- month calendar view-->
     <div id="monthView" class="month-view">
@@ -18,7 +18,7 @@
             <div>Sat</div>
         </div>
         <!-- Month calendar grid will be populated here -->
-        <div id="monthGrid" class="month-grid">
+        <div id="monthGrid" class="month-grid grid grid-cols-7">
             <!-- Month dates will be populated by JavaScript -->
         </div>
     </div>
@@ -28,6 +28,11 @@
 
     <!-- day calendar view-->
     <div id="dayView" class="day-view"></div>
+
+    <!-- year calendar view-->
+    <div id="yearView" class="year-view">
+        <div id="yearGrid" class="year-grid"></div>
+    </div>
 
 </div>
 
