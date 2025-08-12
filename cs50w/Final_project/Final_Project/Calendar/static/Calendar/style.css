@@ -354,3 +354,102 @@ body {
     margin: 0 auto;
     box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
 }
+
+.week-grid {
+    display: grid;
+    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.week-grid-header {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    text-align: center;
+    font-weight: 500;
+    color: #5f6368;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    padding: 8px 0;
+}
+
+.week-grid-header>div {
+    padding: 4px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.week-grid-header>div:last-child {
+    border-right: none;
+}
+
+.week-all-day-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #fff;
+    min-height: 40px;
+}
+
+.time-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 8px;
+    font-size: 0.75rem;
+    color: #5f6368;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+}
+
+.all-day-events-container {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    min-height: 100%;
+}
+
+.all-day-events-container>div {
+    border-right: 1px solid #e0e0e0;
+    padding: 4px;
+    min-height: 32px;
+}
+
+.all-day-events-container>div:last-child {
+    border-right: none;
+}
+
+
+#weekTimeGrid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-auto-rows: 3rem;
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.time-slot {
+    height: 48px;
+    border-bottom: 1px solid #f1f3f4;
+    position: relative;
+}
+
+.time-slot-label {
+    position: absolute;
+    top: -8px;
+    right: 4px;
+    font-size: 0.75rem;
+    color: #5f6368;
+}
+
+#weekView .daysOfWeekHeader {
+    grid-template-columns: 3.5rem repeat(7, 1fr);
+}

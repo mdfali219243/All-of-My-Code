@@ -24,7 +24,36 @@
     </div>
 
     <!-- week calendar view-->
-    <div id="weekView" class="week-view"></div>
+    <div id="weekView" class="week-view">
+
+        <div class="week-date-range-container mb-2">
+            <div id="weekDateRange" class="font-semibold text-lg text-center"></div>
+        </div>
+
+        <div
+            class="daysOfWeekHeader grid grid-cols-7 text-center font-medium text-gray-600 border-b border-gray-200 pb-2 mb-2">
+            <div></div>
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+
+        <div id="weekAllDayRow" class="week-all-day-row">
+            <div class="time-label">All-day</div>
+            <div id="weekAllDayEvents" class="all-day-events-container">
+                <!-- All-day events will be populated by JavaScript -->
+            </div>
+        </div>
+        <!-- Time grid -->
+        <div id="weekTimeGrid" class="week-time-grid">
+            <!-- Time grid will be populated by JavaScript -->
+        </div>
+
+    </div>
 
     <!-- day calendar view-->
     <div id="dayView" class="day-view"></div>
