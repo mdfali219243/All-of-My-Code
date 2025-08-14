@@ -48,8 +48,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
-
+    // Re-attach Day view button handler
+    if (dayViewBtn) {
+        dayViewBtn.addEventListener('click', function () {
+            renderDayView(currentDate);
+        });
+    }
 
     // month view function
     if (window.currentUserId) {
@@ -496,8 +500,287 @@ document.addEventListener('DOMContentLoaded', function () {
         return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
     }
 
-
     //day view function
+    function renderDayView(date) {
+        console.log('renderDayView called with date:', date);
+
+        const dayView = document.getElementById('dayView');
+        const weekView = document.getElementById('weekView');
+        const monthView = document.getElementById('monthView');
+        const currentDisplay = document.getElementById('currentDisplay');
+        const dayTimeGrid = document.getElementById('dayTimeGrid');
+
+        if (!dayView) {
+            console.error('dayView container not found');
+            return;
+        }
+        if (!dayTimeGrid) {
+            console.error('dayTimeGrid container not found');
+            return;
+        }
+
+        // Clear existing grid
+        dayTimeGrid.innerHTML = '';
+
+        // Ensure grid has the right classes for selection
+        dayTimeGrid.classList.add('time-grid');
+        dayTimeGrid.style.position = 'relative';
+
+        // Attach drag-to-select listeners
+        enableDragSelection(dayTimeGrid, 'day');
+        const dayViewContent = dayView.querySelector('.day-view-content');
+
+        if (!dayView) {
+            console.error('dayView container not found');
+            return;
+        }
+        if (!dayTimeGrid) {
+            console.error('dayTimeGrid container not found');
+            return;
+        }
+
+        // Hide other views, show day view
+        dayView.style.display = 'flex';
+        if (weekView) weekView.style.display = 'none';
+        if (monthView) monthView.style.display = 'none';
+        if (yearGrid) yearGrid.style.display = 'none';
+
+        // Set the main header (if needed)
+        if (currentDisplay) {
+            currentDisplay.textContent = new Intl.DateTimeFormat('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            }).format(date);
+        }
+
+        // Update or create day view header
+        let dayViewHeader = dayView.querySelector('.day-view-header');
+        if (!dayViewHeader) {
+            dayViewHeader = document.createElement('div');
+            dayViewHeader.classList.add('day-view-header');
+            dayView.insertBefore(dayViewHeader, dayViewContent);
+        } else {
+            dayViewHeader.innerHTML = '';
+        }
+
+        // Highlight header if today
+        const today = new Date();
+        const isToday = date.getFullYear() === today.getFullYear() &&
+            date.getMonth() === today.getMonth() &&
+            date.getDate() === today.getDate();
+
+        if (isToday) {
+            dayViewHeader.classList.add('day-header-today');
+        } else {
+            dayViewHeader.classList.remove('day-header-today');
+        }
+
+        // Set the header content
+        dayViewHeader.textContent = date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        // Clear the time grid
+        dayTimeGrid.innerHTML = '';
+        console.log('dayTimeGrid cleared, ready to populate');
+
+        // Create a container for the time grid
+        const timeGridContainer = document.createElement('div');
+        timeGridContainer.className = 'day-time-grid-container';
+        dayTimeGrid.appendChild(timeGridContainer);
+
+        // Clear all-day events row
+        const dayAllDayEvents = document.getElementById('dayAllDayEvents');
+        if (dayAllDayEvents) {
+            dayAllDayEvents.innerHTML = '';
+
+            // Find all-day events for this day
+            const allDayEvents = calendarEvents.filter(ev =>
+                ev.date === formatDateToISO(date) && ev.allDay
+            );
+
+            // Add each all-day event
+            allDayEvents.forEach(ev => {
+                const isDarkMode = isDarkModeEnabled();
+                const evDiv = document.createElement('div');
+                evDiv.className = 'all-day-event px-3 py-2 rounded text-sm mb-1 inline-block mr-2';
+
+                // Only set inline colors when event has a custom color.
+                // Otherwise, let CSS control light/dark defaults using 'event-default'.
+                if (ev.color) {
+                    if (isDarkMode) {
+                        evDiv.style.backgroundColor = `${ev.color}80`;
+                        evDiv.style.color = '#e8eaed';
+                        evDiv.style.borderLeft = `3px solid ${ev.color}`;
+                    } else {
+                        evDiv.style.backgroundColor = `${ev.color}30`;
+                        evDiv.style.color = '#1a202c';
+                        evDiv.style.borderLeft = `3px solid ${ev.color}`;
+                    }
+                } else {
+                    evDiv.classList.add('event-default');
+                }
+
+                evDiv.style.cursor = 'pointer';
+                evDiv.textContent = ev.title;
+
+                evDiv.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    openViewEventModal(ev.id);
+                });
+
+                dayAllDayEvents.appendChild(evDiv);
+            });
+
+            // Add "+ Add" button if no all-day events
+            if (allDayEvents.length === 0) {
+                const addButton = document.createElement('button');
+                addButton.className = 'text-xs hover:text-blue-500';
+                addButton.innerHTML = '+ Add';
+                addButton.addEventListener('click', function () {
+                    openAddEventModal(formatDateToISO(date), 0, true);
+                });
+                dayAllDayEvents.appendChild(addButton);
+            }
+        }
+
+        // Define time slots (e.g., 1:00 to 24:00)
+        const startHour = 1;
+        const endHour = 24;
+        const hours = [];
+        for (let h = startHour; h <= endHour; h++) {
+            hours.push(h);
+        }
+
+        // Filter timed events for the current day once
+        const timedEvents = calendarEvents.filter(ev => ev.date === formatDateToISO(date) && !ev.allDay);
+
+        // Create one row per hour; draw half-hour guideline via CSS
+        for (let h = 0; h < 24; h++) {
+            const row = document.createElement('div');
+            row.className = 'day-time-row';
+
+            // Time label cell
+            const timeLabelCell = document.createElement('div');
+            timeLabelCell.className = 'time-label-cell';
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'time-label';
+            let displayHour = h % 12 || 12;
+            const ampm = h < 12 ? 'AM' : 'PM';
+            if (h === 0) displayHour = 12; // Midnight
+            timeLabel.textContent = `${displayHour} ${ampm}`;
+            timeLabelCell.appendChild(timeLabel);
+            row.appendChild(timeLabelCell);
+
+            // Day cell for the hour
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day-cell hour-start';
+            dayCell.dataset.date = formatDateToISO(date);
+            dayCell.dataset.hour = h;
+            dayCell.dataset.minute = 0;
+
+            dayCell.addEventListener('click', (e) => {
+                if (isDragging || dayTimeGrid.classList.contains('dragging') || e.target.closest('.time-event')) return;
+                const rect = dayCell.getBoundingClientRect();
+                const clickY = e.clientY - rect.top;
+                const minute = clickY < rect.height / 2 ? 0 : 30;
+                const time = `${String(h).padStart(2, '0')}:${minute === 0 ? '00' : '30'}`;
+                openAddEventModal(formatDateToISO(date), h, false, null, null, time);
+            });
+
+            row.appendChild(dayCell);
+            timeGridContainer.appendChild(row);
+        }
+
+        // Create a separate container for timed events, positioned over the grid
+        const timedEventsContainer = document.createElement('div');
+        timedEventsContainer.className = 'timed-events-container';
+        timedEventsContainer.style.position = 'absolute';
+        timedEventsContainer.style.top = '0';
+        timedEventsContainer.style.left = '64px'; // Width of the time label (matches CSS grid first column)
+        timedEventsContainer.style.right = '0';
+        timedEventsContainer.style.bottom = '0';
+        timedEventsContainer.style.pointerEvents = 'none'; // Allow clicks to pass through to the grid
+        timeGridContainer.appendChild(timedEventsContainer);
+
+        // Function to find overlapping events
+        const getOverlappingEvents = (events) => {
+            const sortedEvents = events.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+            const groups = [];
+            let lastEventEnd = null;
+
+            sortedEvents.forEach(event => {
+                const eventStart = new Date(`${event.date}T${event.startTime || '00:00:00'}`);
+                if (lastEventEnd && eventStart < lastEventEnd) {
+                    groups[groups.length - 1].push(event);
+                } else {
+                    groups.push([event]);
+                }
+                const eventEnd = new Date(`${event.date}T${event.endTime || '23:59:59'}`);
+                if (!lastEventEnd || eventEnd > lastEventEnd) {
+                    lastEventEnd = eventEnd;
+                }
+            });
+            return groups;
+        };
+
+        const eventGroups = getOverlappingEvents(timedEvents);
+
+        // Render timed events in the overlay container
+        eventGroups.forEach(group => {
+            const groupWidth = 100 / group.length;
+            group.forEach((ev, index) => {
+                const [startH, startM] = ev.startTime ? ev.startTime.split(':').map(Number) : [0, 0];
+                const [endH, endM] = ev.endTime ? ev.endTime.split(':').map(Number) : [startH, 30];
+
+                const totalStartMinutes = startH * 60 + startM;
+                const totalEndMinutes = endH * 60 + endM;
+                const durationMinutes = totalEndMinutes - totalStartMinutes;
+
+                const evDiv = document.createElement('div');
+                const isDarkMode = isDarkModeEnabled();
+                evDiv.className = 'time-event';
+                evDiv.textContent = ev.title;
+                // Only set inline background if event has a custom color; otherwise rely on CSS per theme using 'event-default'
+                if (ev.color) {
+                    evDiv.style.backgroundColor = isDarkMode ? `${ev.color}80` : ev.color;
+                    evDiv.style.color = isDarkMode ? '#e8eaed' : 'white';
+                } else {
+                    evDiv.classList.add('event-default');
+                }
+                evDiv.style.position = 'absolute';
+                evDiv.style.left = `${index * groupWidth}%`;
+                evDiv.style.width = `${groupWidth}%`;
+                evDiv.style.top = `${(totalStartMinutes / (24 * 60)) * 100}%`;
+                evDiv.style.height = `${(durationMinutes / (24 * 60)) * 100}%`;
+                evDiv.style.borderLeft = `3px solid ${ev.color ? darkenColor(ev.color, 20) : '#1a237e'}`;
+                evDiv.style.padding = '2px 5px';
+                evDiv.style.fontSize = '12px';
+                evDiv.style.borderRadius = '4px';
+                evDiv.style.pointerEvents = 'auto'; // Make individual events clickable
+
+                evDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openViewEventModal(ev.id);
+                });
+
+                timedEventsContainer.appendChild(evDiv);
+            });
+        });
+
+
+
+        console.log('dayTimeGrid children after render:', dayTimeGrid.children.length);
+        console.log('dayTimeGrid:', dayTimeGrid, 'children:', dayTimeGrid.children.length, 'dayView.style.display:', dayView.style.display, 'computed display:', getComputedStyle(dayView).display);
+    }
+
+
 
     //year view function
+
 });

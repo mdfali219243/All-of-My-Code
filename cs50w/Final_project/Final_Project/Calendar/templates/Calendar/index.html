@@ -56,7 +56,19 @@
     </div>
 
     <!-- day calendar view-->
-    <div id="dayView" class="day-view"></div>
+    <div id="dayView" class="day-view" style="display: none;">
+        <!-- date header will be populated by JavaScript -->
+        <div class="day-view-content">
+            <!-- All-day row-->
+            <div id="dayAllDayRow" class="day-all-day-row">
+                <div class="time-label">All-day</div>
+                <div id="dayAllDayEvents" class="all-day-events-container">
+                    <!-- All-day events will be populated by JavaScript -->
+                </div>
+            </div>
+            <div id="dayTimeGrid" class="day-time-grid"></div>
+        </div>
+    </div>
 
     <!-- year calendar view-->
     <div id="yearView" class="year-view">
