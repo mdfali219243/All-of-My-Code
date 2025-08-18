@@ -79,10 +79,10 @@
                 month
             </button>
             <ul class="dropdown-menu">
-                <li><button class="weekViewBtn" type="button">Week</button></li>
-                <li><button class="dayViewBtn" type="button">Day</button></li>
-                <li><button class="monthViewBtn" type="button">Month</button></li>
-                <li><button class="yearViewBtn" type="button">Year</button></li>
+                <li><button class="dropdown-item weekViewBtn" type="button">Week</button></li>
+                <li><button class="dropdown-item dayViewBtn" type="button">Day</button></li>
+                <li><button class="dropdown-item monthViewBtn" type="button">Month</button></li>
+                <li><button class="dropdown-item yearViewBtn" type="button">Year</button></li>
             </ul>
         </div>
     </div>
@@ -91,6 +91,9 @@
 
 <!-- tasks and logout -->
 <div class="right-menu">
+    <div class="nav-item">
+        <a class="nav-link" href="{% url 'settings' %}">Settings</a>
+    </div>
     <div class="nav-item">
         <a class="nav-link" href="{% url 'tasks' %}">Tasks</a>
     </div>
