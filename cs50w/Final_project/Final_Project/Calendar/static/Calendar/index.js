@@ -631,7 +631,14 @@ function renderYearView(date) {
         for (let d = 1; d <= daysInMonth; d++) {
             const dayCell = document.createElement('div');
             dayCell.textContent = d;
-            dayCell.className = 'text-center';
+            dayCell.className = 'mini-day text-center';
+            
+            // Check if this day is today and add the 'today' class if so
+            const today = new Date();
+            if (d === today.getDate() && m === today.getMonth() && year === today.getFullYear()) {
+                dayCell.classList.add('today');
+            }
+            
             miniGrid.appendChild(dayCell);
         }
 

@@ -13,4 +13,7 @@ urlpatterns = [
     # Simple Events API
     path("api/events", views.events_collection, name="events_collection"),
     path("api/events/<int:event_id>", views.events_detail, name="events_detail"),
+    # Tasks API
+    path("api/tasks", views.tasks_collection, name="tasks_collection"),
+    path("api/tasks/<int:task_id>", views.tasks_detail, name="tasks_detail"),
 ]

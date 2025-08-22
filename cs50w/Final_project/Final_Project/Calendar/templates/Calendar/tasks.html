@@ -1,5 +1,183 @@
 {% extends "Calendar/layout.html" %}
 
 {% block body %}
-<button class="btn btn-primary" onclick="window.location.href = '/';"> Back to Home Page </button>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Task Checklist</h2>
+        <button class="btn btn-primary" onclick="window.location.href = '/';">Back to Calendar</button>
+    </div>
+    
+    <!-- Tasks List -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Your Checklist</h5>
+        </div>
+        <div class="card-body">
+            <ul id="tasksList" class="list-group">
+                <!-- Tasks will be loaded here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Add Task Form (Circular Chatbot-like) -->
+    <div class="chatbot-form-container">
+        <form id="addTaskForm">
+            <div class="input-group">
+                <input type="text" class="form-control rounded-pill" id="taskTitle" placeholder="Enter a new task" required>
+                <button type="submit" class="btn btn-success rounded-circle ms-2" id="addTaskBtn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // API endpoint
+    const API_TASKS_URL = "/api/tasks";
+    
+    // DOM elements
+    const addTaskForm = document.getElementById('addTaskForm');
+    const tasksList = document.getElementById('tasksList');
+    
+    // Utility function for API calls
+    function apiFetch(url, options = {}) {
+        return fetch(url, {
+            headers: {
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            ...options
+        });
+    }
+    
+    // Load all tasks
+    function loadTasks() {
+        apiFetch(API_TASKS_URL)
+            .then(resp => resp.json())
+            .then(tasks => renderTasks(tasks))
+            .catch(err => {
+                console.error(err);
+                tasksList.innerHTML = `<li class="list-group-item">Error loading tasks</li>`;
+            });
+    }
+    
+    // Render tasks list as checklist
+    function renderTasks(tasks) {
+        if (tasks.length === 0) {
+            tasksList.innerHTML = `<li class="list-group-item">No tasks found. Add a new task above!</li>`;
+            return;
+        }
+        
+        const tasksHtml = tasks.map(task => `
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input task-checkbox" type="checkbox" id="task${task.id}" data-task-id="${task.id}" ${task.completed ? "checked" : ""}>
+                        <label class="form-check-label ${task.completed ? "text-decoration-line-through" : ""}" for="task${task.id}">
+                            ${task.title}
+                        </label>
+                    </div>
+                    <button class="btn btn-sm btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                </div>
+            </li>
+        `).join("");
+        
+        tasksList.innerHTML = tasksHtml;
+        
+        // Add event listeners for checkboxes
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const taskId = this.getAttribute('data-task-id');
+                const completed = this.checked;
+                updateTaskCompletion(taskId, completed);
+            });
+        });
+        
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-task-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const taskId = this.getAttribute('data-task-id');
+                deleteTask(taskId);
+            });
+        });
+    }
+    
+    // Add new task
+    addTaskForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('taskTitle').value.trim();
+        
+        if (!title) {
+            alert('Task description is required');
+            return;
+        }
+        
+        const payload = {
+            title: title,
+            description: "",
+            completed: false
+        };
+        
+        apiFetch(API_TASKS_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Failed to create task');
+                return resp.json();
+            })
+            .then(task => {
+                // Reset form
+                addTaskForm.reset();
+                // Reload tasks
+                loadTasks();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to create task');
+            });
+    });
+    
+    // Delete task
+    function deleteTask(taskId) {
+        if (!confirm('Are you sure you want to delete this task?')) return;
+        
+        apiFetch(`${API_TASKS_URL}/${taskId}`, { method: 'DELETE' })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Failed to delete task');
+                loadTasks();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to delete task');
+            });
+    }
+    
+    // Update task completion status
+    function updateTaskCompletion(taskId, completed) {
+        const payload = { completed: completed };
+        
+        apiFetch(`${API_TASKS_URL}/${taskId}`, { method: 'PUT', body: JSON.stringify(payload) })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Failed to update task');
+                return resp.json();
+            })
+            .then(task => {
+                // Update the task display
+                const label = document.querySelector(`label[for="task${taskId}"]`);
+                if (completed) {
+                    label.classList.add('text-decoration-line-through');
+                } else {
+                    label.classList.remove('text-decoration-line-through');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to update task');
+            });
+    }
+    
+    // Load tasks when page loads
+    document.addEventListener('DOMContentLoaded', loadTasks);
+</script>
 {% endblock %}

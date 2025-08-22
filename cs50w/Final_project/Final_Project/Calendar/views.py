@@ -4,7 +4,7 @@ from .forms import CustomUserCreationForm
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseBadRequest
 from django.urls import reverse
-from .models import User, Event
+from .models import User, Event, Task
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 import json
@@ -253,4 +253,98 @@ def events_detail(request, event_id: int):
         "endTime": ev.end_time.strftime("%H:%M") if ev.end_time else None,
         "color": ev.color,
         "description": ev.description or "",
+    })
+
+
+# -------------------------
+# Tasks JSON API
+# -------------------------
+@login_required
+def tasks_collection(request):
+    if request.method == "GET":
+        # Get all tasks for the current user
+        qs = Task.objects.filter(user=request.user)
+        data = [{
+            "id": task.id,
+            "title": task.title,
+            "description": task.description or "",
+            "created_at": task.created_at.isoformat(),
+            "updated_at": task.updated_at.isoformat(),
+            "completed": task.completed,
+        } for task in qs.order_by("-created_at")]
+        return JsonResponse(data, safe=False)
+
+    elif request.method == "POST":
+        # Create a new task
+        try:
+            body = json.loads(request.body or "{}")
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest("Invalid JSON body")
+
+        title = (body.get("title") or "").strip()
+        description = body.get("description") or ""
+        completed = bool(body.get("completed", False))
+
+        if not title:
+            return HttpResponseBadRequest("'title' is required")
+
+        task = Task.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            completed=completed,
+        )
+        return JsonResponse({
+            "id": task.id,
+            "title": task.title,
+            "description": task.description or "",
+            "created_at": task.created_at.isoformat(),
+            "updated_at": task.updated_at.isoformat(),
+            "completed": task.completed,
+        }, status=201)
+
+
+@login_required
+def tasks_detail(request, task_id: int):
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+    except Task.DoesNotExist:
+        return JsonResponse({"error": "Not found"}, status=404)
+
+    if request.method == "GET":
+        return JsonResponse({
+            "id": task.id,
+            "title": task.title,
+            "description": task.description or "",
+            "created_at": task.created_at.isoformat(),
+            "updated_at": task.updated_at.isoformat(),
+            "completed": task.completed,
+        })
+
+    if request.method == "DELETE":
+        task.delete()
+        return JsonResponse({"ok": True})
+
+    # Update (PUT/PATCH)
+    try:
+        body = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON body")
+
+    # Map incoming fields if present
+    if "title" in body:
+        task.title = (body.get("title") or "").strip()
+    if "description" in body:
+        task.description = body.get("description") or ""
+    if "completed" in body:
+        task.completed = bool(body.get("completed"))
+
+    task.save()
+    return JsonResponse({
+        "id": task.id,
+        "title": task.title,
+        "description": task.description or "",
+        "created_at": task.created_at.isoformat(),
+        "updated_at": task.updated_at.isoformat(),
+        "completed": task.completed,
     })
