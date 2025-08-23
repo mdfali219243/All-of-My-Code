@@ -1,5 +1,25 @@
 {% extends "Calendar/layout.html" %}
 
 {% block body %}
-<button class="btn btn-primary" onclick="window.location.href = '/';"> Back to Home Page </button>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Settings</h2>
+    <button class="btn btn-outline-secondary" onclick="window.location.href='/'">Back to Calendar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header fw-bold">Appearance</div>
+    <div class="card-body">
+      <p class="text-muted mb-2">Choose your theme (applies site-wide, stored in your browser).</p>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="theme" id="theme-light" value="light">
+        <label class="form-check-label" for="theme-light">Light</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="theme" id="theme-dark" value="dark">
+        <label class="form-check-label" for="theme-dark">Dark</label>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

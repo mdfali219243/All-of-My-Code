@@ -1541,3 +1541,169 @@ body {
 /* Ensure modals sit above the navbar/dropdowns */
 .modal { z-index: 6000 !important; }
 .modal-backdrop { z-index: 5990 !important; }
+
+/* -------------------------
+   Dark Theme (Google Cal vibe)
+   Activated by theme.js adding 'dark' to :root and <body>
+-------------------------- */
+
+:root.dark body {
+    background-color: #202124;
+    color: #e8eaed;
+}
+
+:root.dark .navbar {
+    background-color: #202124 !important;
+    border-bottom: 1px solid #3c4043;
+}
+
+:root.dark .card,
+:root.dark .modal-content,
+:root.dark .dropdown-menu,
+:root.dark .list-group-item {
+    background-color: #2d2e30;
+    color: #e8eaed;
+    border-color: #3c4043;
+}
+
+:root.dark .form-control,
+:root.dark .form-select {
+    background-color: #303134;
+    color: #e8eaed;
+    border-color: #5f6368;
+}
+
+:root.dark .form-control::placeholder {
+    color: #9aa0a6;
+    opacity: 1;
+}
+
+:root.dark .btn-outline-secondary {
+    color: #e8eaed;
+    border-color: #5f6368;
+}
+
+:root.dark .btn-outline-secondary:hover {
+    background-color: #303134;
+    color: #e8eaed;
+    border-color: #8ab4f8;
+}
+
+/* Links */
+:root.dark a { color: #8ab4f8; }
+:root.dark a:hover { color: #a8c7fa; }
+
+/* Chatbot task bar + button */
+:root.dark .chatbot-form-container {
+    background-color: #2d2e30;
+    border-color: #3c4043;
+}
+
+:root.dark #addTaskBtn {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+/* Dropdown menu items */
+:root.dark .dropdown-item { color: #e8eaed; }
+:root.dark .dropdown-item:hover { background-color: #303134; color: #e8eaed; }
+
+/* List group borders */
+:root.dark .list-group-item { border-color: #3c4043; }
+
+/* Strong overrides for calendar views that set white backgrounds */
+:root.dark { color-scheme: dark; }
+
+/* Tailwind/utility override */
+:root.dark .bg-white { background-color: #202124 !important; }
+
+/* Main container */
+:root.dark .main-view { background-color: #202124 !important; }
+
+/* Top-level view wrappers */
+:root.dark .month-view,
+:root.dark .week-view,
+:root.dark .day-view,
+:root.dark .year-view { background-color: #202124 !important; }
+
+/* Grids that explicitly set white */
+:root.dark .month-grid,
+:root.dark .week-time-grid,
+:root.dark .day-time-grid { background-color: #202124 !important; }
+
+/* Day cells often force white with !important */
+:root.dark .day-cell { background: #202124 !important; }
+:root.dark .day-cell:hover { background: #303134 !important; }
+
+/* Hover overrides for draggable interactions */
+:root.dark .month-cell.draggable:hover,
+:root.dark .day-cell.draggable:hover { background: #303134 !important; }
+
+/* Header rows and containers */
+:root.dark .week-grid,
+:root.dark .week-grid-header,
+:root.dark #weekDaysHeader,
+:root.dark .day-all-day-row,
+:root.dark .week-all-day-row { background-color: #202124 !important; }
+
+/* Borders inside grids */
+:root.dark .week-grid-header>div,
+:root.dark #weekDaysHeader>div,
+:root.dark .calendar-day,
+:root.dark .day-cell,
+:root.dark .all-day-events-container>div { border-color: #3c4043 !important; }
+
+/* Month header rows */
+:root.dark .daysOfWeekHeader,
+:root.dark #daysOfWeekHeader { background-color: #202124 !important; border-color: #3c4043 !important; color: #e8eaed !important; }
+:root.dark .daysOfWeekHeader>div { background-color: #202124 !important; color: #e8eaed !important; }
+
+/* All-day events containers in day/week views */
+:root.dark #dayAllDayEvents { background-color: #202124 !important; border-color: #3c4043 !important; }
+:root.dark #weekAllDayEvents { background-color: #202124 !important; border-color: #3c4043 !important; }
+
+/* Month cells */
+:root.dark .calendar-day { background-color: #202124 !important; }
+:root.dark .calendar-day:hover { background-color: #303134 !important; }
+:root.dark .calendar-day.non-current-month { background-color: #2a2b2e !important; color: #9aa0a6 !important; }
+
+/* Week grid/header and labels */
+:root.dark .week-grid { background: #202124 !important; border-color: #3c4043 !important; }
+:root.dark .week-grid-header { background-color: #2d2e30 !important; color: #9aa0a6 !important; }
+:root.dark .time-label,
+:root.dark .time-label-cell { background-color: #202124 !important; color: #9aa0a6 !important; border-color: #3c4043 !important; }
+
+/* Day time grid background lines */
+:root.dark .day-time-grid-container::before { background-image: linear-gradient(to bottom, #3c4043 1px, transparent 1px) !important; }
+
+/* Mini month/year components */
+:root.dark .mini-month { background-color: #2d2e30 !important; border-color: #3c4043 !important; }
+:root.dark .mini-day:hover { background-color: #303134 !important; }
+
+/* Generic white headers */
+:root.dark .header { background-color: #202124 !important; border-color: #3c4043 !important; color: #e8eaed !important; }
+
+/* Sticky month header and top bar */
+:root.dark #monthHeaderSticky,
+:root.dark .top-bar { background-color: #202124 !important; border-bottom: 1px solid #3c4043 !important; }
+
+/* Today highlight and today button */
+:root.dark .today-highlight { background: #2a2b2e !important; color: inherit !important; }
+:root.dark .today-button { background-color: #303134 !important; color: #e8eaed !important; border-color: #5f6368 !important; }
+
+/* Floating Add Event button */
+:root.dark .addEventBtn { background-color: #2d2e30 !important; color: #e8eaed !important; border: 1px solid #3c4043 !important; }
+
+/* Feature menu panels */
+:root.dark .feature-menu,
+:root.dark #featureDropdown { background-color: #202124 !important; border-color: #3c4043 !important; }
+
+/* Force white text across calendar in dark mode */
+:root.dark .main-view,
+:root.dark .main-view * { color: #e8eaed !important; }
+
+/* Ensure overlays inherit white text */
+:root.dark .modal-content,
+:root.dark .modal-content * { color: #e8eaed !important; }
+:root.dark .dropdown-menu,
+:root.dark .dropdown-menu * { color: #e8eaed !important; }

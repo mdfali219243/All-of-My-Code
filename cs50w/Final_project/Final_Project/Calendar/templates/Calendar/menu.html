@@ -43,7 +43,7 @@
         </a>
     </div>
 </div>
-{% if request.resolver_match.url_name != 'tasks' %}
+{% if request.resolver_match.url_name != 'tasks' and request.resolver_match.url_name != 'settings' %}
 <div class="center-menu">
     <div class="nav-item d-flex align-items-center gap-3">
         <!-- today button -->
