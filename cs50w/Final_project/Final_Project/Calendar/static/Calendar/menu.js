@@ -7,12 +7,18 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
             const isHidden = featureDropdown.style.display === 'none' || !featureDropdown.style.display;
             featureDropdown.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                document.body.classList.add('feature-open');
+            } else {
+                document.body.classList.remove('feature-open');
+            }
         });
 
         // Close dropdown if clicking outside
         window.addEventListener('click', (event) => {
             if (featureDropdown.style.display === 'block' && !featureMenuBtn.contains(event.target) && !featureDropdown.contains(event.target)) {
                 featureDropdown.style.display = 'none';
+                document.body.classList.remove('feature-open');
             }
         });
     }

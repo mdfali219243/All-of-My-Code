@@ -66,15 +66,22 @@ body {
     max-height: none !important;
 }
 
-/* Ensure dropdown appears above navbar and adjacent elements */
-.navbar .dropdown-menu {
-    z-index: 1100;
+/* Create higher stacking context for navbar and its dropdowns */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 5000;
 }
 
-/* Ensure the toggle button itself stacks above the sticky header */
+/* Ensure dropdown appears above bottom fixed UI */
+.navbar .dropdown-menu {
+    z-index: 5100;
+}
+
+/* Ensure the toggle button itself stacks above */
 .navbar .dropdown-toggle {
     position: relative;
-    z-index: 1201;
+    z-index: 5200;
 }
 
 /* Ensure menu groups layout nicely */
@@ -407,7 +414,7 @@ body {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
     box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-    z-index: 1000;
+    z-index: 100; /* keep well under navbar/dropdowns */
     position: sticky;
     top: 0;
     width: 100%;
@@ -1239,50 +1246,74 @@ body {
     width: 100%;
 }
 
-/* Sidebar styles - Force visibility */
-#calendarSidebar {
-    width: 3% !important;
-    background-color: #ffffff !important;
-    border-left: 1px solid #e0e0e0 !important;
-    height: calc(100vh - 64px) !important;
-    position: fixed !important;
-    right: 0 !important;
-    top: 64px !important;
-    overflow-y: auto !important;
-    z-index: 990 !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05) !important;
-    pointer-events: auto !important;
+/* Full-height Feature Panel */
+#featureDropdown {
+    position: fixed;
+    top: 64px;
+    /* adjust if your navbar height differs */
+    left: 0;
+    height: calc(100vh - 64px);
+    width: 280px;
+    /* 320px if you want wider */
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 1050;
+    display: none;
+    /* toggled to block by menu.js */
+    padding: 12px;
+    overflow-y: auto;
 }
 
-/* Mobile styles */
-@media (max-width: 767px) {
-    #calendarSidebar {
-        transform: translateX(100%);
-        opacity: 0;
-        visibility: hidden;
-        display: block !important;
-    }
+/* Remove bullets and spacing */
+#featureDropdown>li {
+    list-style: none;
+    margin: 6px 0;
+}
 
-    #calendarSidebar.show {
-        transform: translateX(0);
-        opacity: 1;
-        visibility: visible;
+/* Button-style items */
+#featureDropdown .feature-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #111827;
+    /* gray-900 */
+    cursor: pointer;
+}
+
+#featureDropdown .feature-btn:hover,
+#featureDropdown .feature-btn:focus {
+    background: #eff6ff;
+    /* blue-50 */
+    border-color: #93c5fd;
+    /* blue-300 */
+    color: #1d4ed8;
+    /* blue-700 */
+    outline: none;
+}
+
+@media (max-width: 768px) {
+    #featureDropdown {
+        width: 100vw;
+        left: 0;
     }
 }
 
-
+/* Shift main content when feature panel is open (desktop only) */
 .main-container {
-    transition: margin-right 0.3s ease;
+    transition: margin-left 0.25s ease;
 }
 
-.sidebar-open .main-container {
-    margin-right: 16rem;
+@media (min-width: 769px) {
+    body.feature-open .main-container {
+        margin-left: 280px;
+    }
 }
-
 
 #mobileToggleSidebar {
     display: none;
@@ -1317,39 +1348,6 @@ body {
 .sidebar-item:hover {
     background-color: #f1f3f4;
 }
-
-@media (max-width: 1024px) {
-    #calendarSidebar {
-        transform: translateX(100%);
-        width: 320px;
-    }
-
-    #calendarSidebar.show {
-        transform: translateX(0);
-    }
-
-    #mobileToggleSidebar {
-        display: flex;
-    }
-
-
-    body.sidebar-open {
-        overflow: hidden;
-    }
-
-    body.sidebar-open::after {
-        content: '';
-        position: fixed;
-        top: 64px;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 980;
-    }
-}
-
-
 
 @keyframes fadeIn {
     from {
@@ -1429,11 +1427,12 @@ body {
 /* Chatbot-style Task Form */
 .chatbot-form-container {
     position: fixed;
+    top: auto;
     bottom: 20px;
-    right: 20px;
-    left: auto;
-    transform: none;
-    width: 90%;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
     height: 80px;
     background-color: #ffffff;
     border-radius: 50px;
@@ -1441,9 +1440,9 @@ body {
     padding: 15px 25px;
     display: flex;
     align-items: center;
-    z-index: 1000;
+    z-index: 150; /* ensure below navbar/dropdowns */
     border: 1px solid #e5e5e5;
-    max-width: 1200px;
+    max-width: 1600px;
 }
 
 .chatbot-form-container .input-group {
@@ -1460,6 +1459,32 @@ body {
     box-shadow: none;
     background-color: #f7f7f8;
     border-radius: 50px;
+    flex: 1 1 100%;
+    width: 100%;
+}
+
+/* Ensure the inner form consumes the container width */
+#addTaskForm {
+    width: 100%;
+}
+
+/* Floating submit button placed just outside the right edge of the centered bar */
+#addTaskBtn {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom) + 12px);
+    /* align horizontally to the right edge of the centered container (width: 95%, max 1600px) */
+    left: min(calc(50% + (min(95vw, 1600px) / 2) + 10px), calc(100vw - 40px));
+    z-index: 150; /* under navbar/dropdowns */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    font-size: 24px;
+    box-shadow: none;
 }
 
 .chatbot-form-container .btn {
@@ -1478,7 +1503,7 @@ body {
     color: #1a73e8;
 }
 
-/* Adjust main container padding to accommodate fixed form */
+
 .main-container {
     padding-bottom: 100px;
 }
@@ -1501,7 +1526,7 @@ body {
     font-size: 24px;
     font-weight: 500;
     cursor: pointer;
-    z-index: 1000;
+    z-index: 150; /* under navbar/dropdowns */
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
     transition: all 0.2s ease;
     border: none;
@@ -1512,3 +1537,7 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
 }
+
+/* Ensure modals sit above the navbar/dropdowns */
+.modal { z-index: 6000 !important; }
+.modal-backdrop { z-index: 5990 !important; }

@@ -101,6 +101,11 @@ def settings(request):
 def tasks(request):
     return render(request, "Calendar/tasks.html")
 
+def events(request):
+    # Show all events across users
+    qs = Event.objects.all().order_by("date", "start_time")
+    return render(request, "Calendar/events.html", {"events": qs})
+
 # -------------------------
 # Events JSON API (simple)
 # -------------------------

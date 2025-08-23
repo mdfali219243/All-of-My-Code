@@ -25,12 +25,14 @@
             <div class="input-group">
                 <input type="text" class="form-control rounded-pill" id="taskTitle" placeholder="Enter a new task"
                     required>
-                <button type="submit" class="btn btn-success rounded-circle ms-2" id="addTaskBtn">
-                    <i class="fas fa-plus"></i>
-                </button>
             </div>
         </form>
     </div>
+
+    <!-- External submit button anchored just outside the bar; still submits addTaskForm -->
+    <button type="submit" class="btn btn-success rounded-circle" id="addTaskBtn" form="addTaskForm" aria-label="Add task">
+        <i class="fas fa-plus"></i>
+    </button>
 </div>
 
 <script>
