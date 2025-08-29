@@ -531,6 +531,18 @@ function renderDayView(date) {
     // --- Header --- //
     if (currentDisplay) {
         currentDisplay.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(date);
+        
+        // Highlight today's date in blue if viewing today, otherwise remove highlight
+        const today = new Date();
+        const isToday = date.getDate() === today.getDate() && 
+                       date.getMonth() === today.getMonth() && 
+                       date.getFullYear() === today.getFullYear();
+        
+        if (isToday) {
+            currentDisplay.classList.add('day-header-today');
+        } else {
+            currentDisplay.classList.remove('day-header-today');
+        }
     }
 
     // --- All-Day Events --- //
