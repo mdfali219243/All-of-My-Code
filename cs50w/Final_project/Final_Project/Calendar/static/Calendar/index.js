@@ -252,6 +252,7 @@ function renderMonthView(date) {
     // Set header to 'Month Year', e.g., 'July 2025'
     if (currentDisplay) {
         currentDisplay.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+        currentDisplay.classList.remove('day-header-today'); // Remove day view highlighting
     }
 
     const firstDayOfMonth = new Date(year, month, 1);
@@ -396,6 +397,7 @@ function renderWeekView(date) {
         const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
         const endOfWeek = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 6);
         currentDisplay.textContent = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { day: 'numeric', year: 'numeric' })}`;
+        currentDisplay.classList.remove('day-header-today'); // Remove day view highlighting
     }
     const weekDaysHeader = document.getElementById('weekDaysHeader');
     if (weekDaysHeader) {
@@ -458,11 +460,11 @@ function renderEventsInTimeGrid(container, events, viewType, dayIndex = 0) {
         for (const event of sortedEvents) {
             let placed = false;
             const eventStart = new Date(`${event.date}T${event.startTime || '00:00:00'}`);
-            
+
             for (const column of columns) {
                 const lastEventInColumn = column[column.length - 1];
                 const lastEventEnd = new Date(`${lastEventInColumn.date}T${lastEventInColumn.endTime || '23:59:59'}`);
-                
+
                 if (eventStart >= lastEventEnd) {
                     column.push(event);
                     placed = true;
@@ -513,7 +515,7 @@ function renderEventsInTimeGrid(container, events, viewType, dayIndex = 0) {
                 evDiv.style.left = `${colIndex * eventWidthPercent}%`;
                 evDiv.style.width = `calc(${eventWidthPercent}% - 2px)`; // -2px for margin
             }
-            
+
             evDiv.addEventListener('click', (e) => { e.stopPropagation(); openViewEventModal(ev.id); });
             container.appendChild(evDiv);
         });
@@ -531,13 +533,13 @@ function renderDayView(date) {
     // --- Header --- //
     if (currentDisplay) {
         currentDisplay.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(date);
-        
+
         // Highlight today's date in blue if viewing today, otherwise remove highlight
         const today = new Date();
-        const isToday = date.getDate() === today.getDate() && 
-                       date.getMonth() === today.getMonth() && 
-                       date.getFullYear() === today.getFullYear();
-        
+        const isToday = date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear();
+
         if (isToday) {
             currentDisplay.classList.add('day-header-today');
         } else {
@@ -613,6 +615,7 @@ function renderYearView(date) {
 
     const year = date.getFullYear();
     if (currentDisplay) currentDisplay.textContent = `${year}`;
+    currentDisplay.classList.remove('day-header-today'); // Remove day view highlighting
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -644,13 +647,13 @@ function renderYearView(date) {
             const dayCell = document.createElement('div');
             dayCell.textContent = d;
             dayCell.className = 'mini-day text-center';
-            
+
             // Check if this day is today and add the 'today' class if so
             const today = new Date();
             if (d === today.getDate() && m === today.getMonth() && year === today.getFullYear()) {
                 dayCell.classList.add('today');
             }
-            
+
             miniGrid.appendChild(dayCell);
         }
 
