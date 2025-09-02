@@ -496,6 +496,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
     }
 
+    // the pervious and next buttons function
+    next_button = document.getElementById('nextBtn');
+    document.addEventListener('click', function () {
+
+    })
+
 
     //day view function
 
