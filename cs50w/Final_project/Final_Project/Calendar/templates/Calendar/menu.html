@@ -10,13 +10,11 @@
                     d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
             </svg>
         </button>
-        <ul id="featureDropdown" class="py-2"
-            style="display: none; position: absolute; left: 0; top: 36px; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 10; min-width: 180px;">
-            <li><a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">My Calendar</a></li>
-            <li><a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Events</a></li>
-            <li><a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Tasks</a></li>
-            <li><a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Reminders</a></li>
-            <li><a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Settings</a></li>
+        <ul id="featureDropdown" class="py-2">
+            <li><a href="{% url 'index' %}"><button type="button" class="feature-btn">My Calendar</button></a></li>
+            <li><a href="{% url 'events' %}"><button type="button" class="feature-btn">Events</button></a></li>
+            <li><a href="{% url 'tasks' %}"><button type="button" class="feature-btn">Tasks</button></a></li>
+            <li><a href="{% url 'settings' %}"><button type="button" class="feature-btn">Settings</button></a></li>
         </ul>
     </div>
     <div class="nav-item">
@@ -45,6 +43,7 @@
         </a>
     </div>
 </div>
+{% if request.resolver_match.url_name != 'tasks' and request.resolver_match.url_name != 'settings' %}
 <div class="center-menu">
     <div class="nav-item d-flex align-items-center gap-3">
         <!-- today button -->
@@ -79,10 +78,10 @@
                 month
             </button>
             <ul class="dropdown-menu">
-                <li><button class="weekViewBtn" type="button">Week</button></li>
-                <li><button class="dayViewBtn" type="button">Day</button></li>
-                <li><button class="monthViewBtn" type="button">Month</button></li>
-                <li><button class="yearViewBtn" type="button">Year</button></li>
+                <li><button class="dropdown-item weekViewBtn" type="button">Week</button></li>
+                <li><button class="dropdown-item dayViewBtn" type="button">Day</button></li>
+                <li><button class="dropdown-item monthViewBtn" type="button">Month</button></li>
+                <li><button class="dropdown-item yearViewBtn" type="button">Year</button></li>
             </ul>
         </div>
     </div>
@@ -90,7 +89,11 @@
 
 
 <!-- tasks and logout -->
+{% endif %}
 <div class="right-menu">
+    <div class="nav-item">
+        <a class="nav-link" href="{% url 'settings' %}">Settings</a>
+    </div>
     <div class="nav-item">
         <a class="nav-link" href="{% url 'tasks' %}">Tasks</a>
     </div>

@@ -10,4 +10,11 @@ urlpatterns = [
     path("register", views.register, name="register"),
     path("settings", views.settings, name="settings"),
     path("tasks", views.tasks, name="tasks"),
+    path("events", views.events, name="events"),
+    # Simple Events API
+    path("api/events", views.events_collection, name="events_collection"),
+    path("api/events/<int:event_id>", views.events_detail, name="events_detail"),
+    # Tasks API
+    path("api/tasks", views.tasks_collection, name="tasks_collection"),
+    path("api/tasks/<int:task_id>", views.tasks_detail, name="tasks_detail"),
 ]

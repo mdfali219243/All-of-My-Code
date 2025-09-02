@@ -1,0 +1,49 @@
+{% extends "Calendar/layout.html" %}
+
+{% block body %}
+<div class="container py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 m-0">Events</h1>
+    <a class="btn btn-outline-primary" href="/">Home</a>
+  </div>
+
+  {% if events %}
+    <ul class="list-group">
+      {% for ev in events %}
+        <li class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <span class="flex-shrink-0 rounded-circle" style="width:12px;height:12px;margin-top:6px;" data-ev-color="{{ ev.color|default:'#1a73e8' }}"></span>
+            <div class="flex-grow-1">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <strong>{{ ev.title }}</strong>
+                <span class="text-muted">• {{ ev.date|date:"M j, Y" }}</span>
+                {% if ev.all_day %}
+                  <span class="badge bg-primary-subtle text-primary border border-primary" style="--bs-bg-opacity: .15;">All day</span>
+                {% else %}
+                  <span class="text-muted">• {{ ev.start_time|time:"H:i" }}{% if ev.end_time %}–{{ ev.end_time|time:"H:i" }}{% endif %}</span>
+                {% endif %}
+              </div>
+              {% if ev.description %}
+                <div class="text-muted mt-1">{{ ev.description }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-info">No events to show yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-ev-color]').forEach(function (el) {
+      var val = el.getAttribute('data-ev-color') || '#1a73e8';
+      el.style.backgroundColor = val;
+    });
+  });
+  </script>
+{% endblock %}

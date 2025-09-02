@@ -1,149 +1,473 @@
-.card {
-    margin: 20px;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    background: white;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-
-.form {
-    compose: card;
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #ffffff;
+    color: #3c4043;
 }
 
-.text-start {
-    margin-left: 20px;
-    text-align: start;
+/* Layout */
+/* .container styles are now handled by Tailwind in layout.html */
+
+.navbar {
+    background-color: #fff !important;
+    border-bottom: 1px solid #dadce0;
+    padding: 8px 24px;
+    flex-shrink: 0;
+    min-height: 64px;
+    height: 64px;
+    /* keep navbar a single row */
+    max-height: 64px;
+    /* prevent accidental growth */
+    display: flex;
+    align-items: center;
+    overflow: visible;
+    /* show overflowed items (e.g., right menu) */
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+}
+
+.navbar .nav-link,
+.navbar .btn {
+    max-height: 48px;
+    /* constrain typical controls */
+    overflow: hidden;
 }
 
 .custom-nav {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    flex-wrap: nowrap;
+    /* avoid wrapping that inflates navbar height */
+    gap: 8px;
+}
+
+/* Force horizontal layout even when Bootstrap collapses nav */
+.navbar .navbar-nav.custom-nav {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
     width: 100%;
 }
 
-.custom-nav>.left-menu,
-.custom-nav>.center-menu,
-.custom-nav>.right-menu {
+/* Explicitly allow Bootstrap dropdowns to overflow within navbar */
+.navbar .dropdown,
+.navbar .dropdown-toggle,
+.navbar .dropdown-menu {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* Create higher stacking context for navbar and its dropdowns */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 5000;
+}
+
+/* Ensure dropdown appears above bottom fixed UI */
+.navbar .dropdown-menu {
+    z-index: 5100;
+}
+
+/* Ensure the toggle button itself stacks above */
+.navbar .dropdown-toggle {
+    position: relative;
+    z-index: 5200;
+}
+
+/* Ensure menu groups layout nicely */
+.left-menu,
+.center-menu,
+.right-menu {
     display: flex;
     align-items: center;
-}
-
-.custom-nav>.center-menu {
-    justify-content: center;
-    flex: 1;
-}
-
-.custom-nav>.left-menu {
-    justify-content: flex-start;
-}
-
-.custom-nav>.right-menu {
-    justify-content: flex-end;
-}
-
-.left-menu {
-    background: #fdd;
+    gap: 8px;
 }
 
 .center-menu {
-    background: #dfd;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+    /* allow shrinking to prevent overflow */
 }
 
 .right-menu {
-    background: #ddf;
+    margin-left: auto;
+    /* push to far right */
 }
 
-.navbar {
+/* Prevent left menu from growing vertically in navbar */
+.left-menu {
+    flex: 0 0 auto;
+    height: 100%;
+    min-height: 0;
+}
+
+/* .body styles are now handled by Tailwind in layout.html */
+
+.main-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* #main_view layout is now handled by Tailwind in index.html */
+
+/* Main Views */
+.month-view {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    /* Use flex-grow instead of fixed height */
+    overflow: auto;
+}
+
+.week-view {
+    background-color: #ffffff;
+    display: none;
+}
+
+.day-view {
+    background-color: #ffffff;
+    display: none;
+}
+
+.year-view {
+    background-color: #ffffff;
+    display: none;
+}
+
+/* Days of Week Header */
+#daysOfWeekHeader {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    background-color: #dadce0;
+    border-bottom: 1px solid #dadce0;
+    position: sticky;
+    top: 64px;
+    z-index: 100;
+    height: 48px;
+    align-items: center;
+    gap: 1px;
     width: 100%;
-    margin-left: 20px;
-    margin-right: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    margin: 0;
+    padding: 0;
 }
 
-.navbar {
-    padding-left: 0;
-    padding-right: 0;
+#daysOfWeekHeader>div {
+    padding: 12px 8px;
+    text-align: center !important;
+    font-size: 11px;
+    font-weight: 500;
+    color: #70757a !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background-color: #ffffff;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border: none;
 }
 
-.custom-nav {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-}
-
+/* Month Grid */
 .month-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0px;
+    gap: 1px;
+    background-color: #dadce0;
 }
 
-.daysOfWeekHeader {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-    margin-top: 20px;
-}
-
-.daysOfWeekHeader>div {
-    border: 1px solid red;
-    padding: 0.5rem;
-}
-
-
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-}
-
-.container {
-    width: 100%;
-    max-width: 100%;
-    min-height: 100vh;
-    /* Use viewport height */
-    margin: 0;
-    padding: 0 20px;
-    box-sizing: border-box;
+.calendar-day {
+    min-height: 160px;
+    /* Increased from 120px */
+    background-color: #ffffff;
+    padding: 8px;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 }
 
-.navbar {
-    padding: 0 20px !important;
-    margin: 0 auto !important;
-    max-width: 100%;
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day.non-current-month {
+    color: #9aa0a6;
+    background-color: #fafafa;
+}
+
+/* Today Highlight */
+.today-highlight_for_month_week {
+    background-color: #1a73e8;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Events */
+.month-events-list {
+    margin-top: 4px;
     width: 100%;
+}
+
+.month-event {
+    background-color: #1a73e8;
+    color: #ffffff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.month-event:hover {
+    background-color: #1557b0;
+}
+
+/* Week Grid */
+.week-time-grid {
+    display: grid;
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
+    background-color: #ffffff;
+}
+
+.week-all-day-row {
+    display: grid;
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
+    border-bottom: 1px solid #dadce0;
+    min-height: 40px;
+}
+
+.all-day-events-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+/* Day Grid */
+.day-time-grid {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    background-color: #ffffff;
+}
+
+.day-all-day-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    border-bottom: 1px solid #dadce0;
+    min-height: 40px;
+}
+
+.day-cell {
+    border-bottom: 1px solid #f0f0f0;
+    border-right: 1px solid #dadce0;
+    min-height: 48px;
+    position: relative;
+    cursor: pointer;
+}
+
+.day-cell:hover {
+    background-color: #f8f9fa;
+}
+
+/* Year Grid */
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 24px;
+}
+
+.mini-month {
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.mini-month-header {
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: #3c4043;
+    font-size: 14px;
+}
+
+.mini-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.mini-day {
+    aspect-ratio: 1;
     display: flex;
     align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 50%;
+    color: #3c4043;
+}
+
+.mini-day:hover {
+    background-color: #f8f9fa;
+}
+
+.mini-day.today {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+.mini-day.other-month {
+    color: #9aa0a6;
+}
+
+/* Dropdown */
+.dropdown-toggle {
+    background: none !important;
+    border: 1px solid #dadce0 !important;
+    color: #3c4043 !important;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.dropdown-toggle:hover {
+    background-color: #f8f9fa !important;
+}
+
+.dropdown-menu {
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #3c4043;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #3c4043;
+}
+
+/* Drag Selection */
+.selecting {
+    background-color: #e8f0fe !important;
+    border: 1px solid #1a73e8 !important;
+}
+
+.dragging {
+    user-select: none;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+.d-none {
+    display: none !important;
+}
+
+/* Time Labels */
+.time-label {
+    padding: 8px;
+    font-size: 12px;
+    color: #70757a;
+    text-align: right;
+    border-right: 1px solid #dadce0;
+    background-color: #fafafa;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
     height: 64px;
-    background-color: #fff;
-    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    z-index: 100; /* keep well under navbar/dropdowns */
+    position: sticky;
+    top: 0;
+    width: 100%;
 }
 
-.left-menu {
+.left-section {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 15px;
+    min-width: 150px;
 }
 
-.center-menu {
+.icon-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: 0 auto;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    outline: none;
 }
 
-.right-menu {
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.icon-button:active {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.icon-button svg {
+    height: 24px;
+    width: 24px;
+    color: #5f6368;
+}
+
+.calendar-logo {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
+}
+
+.middle-section {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+    flex-grow: 1;
+    justify-content: center;
+    max-width: 600px;
 }
-
 
 .today-button {
     background-color: #ffffff;
@@ -154,210 +478,99 @@ body {
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
     outline: none;
-    height: 36px;
 }
 
 .today-button:hover {
     background-color: #f8f9fa;
-    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px rgba(60, 64, 67, 0.15);
 }
 
 .today-button:active {
     background-color: #e8eaed;
 }
 
-/* Navigation buttons */
-.icon-button {
-    background: none;
-    border: 1px solid #dadce0;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #5f6368;
-    transition: all 0.2s ease;
-}
-
-.icon-button:hover {
-    background-color: #f1f3f4;
-}
-
-.icon-button svg {
-    width: 20px;
-    height: 20px;
-}
-
 .current-display {
     font-size: 1.25rem;
-    font-weight: 500;
+    font-weight: 400;
     color: #3c4043;
     white-space: nowrap;
-    min-width: 140px;
+    min-width: 120px;
     text-align: center;
-    margin: 0 8px;
 }
 
-.dropdown .btn-secondary {
-    background-color: #fff;
-    color: #3c4043;
-    border: 1px solid #dadce0;
-    font-weight: 500;
-    padding: 6px 16px;
-    height: 36px;
+.right-section {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    min-width: 100px;
+    gap: 15px;
+    min-width: 150px;
+    justify-content: flex-end;
 }
 
-.dropdown .btn-secondary::after {
-    margin-left: 8px;
-}
-
-.dropdown-menu {
-    border: 1px solid #dadce0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    padding: 8px 0;
-    min-width: 120px;
-}
-
-.dropdown-item {
-    padding: 8px 16px;
-    color: #3c4043;
-    font-size: 0.9rem;
-    transition: background-color 0.2s ease;
-}
-
-.dropdown-item:hover {
-    background-color: #f8f9fa;
+.user-profile-pic {
+    border-radius: 50%;
 }
 
 .feature-menu {
-    position: relative;
-}
-
-#featureDropdown {
-    display: none;
-    position: absolute;
+    position: fixed;
+    top: 0;
     left: 0;
-    top: 100%;
-    background: #fff;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    min-width: 200px;
-    padding: 8px 0;
-    margin-top: 8px;
-}
-
-.main-view {
-    max-width: 100%;
-    width: 100%;
-    margin: 0 auto;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-.navbar>.container,
-.navbar>.container-fluid {
-    padding: 0 20px;
-    margin: 0 auto;
-    max-width: 100%;
-    width: 100%;
-}
-
-.navbar-expand-lg {
-    padding: 0 !important;
-}
-
-.custom-nav {
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-
-.body {
-    padding: 0 20px;
-}
-
-.login {
-    margin: 20px;
-}
-
-.register {
-    margin: 20px;
-}
-
-.today-button {
-    margin-right: 20px;
-}
-
-/* Calendar functions */
-.month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0px;
-}
-
-.calendar-day {
-    min-height: 150px;
-    text-align: center;
-    border-right: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-    padding-top: 8px;
-    position: relative;
-    box-sizing: border-box;
-    cursor: pointer;
-    display: flex;
-}
-
-.month-grid .calendar-day:nth-child(7n) {
-    border-right: none;
-}
-
-.month-grid .calendar-day:nth-last-child(-n + 7) {
-    border-bottom: none;
-}
-
-.calendar-day.text-gray-400 {
-    background-color: #f9f9f9;
-    cursor: default;
-}
-
-.today-container {
+    height: 100vh;
+    width: 256px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1001;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    color: #3c4043;
 }
 
-.today-highlight_for_month_week {
-    background-color: #1a73e8;
-    color: #ffffff !important;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin: 0 auto;
-    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
+.feature-menu.show {
+    transform: translateX(0);
 }
+
+/* Reset feature-menu when used as a small dropdown trigger inside the navbar */
+.navbar .feature-menu {
+    position: relative !important;
+    top: auto;
+    left: auto;
+    height: auto;
+    width: auto;
+    transform: none;
+    background: transparent;
+    box-shadow: none;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.navbar .feature-menu #featureDropdown {
+    position: absolute;
+    left: 0;
+    top: 36px;
+    min-width: 180px;
+    display: none;
+    /* JS toggles this */
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
+
 
 .week-grid {
     display: grid;
-    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
     grid-template-rows: auto auto 1fr;
     background: #fff;
     border: 1px solid #e0e0e0;
@@ -369,7 +582,7 @@ body {
 .week-grid-header {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
     text-align: center;
     font-weight: 500;
     color: #5f6368;
@@ -390,7 +603,7 @@ body {
 .week-all-day-row {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
     border-bottom: 1px solid #e0e0e0;
     background-color: #fff;
     min-height: 40px;
@@ -429,7 +642,7 @@ body {
 #weekTimeGrid {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 3.5rem repeat(7, minmax(0, 1fr));
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
     grid-auto-rows: 3rem;
     position: relative;
     width: 100%;
@@ -450,6 +663,1047 @@ body {
     color: #5f6368;
 }
 
-#weekView .daysOfWeekHeader {
-    grid-template-columns: 3.5rem repeat(7, 1fr);
+.day-cell {
+    border-right: 1px solid #f1f3f4;
+    border-bottom: 1px solid #f1f3f4;
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
 }
+
+.day-cell:last-child {
+    border-right: none;
+}
+
+.day-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.day-view .day-view-header {
+    padding: 16px 24px;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #3c4043;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.day-view .day-view-header.day-header-today {
+    color: #1a73e8;
+    font-weight: 500;
+}
+
+.day-time-grid {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    background-color: #fff;
+}
+
+.day-time-grid-container {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    width: 100%;
+    position: relative;
+}
+
+.day-time-row {
+    display: contents;
+}
+
+.time-label-cell {
+    position: relative;
+    height: 48px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    background-color: #fff;
+    border-right: 1px solid #e0e0e0;
+}
+
+.time-label {
+    font-size: 10px;
+    color: #70757a;
+    margin-top: -8px;
+    padding-right: 8px;
+    position: relative;
+    background-color: #fff;
+    z-index: 2;
+    font-weight: 400;
+}
+
+.day-cell {
+    position: relative;
+    min-height: 48px;
+    border-bottom: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    box-sizing: border-box;
+    background-color: #fff;
+    transition: background-color 0.2s;
+}
+
+.day-cell:hover {
+    background-color: #f8f9fa;
+}
+
+.current-time-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #ea4335;
+    z-index: 2;
+}
+
+.current-time-indicator::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ea4335;
+}
+
+.day-all-day-row {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    min-height: 24px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.day-all-day-row .time-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 8px;
+    font-size: 0.75rem;
+    color: #5f6368;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+}
+
+.day-all-day-row .all-day-events-container {
+    padding: 4px 8px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    overflow-x: auto;
+}
+
+.day-event {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    z-index: 1;
+    border-left: 3px solid #1a56db;
+    background-color: #e3f2fd;
+    color: #1a237e;
+    font-weight: 500;
+}
+
+.day-event:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.day-time-grid-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 64px;
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to bottom, #f1f3f4 1px, transparent 1px);
+    background-size: 100% 48px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.all-day-event {
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid #1a56db;
+    background-color: #e3f2fd;
+    color: #1a237e;
+    font-weight: 500;
+}
+
+.all-day-event:hover {
+    opacity: 0.9;
+}
+
+
+
+
+.day-view-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a73e8;
+    text-align: center;
+    margin: 24px 0 16px 0;
+    letter-spacing: 0.01em;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px 0;
+    box-shadow: 0 2px 8px rgba(60, 64, 67, 0.04);
+    border: 1px solid #e0e0e0;
+}
+
+.day-header-date {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #222;
+}
+
+.today-highlight {
+    background: #1a73e8 !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15) !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
+
+
+.day-cell {
+    min-height: 40px !important;
+    background: #fff !important;
+    box-sizing: border-box !important;
+    border: 1px solid #e0e0e0 !important;
+    transition: background 0.2s;
+    position: relative;
+    width: 90vw !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: stretch;
+}
+
+.day-header-today {
+    background: #1a73e8 !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 12px 0 !important;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.10);
+    border: 1.5px solid #1a73e8 !important;
+}
+
+.day-cell:hover {
+    background: #f1f8fe !important;
+}
+
+.day-cell.selecting {
+    background: #c2e7ff !important;
+    border-color: #1a73e8 !important;
+    position: relative;
+}
+
+.day-cell.selecting::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 115, 232, 0.1);
+    pointer-events: none;
+}
+
+.month-cell.selecting {
+    background: #c2e7ff !important;
+    border-color: #1a73e8 !important;
+}
+
+.week-cell.selecting {
+    background: #c2e7ff !important;
+    border-color: #1a73e8 !important;
+}
+
+
+.month-grid.dragging,
+.week-time-grid.dragging,
+.day-time-grid.dragging {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Visual feedback for draggable areas */
+.month-cell.draggable,
+.day-cell.draggable {
+    cursor: crosshair;
+}
+
+.month-cell.draggable:hover,
+.day-cell.draggable:hover {
+    background: #f8f9fa !important;
+}
+
+.today-highlight {
+    background: #fff !important;
+    color: inherit !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    border: 1px solid #e0e0e0 !important;
+}
+
+.date-number-dayview {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222;
+    z-index: 2;
+    background: transparent;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.today-circle {
+    background: #1a73e8 !important;
+    color: #fff !important;
+    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
+    border: none !important;
+}
+
+
+
+
+.time-label {
+    background: #f8f9fa !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 12px !important;
+    color: #888 !important;
+    min-height: 40px !important;
+    box-sizing: border-box !important;
+    border: none !important;
+    font-weight: 500;
+    text-align: left;
+}
+
+
+
+/* Month View */
+
+.daysOfWeekHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: #ffffff;
+    border-bottom: 1px solid #dadce0;
+    padding: 0;
+}
+
+.daysOfWeekHeader>div {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: #70757a;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background-color: #ffffff;
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    background-color: #ffffff;
+    flex-grow: 1;
+}
+
+.calendar-day {
+    border-right: 1px solid #dadce0;
+    border-bottom: 1px solid #dadce0;
+    padding: 8px;
+    position: relative;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 14px;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.calendar-day.non-current-month {
+    color: #9aa0a6;
+    background-color: #fafafa;
+}
+
+.calendar-day.non-current-month:hover {
+    background-color: #f1f3f4;
+}
+
+.week-day {
+    min-height: 600px;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    padding-top: 8px;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+}
+
+
+.month-grid .calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.month-grid .calendar-day:nth-last-child(-n + 7) {
+    border-bottom: none;
+}
+
+.calendar-day.text-gray-400 {
+    background-color: #f9f9f9;
+    cursor: default;
+}
+
+.today-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    color: #3c4043;
+}
+
+
+/* Today highlighting */
+.today-container {
+    position: relative;
+}
+
+.today-highlight_for_month_week {
+    background-color: #1a73e8;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Events in month view */
+.month-events-list {
+    margin-top: 4px;
+    width: 100%;
+}
+
+.month-event {
+    background-color: #1a73e8;
+    color: #ffffff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.month-event:hover {
+    background-color: #1557b0;
+}
+
+/* Week View */
+.week-view {
+    background-color: #ffffff;
+    display: none;
+}
+
+.week-time-grid {
+    display: grid;
+    grid-template-columns: 4rem repeat(7, minmax(0, 1fr));
+    background-color: #ffffff;
+}
+
+/* Day View */
+.day-view {
+    background-color: #ffffff;
+    display: none;
+}
+
+.day-time-grid {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    background-color: #ffffff;
+}
+
+/* Year View */
+.year-view {
+    background-color: #ffffff;
+    display: none;
+    padding: 24px;
+}
+
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.today-highlight {
+    background-color: #1a73e8;
+    color: #ffffff !important;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto;
+    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Color picker styles */
+.color-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: #333;
+}
+
+.color-option.selected {
+    border: 2px solid #000;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+}
+
+
+.main-container {
+    display: flex;
+    flex: 1;
+    position: relative;
+    width: 100%;
+}
+
+/* Full-height Feature Panel */
+#featureDropdown {
+    position: fixed;
+    top: 64px;
+    /* adjust if your navbar height differs */
+    left: 0;
+    height: calc(100vh - 64px);
+    width: 280px;
+    /* 320px if you want wider */
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 1050;
+    display: none;
+    /* toggled to block by menu.js */
+    padding: 12px;
+    overflow-y: auto;
+}
+
+/* Remove bullets and spacing */
+#featureDropdown>li {
+    list-style: none;
+    margin: 6px 0;
+}
+
+/* Button-style items */
+#featureDropdown .feature-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #111827;
+    /* gray-900 */
+    cursor: pointer;
+}
+
+#featureDropdown .feature-btn:hover,
+#featureDropdown .feature-btn:focus {
+    background: #eff6ff;
+    /* blue-50 */
+    border-color: #93c5fd;
+    /* blue-300 */
+    color: #1d4ed8;
+    /* blue-700 */
+    outline: none;
+}
+
+@media (max-width: 768px) {
+    #featureDropdown {
+        width: 100vw;
+        left: 0;
+    }
+}
+
+/* Shift main content when feature panel is open (desktop only) */
+.main-container {
+    transition: margin-left 0.25s ease;
+}
+
+@media (min-width: 769px) {
+    body.feature-open .main-container {
+        margin-left: 280px;
+    }
+}
+
+#mobileToggleSidebar {
+    display: none;
+}
+
+.sidebar-header {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 16px;
+}
+
+.sidebar-section {
+    margin-bottom: 20px;
+}
+
+.sidebar-section h4 {
+    color: #5f6368;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.07272727em;
+    text-transform: uppercase;
+    margin: 0 0 12px 0;
+}
+
+.sidebar-item {
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.sidebar-item:hover {
+    background-color: #f1f3f4;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.sidebar-item {
+    animation: fadeIn 0.2s ease-out forwards;
+    opacity: 0;
+}
+
+.sidebar-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.sidebar-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.sidebar-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.sidebar-item:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.app-feature-menu {
+    width: 3%;
+    background-color: aqua;
+    display: block;
+}
+
+#monthView #daysOfWeekHeader {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    column-gap: 0.5rem;
+    padding: 0 0.5rem;
+    position: sticky !important;
+    top: 64px !important;
+    z-index: 100 !important;
+    background-color: #ffffff !important;
+}
+
+#monthView #monthGrid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    column-gap: 0.5rem;
+    padding: 0 0.5rem;
+    margin-top: 66px;
+}
+
+
+.timed-events-container {
+    position: absolute;
+    top: 0;
+    left: 4rem;
+    /* Match the width of the time label column */
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    /* Allow clicks to pass through to the grid cells below */
+}
+
+.timed-events-container>.time-event {
+    pointer-events: auto;
+    /* Re-enable pointer events for the events themselves */
+}
+
+/* Chatbot-style Task Form */
+.chatbot-form-container {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    height: 80px;
+    background-color: #ffffff;
+    border-radius: 50px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    z-index: 150; /* ensure below navbar/dropdowns */
+    border: 1px solid #e5e5e5;
+    max-width: 1600px;
+}
+
+.chatbot-form-container .input-group {
+    width: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.chatbot-form-container .form-control {
+    border: none;
+    padding: 15px 25px;
+    font-size: 18px;
+    box-shadow: none;
+    background-color: #f7f7f8;
+    border-radius: 50px;
+    flex: 1 1 100%;
+    width: 100%;
+}
+
+/* Ensure the inner form consumes the container width */
+#addTaskForm {
+    width: 100%;
+}
+
+/* Floating submit button placed just outside the right edge of the centered bar */
+#addTaskBtn {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom) + 12px);
+    /* align horizontally to the right edge of the centered container (width: 95%, max 1600px) */
+    left: min(calc(50% + (min(95vw, 1600px) / 2) + 10px), calc(100vw - 40px));
+    z-index: 150; /* under navbar/dropdowns */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    font-size: 24px;
+    box-shadow: none;
+}
+
+.chatbot-form-container .btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    font-size: 24px;
+    box-shadow: none;
+    margin-left: auto;
+    background-color: #ffffff;
+    color: #1a73e8;
+}
+
+
+.main-container {
+    padding-bottom: 100px;
+}
+
+/* Floating Add Event Button */
+.addEventBtn {
+    position: fixed;
+    bottom: 24px;
+    /* Increased bottom margin for better spacing */
+    right: 29px;
+    /* Increased right margin for better spacing */
+    background-color: #1a73e8;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 150; /* under navbar/dropdowns */
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.addEventBtn:hover {
+    background-color: #1557b0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
+}
+
+/* Ensure modals sit above the navbar/dropdowns */
+.modal { z-index: 6000 !important; }
+.modal-backdrop { z-index: 5990 !important; }
+
+/* -------------------------
+   Dark Theme (Google Cal vibe)
+   Activated by theme.js adding 'dark' to :root and <body>
+-------------------------- */
+
+:root.dark body {
+    background-color: #202124;
+    color: #e8eaed;
+}
+
+:root.dark .navbar {
+    background-color: #202124 !important;
+    border-bottom: 1px solid #3c4043;
+}
+
+:root.dark .card,
+:root.dark .modal-content,
+:root.dark .dropdown-menu,
+:root.dark .list-group-item {
+    background-color: #2d2e30;
+    color: #e8eaed;
+    border-color: #3c4043;
+}
+
+:root.dark .form-control,
+:root.dark .form-select {
+    background-color: #303134;
+    color: #e8eaed;
+    border-color: #5f6368;
+}
+
+:root.dark .form-control::placeholder {
+    color: #9aa0a6;
+    opacity: 1;
+}
+
+:root.dark .btn-outline-secondary {
+    color: #e8eaed;
+    border-color: #5f6368;
+}
+
+:root.dark .btn-outline-secondary:hover {
+    background-color: #303134;
+    color: #e8eaed;
+    border-color: #8ab4f8;
+}
+
+/* Links */
+:root.dark a { color: #8ab4f8; }
+:root.dark a:hover { color: #a8c7fa; }
+
+/* Chatbot task bar + button */
+:root.dark .chatbot-form-container {
+    background-color: #2d2e30;
+    border-color: #3c4043;
+}
+
+:root.dark #addTaskBtn {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+/* Dropdown menu items */
+:root.dark .dropdown-item { color: #e8eaed; }
+:root.dark .dropdown-item:hover { background-color: #303134; color: #e8eaed; }
+
+/* List group borders */
+:root.dark .list-group-item { border-color: #3c4043; }
+
+/* Strong overrides for calendar views that set white backgrounds */
+:root.dark { color-scheme: dark; }
+
+/* Tailwind/utility override */
+:root.dark .bg-white { background-color: #202124 !important; }
+
+/* Main container */
+:root.dark .main-view { background-color: #202124 !important; }
+
+/* Top-level view wrappers */
+:root.dark .month-view,
+:root.dark .week-view,
+:root.dark .day-view,
+:root.dark .year-view { background-color: #202124 !important; }
+
+/* Grids that explicitly set white */
+:root.dark .month-grid,
+:root.dark .week-time-grid,
+:root.dark .day-time-grid { background-color: #202124 !important; }
+
+/* Day cells often force white with !important */
+:root.dark .day-cell { background: #202124 !important; }
+:root.dark .day-cell:hover { background: #303134 !important; }
+
+/* Hover overrides for draggable interactions */
+:root.dark .month-cell.draggable:hover,
+:root.dark .day-cell.draggable:hover { background: #303134 !important; }
+
+/* Header rows and containers */
+:root.dark .week-grid,
+:root.dark .week-grid-header,
+:root.dark #weekDaysHeader,
+:root.dark .day-all-day-row,
+:root.dark .week-all-day-row { background-color: #202124 !important; }
+
+/* Borders inside grids */
+:root.dark .week-grid-header>div,
+:root.dark #weekDaysHeader>div,
+:root.dark .calendar-day,
+:root.dark .day-cell,
+:root.dark .all-day-events-container>div { border-color: #3c4043 !important; }
+
+/* Month header rows */
+:root.dark .daysOfWeekHeader,
+:root.dark #daysOfWeekHeader { background-color: #202124 !important; border-color: #3c4043 !important; color: #e8eaed !important; }
+:root.dark .daysOfWeekHeader>div { background-color: #202124 !important; color: #e8eaed !important; }
+
+/* All-day events containers in day/week views */
+:root.dark #dayAllDayEvents { background-color: #202124 !important; border-color: #3c4043 !important; }
+:root.dark #weekAllDayEvents { background-color: #202124 !important; border-color: #3c4043 !important; }
+
+/* Month cells */
+:root.dark .calendar-day { background-color: #202124 !important; }
+:root.dark .calendar-day:hover { background-color: #303134 !important; }
+:root.dark .calendar-day.non-current-month { background-color: #2a2b2e !important; color: #9aa0a6 !important; }
+
+/* Week grid/header and labels */
+:root.dark .week-grid { background: #202124 !important; border-color: #3c4043 !important; }
+:root.dark .week-grid-header { background-color: #2d2e30 !important; color: #9aa0a6 !important; }
+:root.dark .time-label,
+:root.dark .time-label-cell { background-color: #202124 !important; color: #9aa0a6 !important; border-color: #3c4043 !important; }
+
+/* Day time grid background lines */
+:root.dark .day-time-grid-container::before { background-image: linear-gradient(to bottom, #3c4043 1px, transparent 1px) !important; }
+
+/* Mini month/year components */
+:root.dark .mini-month { background-color: #2d2e30 !important; border-color: #3c4043 !important; }
+:root.dark .mini-day:hover { background-color: #303134 !important; }
+
+/* Generic white headers */
+:root.dark .header { background-color: #202124 !important; border-color: #3c4043 !important; color: #e8eaed !important; }
+
+/* Sticky month header and top bar */
+:root.dark #monthHeaderSticky,
+:root.dark .top-bar { background-color: #202124 !important; border-bottom: 1px solid #3c4043 !important; }
+
+/* Today highlight and today button */
+:root.dark .today-highlight { background: #2a2b2e !important; color: inherit !important; }
+:root.dark .today-button { background-color: #303134 !important; color: #e8eaed !important; border-color: #5f6368 !important; }
+
+/* Floating Add Event button */
+:root.dark .addEventBtn { background-color: #2d2e30 !important; color: #e8eaed !important; border: 1px solid #3c4043 !important; }
+
+/* Feature menu panels */
+:root.dark .feature-menu,
+:root.dark #featureDropdown { background-color: #202124 !important; border-color: #3c4043 !important; }
+
+/* Force white text across calendar in dark mode */
+:root.dark .main-view,
+:root.dark .main-view * { color: #e8eaed !important; }
+
+/* Ensure overlays inherit white text */
+:root.dark .modal-content,
+:root.dark .modal-content * { color: #e8eaed !important; }
+:root.dark .dropdown-menu,
+:root.dark .dropdown-menu * { color: #e8eaed !important; }
