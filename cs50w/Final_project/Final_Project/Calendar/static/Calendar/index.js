@@ -890,6 +890,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+<<<<<<< HEAD
+    // the pervious and next buttons function
+    next_button = document.getElementById('nextBtn');
+    document.addEventListener('click', function () {
+
+    })
+
+=======
     // Add Event Button
     if (addEventBtn) {
         addEventBtn.addEventListener('click', () => {
@@ -898,6 +906,7 @@ document.addEventListener('DOMContentLoaded', function () {
             openAddEventModal(todayStr);
         });
     }
+>>>>>>> 534934ed07fcb7ed98082b73a4dfc712785f57ad
 
     // Add Event Form
     if (addEventForm) {
