@@ -3,6 +3,8 @@
 
   <head>
     <title>Calendar</title>
+    <link rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -21,76 +23,7 @@
   </head>
 
   <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-    <!-- AI Chat Sidebar -->
-    <div class="ai-sidebar" id="aiSidebar">
-      <div class="ai-sidebar-header">
-        <button class="new-chat-btn" id="newChatBtn">
-          <i class="fas fa-plus"></i>
-          New chat
-        </button>
-        <button class="ai-sidebar-toggle" id="aiSidebarToggle">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
 
-      <div class="chat-history">
-        <div class="chat-item active">
-          <i class="fas fa-message"></i>
-          <span>New conversation</span>
-          <i class="fas fa-ellipsis-vertical"></i>
-        </div>
-      </div>
-
-      <div class="ai-sidebar-footer">
-        <div class="user-info">
-          <div class="user-avatar">
-            <i class="fas fa-user"></i>
-          </div>
-          <span class="user-name">User</span>
-        </div>
-        <button class="settings-btn">
-          <i class="fas fa-cog"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- AI Chat Main Area -->
-    <div class="ai-main-content" id="aiMainContent">
-      <div class="chat-container">
-        <div class="chat-header">
-          <h1>ChatGPT</h1>
-          <div class="header-actions">
-            <button class="ai-close-btn" id="aiCloseBtn" title="Close AI Chat">
-              <i class="fas fa-times"></i>
-            </button>
-            <button class="theme-toggle" id="themeToggle">
-              <i class="fas fa-moon"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-          <div class="welcome-message">
-            <div class="welcome-icon">
-              <i class="fas fa-robot"></i>
-            </div>
-            <h2>How can I help you today?</h2>
-          </div>
-        </div>
-
-        <div class="chat-input-container">
-          <div class="chat-input-wrapper">
-            <textarea id="chatInput" placeholder="Message ChatGPT..." rows="1" maxlength="4000"></textarea>
-            <button class="send-btn" id="sendBtn" disabled>
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-          <div class="input-footer">
-            <span class="input-hint">ChatGPT can make mistakes. Consider checking important information.</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- AI Chat Toggle Button -->
     <button class="ai-chat-toggle-btn" id="aiChatToggleBtn" title="Open AI Chat">
@@ -115,7 +48,7 @@
         <li><a href="events.html"
             class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Events</a>
         </li>
-        <li><a href="/zaeem/todolist/index.html"
+        <li><a href="tasks.html"
             class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Tasks</a>
         </li>
         <li><a href="settings.html"
@@ -135,63 +68,49 @@
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
           </svg>
         </button>
-        <img class="calendar-logo" src="image/calendar_5_2x.png" alt="Calendar Logo">
+        <div class="header-controls">
+          <button class="today-button">Today</button>
+          <div class="nav-buttons">
+            <button id="prevBtn" class="icon-button" aria-label="Previous">
+              <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="nextBtn" class="icon-button" aria-label="Next">
+              <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div id="currentDisplay" class="current-display">July 2025</div>
+        </div>
       </div>
-      <div class="middle-section">
-        <button class="today-button">Today</button>
-        <button id="prevBtn" class="icon-button" aria-label="Previous Month">
-          <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-            <path fill-rule="evenodd"
-              d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
-        <div id="currentDisplay" class="current-display">July 2025</div>
-        <button id="nextBtn" class="icon-button" aria-label="Next Month">
-          <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-            <path fill-rule="evenodd"
-              d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
+
+      <div class="right-section">
         <button class="icon-button" aria-label="Search">
           <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
           </svg>
         </button>
-      </div>
-      <div class="right-section">
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-            aria-expanded="false">
-            month
-          </button>
-          <ul class="dropdown-menu">
-            <li><button class="weekViewBtn" type="button">Week</button></li>
-            <li><button class="dayViewBtn" type="button">Day</button></li>
-            <li><button class="monthViewBtn" type="button">Month</button></li>
-            <li><button class="yearViewBtn" type="button">Year</button></li>
-          </ul>
+
+        <div class="view-switcher">
+          <select id="viewSelect" class="view-select">
+            <option value="month" selected>Month</option>
+            <option value="week">Week</option>
+            <option value="day">Day</option>
+            <option value="year">Year</option>
+          </select>
         </div>
-        <!-- Placeholder for other Google Calendar header elements -->
+
         <button class="icon-button" aria-label="Settings">
-          <img src="image/gear.svg" alt="Settings Icon">
+          <img src="image/gear.svg" alt="Settings Icon" style="width: 20px; height: 20px;">
         </button>
-        <button class="icon-button" aria-label="help">
-          <img src="image/question-circle.svg" alt="Help Icon">
-        </button>
-        <button id="mobileToggleSidebar" class="icon-button md:hidden" aria-label="Toggle sidebar">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-        <button id="mobileToggleSidebar" class="icon-button md:hidden" aria-label="Toggle sidebar">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-        <!-- Placeholder for user profile picture -->
+
         <img class="user-profile-pic" src="https://placehold.co/32x32/FFC107/FFFFFF?text=U" alt="User Profile Picture">
       </div>
     </div>
@@ -203,7 +122,7 @@
         <div id="monthView" class="month-view">
           <div class="add_event"></div>
           <div id="daysOfWeekHeader"
-            class="grid grid-cols-7 text-center font-medium text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+            class="grid text-center font-medium text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
             <div>Sun</div>
             <div>Mon</div>
             <div>Tue</div>
@@ -271,10 +190,22 @@
         </div>
       </div>
 
-      <!-- Right Sidebar -->
-      <div id="calendarSidebar" class="sidebar w-64 border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
-        style="display: block !important;">
-        <!-- Empty sidebar -->
+      <!-- Chat Overlay for Blur Effect -->
+      <div id="chatOverlay" class="chat-overlay hidden"></div>
+
+      <div id="floatingChatContainer" class="floating-chat-container">
+        <button id="closeChatBtn" class="close-chat-btn" title="Close Chat">
+          <i class="fas fa-times"></i>
+        </button>
+        <div id="chatMessages" class="chat-messages-floating">
+          <!-- Chat history will appear here -->
+        </div>
+        <div class="chat-input-box">
+          <input type="text" id="calendarChatInput" placeholder="Ask your calendar..." autocomplete="off">
+          <button id="calendarChatSendBtn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
       </div>
     </div>
 

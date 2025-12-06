@@ -1,0 +1,156 @@
+/* Kanban Board Layout */
+.board-container {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    overflow-x: auto;
+    height: calc(100vh - 48px);
+    /* Adjust based on new header height */
+    align-items: flex-start;
+}
+
+.column {
+    background-color: var(--bg-secondary);
+    min-width: 300px;
+    max-width: 300px;
+    border-radius: 4px;
+    /* Notion style */
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+}
+
+.dark .column {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border-color);
+}
+
+.column-header {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark .column-header {
+    color: var(--dark-text-secondary);
+    border-bottom-color: var(--dark-border-color);
+}
+
+.task-list {
+    padding: 0.5rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 100px;
+    /* Drop target area */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Task Card */
+.task-card {
+    background-color: var(--bg-primary);
+    padding: 0.75rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.dark .task-card {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+    border-color: var(--dark-border-color);
+}
+
+.task-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+/* Add Task Button */
+.add-task-btn {
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.add-task-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.dark .add-task-btn {
+    color: var(--dark-text-secondary);
+}
+
+.dark .add-task-btn:hover {
+    background-color: var(--dark-bg-hover);
+    color: var(--dark-text-primary);
+}
+
+/* Tags/Labels */
+.task-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.tag-design {
+    background-color: rgba(235, 87, 87, 0.1);
+    color: #eb5757;
+}
+
+.tag-dev {
+    background-color: rgba(46, 170, 220, 0.1);
+    color: #2eaadc;
+}
+
+.tag-urgent {
+    background-color: rgba(235, 87, 87, 0.2);
+    color: #eb5757;
+}
+
+.dark .tag-design {
+    background-color: rgba(235, 87, 87, 0.2);
+    color: #eb5757;
+}
+
+.dark .tag-dev {
+    background-color: rgba(46, 170, 220, 0.2);
+    color: #2eaadc;
+}
+
+.dark .tag-urgent {
+    background-color: rgba(235, 87, 87, 0.3);
+    color: #eb5757;
+}

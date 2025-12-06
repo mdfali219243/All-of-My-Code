@@ -1,18 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tasks</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style/dark_mode.css">
-</head>
-<body class="bg-gray-100">
-    <div class="container mx-auto mt-10">
-        <h1 class="text-3xl font-bold">Tasks Page</h1>
-        <p class="mt-4">This is the tasks page.</p>
-        <button onclick="window.location.href='index.html'" class="btn btn-primary w-full px-4 py-2 text-lg font-semibold rounded-lg" style="background-color:#3b82f6; border-color:#3b82f6; color:#fff;">Back to Calendar</button>
-    </div>
-    <script src="javascript/theme.js"></script>
-</body>
+
+    <head>
+        <title>Task Board</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+            }
+        </script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="style/home_page.css">
+        <link rel="stylesheet" href="style/tasks.css">
+        <link rel="stylesheet" href="style/dark_mode.css">
+    </head>
+
+    <body class="text-gray-900 dark:text-gray-100">
+
+        <!-- Chat Overlay for Blur Effect -->
+        <div id="chatOverlay" class="chat-overlay hidden"></div>
+
+        <div id="floatingChatContainer" class="floating-chat-container">
+            <button id="closeChatBtn" class="close-chat-btn" title="Close Chat">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="chatMessages" class="chat-messages-floating">
+                <!-- Chat history will appear here -->
+            </div>
+            <div class="chat-input-box">
+                <input type="text" id="calendarChatInput" placeholder="Ask about your tasks..." autocomplete="off">
+                <button id="calendarChatSendBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Feature Menu -->
+        <div class="feature-menu" id="featureMenu">
+            <div class="p-4 flex items-center justify-between border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Calendar Menu</h2>
+                <button class="icon-button" id="closeMenuBtn" aria-label="Close navigation menu">
+                    <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+            <ul class="py-2">
+                <li><a href="index.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">My
+                        Calendar</a></li>
+                <li><a href="events.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Events</a>
+                </li>
+                <li><a href="tasks.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Tasks</a>
+                </li>
+                <li><a href="settings.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Overlay for when the menu is open -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="left-section">
+                <button class="icon-button" id="openMenuBtn" aria-label="Open navigation menu">
+                    <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                    </svg>
+                </button>
+                <a href="index.html" class="icon-button ml-2" aria-label="Back to Calendar">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-xl font-bold ml-4">Task Board</h1>
+            </div>
+            <div class="right-section">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="board-container">
+            <!-- To Do Column -->
+            <div class="column">
+                <div class="column-header">
+                    <span>To Do</span>
+                    <span class="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">3</span>
+                </div>
+                <div class="task-list" id="todo-list">
+                    <!-- Tasks will be injected here -->
+                </div>
+                <button class="add-task-btn" data-column="todo-list">
+                    <i class="fas fa-plus"></i> Add Card
+                </button>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="column">
+                <div class="column-header">
+                    <span>In Progress</span>
+                    <span class="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">1</span>
+                </div>
+                <div class="task-list" id="inprogress-list">
+                    <!-- Tasks will be injected here -->
+                </div>
+                <button class="add-task-btn" data-column="inprogress-list">
+                    <i class="fas fa-plus"></i> Add Card
+                </button>
+            </div>
+
+            <!-- Done Column -->
+            <div class="column">
+                <div class="column-header">
+                    <span>Done</span>
+                    <span class="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">2</span>
+                </div>
+                <div class="task-list" id="done-list">
+                    <!-- Tasks will be injected here -->
+                </div>
+                <button class="add-task-btn" data-column="done-list">
+                    <i class="fas fa-plus"></i> Add Card
+                </button>
+            </div>
+        </div>
+
+        <script src="javascript/theme.js"></script>
+        <script src="javascript/tasks.js"></script>
+        <script src="javascript/sidebar.js"></script>
+        <script src="javascript/ai-chat.js"></script>
+        <script src="javascript/menu.js"></script>
+    </body>
+
 </html>

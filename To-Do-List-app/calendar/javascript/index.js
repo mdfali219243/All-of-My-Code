@@ -336,90 +336,100 @@ function renderMonthView(date) {
 
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
-    const startDayIndex = firstDayOfMonth.getDay();
+    const startDayIndex = firstDayOfMonth.getDay(); // 0 for Sunday
     const daysInMonth = lastDayOfMonth.getDate();
 
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
-    for (let i = startDayIndex - 1; i >= 0; i--) {
-        const dayDiv = document.createElement('div');
-        dayDiv.classList.add('calendar-day', 'py-2');
-        dayDiv.textContent = prevMonthLastDay - i;
-        dayDiv.classList.add('non-current-month');
-        if (monthGrid) monthGrid.appendChild(dayDiv);
-    }
+    // Calculate the start date for the grid (including previous month's days)
+    const startDate = new Date(year, month, 1 - startDayIndex);
 
-    // creating the days of the month
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dayDiv = document.createElement('div');
-        dayDiv.classList.add('calendar-day', 'month-cell', 'py-2', 'relative');
-        dayDiv.textContent = i;
-        const fullDate = new Date(year, month, i);
-        dayDiv.dataset.date = formatDateToISO(fullDate);
+    // Iterate 6 rows * 7 columns = 42 cells
+    for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 7; col++) {
+            const currentDayDate = new Date(startDate);
+            currentDayDate.setDate(startDate.getDate() + (row * 7) + col);
 
-        // highlighting the today's date
-        const today = new Date();
-        if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-            dayDiv.innerHTML = `<span class="today-highlight_for_month_week">${i}</span>`;
-            dayDiv.classList.add('today-container');
-        }
+            const dayDiv = document.createElement('div');
+            dayDiv.classList.add('calendar-day', 'month-cell', 'py-2', 'relative');
 
-        // Render events for this date
-        const cellDateStr = formatDateToISO(fullDate);
-        const eventsForDay = calendarEvents.filter(ev => ev.date === cellDateStr);
-        if (eventsForDay.length > 0) {
-            const eventsList = document.createElement('div');
-            eventsList.className = 'month-events-list';
-            eventsForDay.forEach(ev => {
-                const isDarkMode = isDarkModeEnabled();
-                const evDiv = document.createElement('div');
-                evDiv.className = 'month-event px-1 py-0.5 rounded mb-1 text-xs truncate';
-                evDiv.style.cursor = 'pointer';
+            // Determine if it's current month
+            const isCurrentMonth = currentDayDate.getMonth() === month;
+            if (!isCurrentMonth) {
+                dayDiv.classList.add('non-current-month', 'text-gray-400');
+            }
 
-                // Only set inline colors for custom-colored events; otherwise rely on CSS with 'event-default'
-                if (ev.color) {
-                    if (isDarkMode) {
-                        evDiv.style.backgroundColor = `${ev.color}80`;
-                        evDiv.style.color = '#e8eaed';
-                        evDiv.style.borderLeft = `3px solid ${ev.color}`;
+            dayDiv.textContent = currentDayDate.getDate();
+            dayDiv.dataset.date = formatDateToISO(currentDayDate);
+
+            // highlighting the today's date
+            const today = new Date();
+            if (currentDayDate.getDate() === today.getDate() &&
+                currentDayDate.getMonth() === today.getMonth() &&
+                currentDayDate.getFullYear() === today.getFullYear()) {
+                dayDiv.innerHTML = `<span class="today-highlight_for_month_week">${currentDayDate.getDate()}</span>`;
+                dayDiv.classList.add('today-container');
+            }
+
+            // Render events for this date
+            const cellDateStr = formatDateToISO(currentDayDate);
+            const eventsForDay = calendarEvents.filter(ev => ev.date === cellDateStr);
+            if (eventsForDay.length > 0) {
+                const eventsList = document.createElement('div');
+                eventsList.className = 'month-events-list';
+                eventsForDay.forEach(ev => {
+                    const isDarkMode = isDarkModeEnabled();
+                    const evDiv = document.createElement('div');
+                    evDiv.className = 'month-event px-1 py-0.5 rounded mb-1 text-xs truncate';
+                    evDiv.style.cursor = 'pointer';
+
+                    // Only set inline colors for custom-colored events; otherwise rely on CSS with 'event-default'
+                    if (ev.color) {
+                        if (isDarkMode) {
+                            evDiv.style.backgroundColor = `${ev.color}80`;
+                            evDiv.style.color = '#e8eaed';
+                            evDiv.style.borderLeft = `3px solid ${ev.color}`;
+                        } else {
+                            evDiv.style.backgroundColor = `${ev.color}20`;
+                            evDiv.style.color = ev.color;
+                            evDiv.style.borderLeft = `3px solid ${ev.color}`;
+                        }
                     } else {
-                        evDiv.style.backgroundColor = `${ev.color}20`;
-                        evDiv.style.color = ev.color;
-                        evDiv.style.borderLeft = `3px solid ${ev.color}`;
+                        evDiv.classList.add('event-default');
                     }
-                } else {
-                    evDiv.classList.add('event-default');
-                }
 
-                evDiv.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    openViewEventModal(ev.id);
+                    evDiv.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        openViewEventModal(ev.id);
+                    });
+                    if (ev.allDay) {
+                        evDiv.textContent = `• ${ev.title} (All Day)`;
+                    } else if (ev.startTime && ev.endTime) {
+                        evDiv.textContent = `• ${ev.title} (${ev.startTime} - ${ev.endTime})`;
+                    } else if (ev.startTime) {
+                        evDiv.textContent = `• ${ev.title} (${ev.startTime})`;
+                    } else {
+                        evDiv.textContent = `• ${ev.title}`;
+                    }
+                    eventsList.appendChild(evDiv);
                 });
-                if (ev.allDay) {
-                    evDiv.textContent = `• ${ev.title} (All Day)`;
-                } else if (ev.startTime && ev.endTime) {
-                    evDiv.textContent = `• ${ev.title} (${ev.startTime} - ${ev.endTime})`;
-                } else if (ev.startTime) {
-                    evDiv.textContent = `• ${ev.title} (${ev.startTime})`;
-                } else {
-                    evDiv.textContent = `• ${ev.title}`;
-                }
-                eventsList.appendChild(evDiv);
-            });
-            dayDiv.appendChild(eventsList);
-        }
+                dayDiv.appendChild(eventsList);
+            }
 
-        if (monthGrid) monthGrid.appendChild(dayDiv);
+            if (monthGrid) monthGrid.appendChild(dayDiv);
+        }
     }
 
-    // creating the remaining days of the month
-    const totalDaysDisplayed = startDayIndex + daysInMonth;
-    const remainingCells = 42 - totalDaysDisplayed;
-    for (let i = 1; i <= remainingCells; i++) {
-        const dayDiv = document.createElement('div');
-        dayDiv.classList.add('calendar-day', 'py-2');
-        dayDiv.textContent = i;
-        dayDiv.classList.add('non-current-month');
-        if (monthGrid) monthGrid.appendChild(dayDiv);
+    // adding the click event to the days of the month
+    if (monthGrid) {
+        monthGrid.querySelectorAll('.calendar-day.month-cell').forEach(dayDiv => {
+            dayDiv.addEventListener('click', (e) => {
+                // Only open add modal if not clicking on an event
+                if (e.target.closest('.month-event')) return;
+                openAddEventModal(dayDiv.dataset.date);
+            });
+        });
+
+        // Enable drag selection for month view
+        enableDragSelection(monthGrid, 'month');
     }
 
     // adding the click event to the days of the month
@@ -587,7 +597,7 @@ function renderWeekView(date) {
 
         // Time label cell
         const timeCell = document.createElement('div');
-        timeCell.classList.add('time-label', 'border', 'text-xs', 'text-right', 'pr-2', 'py-1');
+        timeCell.classList.add('time-label', 'text-xs', 'text-right', 'pr-2', 'py-1');
         const hourStr = rowHour < 12 ? `${rowHour} AM` : rowHour === 12 ? '12 PM' : rowHour === 24 ? '12 AM' : rowHour === 25 ? '1 AM' : `${rowHour - 12} PM`;
         timeCell.textContent = hourStr;
         weekTimeGrid.appendChild(timeCell);
@@ -595,7 +605,7 @@ function renderWeekView(date) {
         // 7 day cells
         for (let d = 0; d < 7; d++) {
             const dayCell = document.createElement('div');
-            dayCell.classList.add('week-cell', 'day-cell', 'border', 'relative', 'h-12');
+            dayCell.classList.add('day-cell', 'relative', 'h-12');
 
             // For future event placement, store date and hour
             const currentDay = new Date(startOfWeek);
@@ -1217,35 +1227,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const addEventBtn = document.getElementById('addEventBtn');
 
     // View switch event listeners
-    if (weekViewBtn) {
-        weekViewBtn.addEventListener('click', () => {
-            currentView = 'week';
-            renderWeekView(currentDate);
-            updateDropdownText();
-        });
-    }
-
-    if (dayViewBtn) {
-        dayViewBtn.addEventListener('click', () => {
-            currentView = 'day';
-            renderDayView(currentDate);
-            updateDropdownText();
-        });
-    }
-
-    if (monthViewBtn) {
-        monthViewBtn.addEventListener('click', () => {
-            currentView = 'month';
-            renderMonthView(currentDate);
-            updateDropdownText();
-        });
-    }
-
-    if (yearViewBtn) {
-        yearViewBtn.addEventListener('click', () => {
-            currentView = 'year';
-            renderYearView(currentDate);
-            updateDropdownText();
+    // View switch event listeners for the new select element
+    const viewSelect = document.getElementById('viewSelect');
+    if (viewSelect) {
+        viewSelect.addEventListener('change', (e) => {
+            currentView = e.target.value;
+            switch (currentView) {
+                case 'month': renderMonthView(currentDate); break;
+                case 'week': renderWeekView(currentDate); break;
+                case 'day': renderDayView(currentDate); break;
+                case 'year': renderYearView(currentDate); break;
+            }
         });
     }
 
@@ -1537,17 +1529,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Update dropdown toggle text based on current view
+    // Update view select value based on current view
     function updateDropdownText() {
-        const dropdownToggle = document.querySelector('.dropdown-toggle');
-        if (dropdownToggle) {
-            const textMap = {
-                'month': 'Month',
-                'week': 'Week',
-                'day': 'Day',
-                'year': 'Year'
-            };
-            dropdownToggle.textContent = textMap[currentView] || 'Month';
+        const viewSelect = document.getElementById('viewSelect');
+        if (viewSelect) {
+            viewSelect.value = currentView;
         }
     }
 
@@ -1629,4 +1615,106 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial render
     updateDropdownText();
     initializeView();
+
+    // Floating Chat Focus Effects
+    const chatInput = document.getElementById('calendarChatInput');
+    const chatSendBtn = document.getElementById('calendarChatSendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    const mainView = document.getElementById('main_view');
+    const header = document.querySelector('.header');
+    const chatOverlay = document.getElementById('chatOverlay');
+    const closeChatBtn = document.getElementById('closeChatBtn');
+
+    if (chatInput) {
+        // When chat is focused, blur background and show overlay
+        chatInput.addEventListener('focus', () => {
+            if (mainView) mainView.classList.add('blur-content');
+            if (header) header.classList.add('blur-content');
+            if (chatOverlay) chatOverlay.classList.add('active');
+            if (closeChatBtn) closeChatBtn.style.display = 'flex';
+        });
+
+        // Function to close chat focus
+        // param endChat: boolean, if true, clears the chat session (for close button)
+        const closeChatFocus = (endChat = false) => {
+            if (mainView) mainView.classList.remove('blur-content');
+            if (header) header.classList.remove('blur-content');
+            if (chatOverlay) chatOverlay.classList.remove('active');
+            if (closeChatBtn) closeChatBtn.style.display = 'none';
+            chatInput.blur(); // Remove focus from input
+
+            // Clear chat session ONLY if requested (Close button)
+            if (endChat) {
+                if (chatMessages) chatMessages.innerHTML = '';
+                chatInput.value = '';
+            }
+        };
+
+        // Clicking the overlay closes the chat session (removes blur) - PRESERVE HISTORY
+        if (chatOverlay) {
+            chatOverlay.addEventListener('click', () => closeChatFocus(false));
+        }
+
+        // Clicking the close button also closes the chat session - CLEAR HISTORY
+        if (closeChatBtn) {
+            closeChatBtn.addEventListener('click', () => closeChatFocus(true));
+        }
+
+        // Chat Logic
+        const handleChatSubmit = () => {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            // 1. Add User Message
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            // 2. Call AI Backend
+            const loadingBubble = document.createElement('div');
+            loadingBubble.classList.add('message-bubble', 'ai', 'loading');
+            loadingBubble.textContent = '...';
+            chatMessages.appendChild(loadingBubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            fetch('http://127.0.0.1:5000/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: text })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loadingBubble.remove();
+                    const reply = data.reply || "I'm having trouble connecting to my brain right now.";
+                    addMessage(reply, 'ai');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingBubble.remove();
+                    addMessage("Sorry, I can't connect to the server. Is it running?", 'ai');
+                });
+        };
+
+        const addMessage = (text, sender) => {
+            if (!chatMessages) return;
+            const bubble = document.createElement('div');
+            bubble.classList.add('message-bubble', sender);
+            bubble.textContent = text;
+            chatMessages.appendChild(bubble);
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        if (chatSendBtn) {
+            chatSendBtn.addEventListener('click', handleChatSubmit);
+        }
+
+        // Use keydown for better compatibility
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleChatSubmit();
+            }
+        });
+    }
 });

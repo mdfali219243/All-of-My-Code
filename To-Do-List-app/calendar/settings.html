@@ -1,40 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style/dark_mode.css">
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-    <div class="container mx-auto mt-10 p-4">
-        <h1 class="text-3xl font-bold">Settings</h1>
-        <div class="mt-8">
-            <h2 class="text-2xl font-semibold">Appearance</h2>
-            <p class="text-gray-600 dark:text-gray-400 mt-2">Choose how your calendar looks. This will be saved for your next visit.</p>
-            <fieldset class="mt-4">
-                <legend class="sr-only">Theme</legend>
-                <div class="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
-                    <div class="flex items-center">
-                        <input id="theme-light" name="theme" type="radio" value="light" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                        <label for="theme-light" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Light
-                        </label>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Settings</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="style/dark_mode.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="style/home_page.css">
+    </head>
+
+    <body class="text-gray-900 dark:text-gray-100">
+
+        <!-- AI Chat Sidebar -->
+        <div class="ai-sidebar" id="aiSidebar">
+            <div class="ai-sidebar-header">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fas fa-plus"></i>
+                    New chat
+                </button>
+                <button class="ai-sidebar-toggle" id="aiSidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="chat-history">
+                <div class="chat-item active">
+                    <i class="fas fa-message"></i>
+                    <span>New conversation</span>
+                    <i class="fas fa-ellipsis-vertical"></i>
+                </div>
+            </div>
+
+            <div class="ai-sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <div class="flex items-center">
-                        <input id="theme-dark" name="theme" type="radio" value="dark" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                        <label for="theme-dark" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Dark
-                        </label>
+                    <span class="user-name">User</span>
+                </div>
+                <button class="settings-btn">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Chat Main Area -->
+        <div class="ai-main-content" id="aiMainContent">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h1>ChatGPT</h1>
+                    <div class="header-actions">
+                        <button class="ai-close-btn" id="aiCloseBtn" title="Close AI Chat">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="theme-toggle" id="themeToggle">
+                            <i class="fas fa-moon"></i>
+                        </button>
                     </div>
                 </div>
-            </fieldset>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-message">
+                        <div class="welcome-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h2>How can I help you today?</h2>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea id="chatInput" placeholder="Message ChatGPT..." rows="1" maxlength="4000"></textarea>
+                        <button class="send-btn" id="sendBtn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-footer">
+                        <span class="input-hint">ChatGPT can make mistakes. Consider checking important
+                            information.</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mt-8">
-            <button onclick="window.location.href='index.html'" class="btn btn-primary w-full px-4 py-2 text-lg font-semibold rounded-lg" style="background-color:#3b82f6; border-color:#3b82f6; color:#fff;">Back to Calendar</button>
+
+        <!-- AI Chat Toggle Button -->
+        <button class="ai-chat-toggle-btn" id="aiChatToggleBtn" title="Open AI Chat">
+            <i class="fas fa-robot"></i>
+        </button>
+
+        <!-- Feature Menu -->
+        <div class="feature-menu" id="featureMenu">
+            <div class="p-4 flex items-center justify-between border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Calendar Menu</h2>
+                <button class="icon-button" id="closeMenuBtn" aria-label="Close navigation menu">
+                    <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+            <ul class="py-2">
+                <li><a href="index.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">My
+                        Calendar</a></li>
+                <li><a href="events.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Events</a>
+                </li>
+                <li><a href="tasks.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Tasks</a>
+                </li>
+                <li><a href="settings.html"
+                        class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
+                </li>
+            </ul>
         </div>
-    </div>
-    <script src="javascript/theme.js"></script>
-</body>
+
+        <!-- Overlay for when the menu is open -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="left-section">
+                <button class="icon-button" id="openMenuBtn" aria-label="Open navigation menu">
+                    <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                    </svg>
+                </button>
+                <a href="index.html" class="icon-button ml-2" aria-label="Back to Calendar">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-xl font-bold ml-4">Settings</h1>
+            </div>
+            <div class="right-section">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container mx-auto mt-10 p-4">
+            <div class="mt-8">
+                <h2 class="text-2xl font-semibold">Appearance</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Choose how your calendar looks. This will be saved for
+                    your next visit.</p>
+                <fieldset class="mt-4">
+                    <legend class="sr-only">Theme</legend>
+                    <div class="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
+                        <div class="flex items-center">
+                            <input id="theme-light" name="theme" type="radio" value="light"
+                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                            <label for="theme-light"
+                                class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Light
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="theme-dark" name="theme" type="radio" value="dark"
+                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                            <label for="theme-dark"
+                                class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Dark
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="mt-8">
+                <button onclick="window.location.href='index.html'"
+                    class="btn btn-primary w-full px-4 py-2 text-lg font-semibold rounded-lg"
+                    style="background-color:#3b82f6; border-color:#3b82f6; color:#fff;">Back to Calendar</button>
+            </div>
+        </div>
+        <script src="javascript/theme.js"></script>
+        <script src="javascript/sidebar.js"></script>
+        <script src="javascript/ai-chat.js"></script>
+        <script src="javascript/menu.js"></script>
+    </body>
+
 </html>

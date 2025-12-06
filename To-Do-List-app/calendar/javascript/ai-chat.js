@@ -311,8 +311,4 @@ document.addEventListener('click', function (e) {
 });
 
 // Prevent form submission
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-    }
-});
+

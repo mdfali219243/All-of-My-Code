@@ -9,28 +9,8 @@ DB_PATH = os.path.join(BASE_DIR, "chat.db")
 
 app = Flask(__name__)
 
-# Keep Flask-CORS, but also add an explicit after_request hook so
-# every response (including preflight) has the correct headers.
+# Allow CORS for all domains on all routes
 CORS(app)
-
-
-ALLOWED_ORIGINS = {
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-}
-
-
-@app.after_request
-def add_cors_headers(response):
-    """Echo the requesting origin when it matches our local dev hosts."""
-    origin = request.headers.get("Origin")
-    if origin in ALLOWED_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Vary"] = "Origin"
-
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
