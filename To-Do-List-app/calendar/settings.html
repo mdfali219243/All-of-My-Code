@@ -9,86 +9,91 @@
         <link rel="stylesheet" href="style/dark_mode.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link rel="stylesheet" href="style/home_page.css">
+        <style>
+            .settings-container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .settings-section {
+                background: var(--bg-primary, #fff);
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            html.dark .settings-section {
+                background: var(--dark-bg-primary, #1f2937);
+            }
+
+            .settings-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            .settings-description {
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
+            }
+
+            html.dark .settings-description {
+                color: #9ca3af;
+            }
+
+            .theme-option {
+                display: flex;
+                align-items: center;
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .theme-option:hover {
+                background: #f3f4f6;
+            }
+
+            html.dark .theme-option:hover {
+                background: #374151;
+            }
+
+            .theme-option input[type="radio"] {
+                width: 1.25rem;
+                height: 1.25rem;
+                margin-right: 0.75rem;
+            }
+
+            .theme-option label {
+                cursor: pointer;
+                font-weight: 500;
+            }
+
+            .back-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1.5rem;
+                background: #3b82f6;
+                color: white;
+                border-radius: 8px;
+                font-weight: 500;
+                transition: background 0.2s;
+                text-decoration: none;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .back-btn:hover {
+                background: #2563eb;
+            }
+        </style>
     </head>
 
-    <body class="text-gray-900 dark:text-gray-100">
-
-        <!-- AI Chat Sidebar -->
-        <div class="ai-sidebar" id="aiSidebar">
-            <div class="ai-sidebar-header">
-                <button class="new-chat-btn" id="newChatBtn">
-                    <i class="fas fa-plus"></i>
-                    New chat
-                </button>
-                <button class="ai-sidebar-toggle" id="aiSidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-
-            <div class="chat-history">
-                <div class="chat-item active">
-                    <i class="fas fa-message"></i>
-                    <span>New conversation</span>
-                    <i class="fas fa-ellipsis-vertical"></i>
-                </div>
-            </div>
-
-            <div class="ai-sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <span class="user-name">User</span>
-                </div>
-                <button class="settings-btn">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- AI Chat Main Area -->
-        <div class="ai-main-content" id="aiMainContent">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h1>ChatGPT</h1>
-                    <div class="header-actions">
-                        <button class="ai-close-btn" id="aiCloseBtn" title="Close AI Chat">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <button class="theme-toggle" id="themeToggle">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="chat-messages" id="chatMessages">
-                    <div class="welcome-message">
-                        <div class="welcome-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <h2>How can I help you today?</h2>
-                    </div>
-                </div>
-
-                <div class="chat-input-container">
-                    <div class="chat-input-wrapper">
-                        <textarea id="chatInput" placeholder="Message ChatGPT..." rows="1" maxlength="4000"></textarea>
-                        <button class="send-btn" id="sendBtn" disabled>
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div class="input-footer">
-                        <span class="input-hint">ChatGPT can make mistakes. Consider checking important
-                            information.</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI Chat Toggle Button -->
-        <button class="ai-chat-toggle-btn" id="aiChatToggleBtn" title="Open AI Chat">
-            <i class="fas fa-robot"></i>
-        </button>
+    <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
         <!-- Feature Menu -->
         <div class="feature-menu" id="featureMenu">
@@ -118,7 +123,7 @@
         </div>
 
         <!-- Overlay for when the menu is open -->
-        <div class="overlay" id="overlay"></div>
+        <div class="overlay hidden" id="overlay"></div>
 
         <!-- Header -->
         <div class="header">
@@ -133,49 +138,51 @@
                 </a>
                 <h1 class="text-xl font-bold ml-4">Settings</h1>
             </div>
-            <div class="right-section">
-                <button class="theme-toggle" id="themeToggle">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
         </div>
 
-        <div class="container mx-auto mt-10 p-4">
-            <div class="mt-8">
-                <h2 class="text-2xl font-semibold">Appearance</h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Choose how your calendar looks. This will be saved for
-                    your next visit.</p>
-                <fieldset class="mt-4">
-                    <legend class="sr-only">Theme</legend>
-                    <div class="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
-                        <div class="flex items-center">
-                            <input id="theme-light" name="theme" type="radio" value="light"
-                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                            <label for="theme-light"
-                                class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Light
-                            </label>
-                        </div>
-                        <div class="flex items-center">
-                            <input id="theme-dark" name="theme" type="radio" value="dark"
-                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                            <label for="theme-dark"
-                                class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Dark
-                            </label>
-                        </div>
-                    </div>
-                </fieldset>
+        <!-- Main Content -->
+        <div class="settings-container">
+            <!-- Appearance Section -->
+            <div class="settings-section">
+                <h2 class="settings-title"><i class="fas fa-palette mr-2"></i>Appearance</h2>
+                <p class="settings-description">Choose how your calendar looks. This will be saved for your next visit.
+                </p>
+
+                <div class="theme-option">
+                    <input type="radio" id="theme-light" name="theme" value="light">
+                    <label for="theme-light"><i class="fas fa-sun mr-2"></i>Light Mode</label>
+                </div>
+                <div class="theme-option">
+                    <input type="radio" id="theme-dark" name="theme" value="dark">
+                    <label for="theme-dark"><i class="fas fa-moon mr-2"></i>Dark Mode</label>
+                </div>
             </div>
-            <div class="mt-8">
-                <button onclick="window.location.href='index.html'"
-                    class="btn btn-primary w-full px-4 py-2 text-lg font-semibold rounded-lg"
-                    style="background-color:#3b82f6; border-color:#3b82f6; color:#fff;">Back to Calendar</button>
+
+            <!-- Navigation Section -->
+            <div class="settings-section">
+                <h2 class="settings-title"><i class="fas fa-compass mr-2"></i>Navigation</h2>
+                <p class="settings-description">Quick links to other pages in the app.</p>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <a href="index.html" class="back-btn" style="background: #10b981;">
+                        <i class="fas fa-calendar"></i> Calendar
+                    </a>
+                    <a href="tasks.html" class="back-btn" style="background: #8b5cf6;">
+                        <i class="fas fa-tasks"></i> Tasks
+                    </a>
+                    <a href="events.html" class="back-btn" style="background: #f59e0b;">
+                        <i class="fas fa-calendar-check"></i> Events
+                    </a>
+                </div>
             </div>
+
+            <!-- Back to Calendar -->
+            <a href="index.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Calendar
+            </a>
         </div>
+
         <script src="javascript/theme.js"></script>
-        <script src="javascript/sidebar.js"></script>
-        <script src="javascript/ai-chat.js"></script>
         <script src="javascript/menu.js"></script>
     </body>
 
