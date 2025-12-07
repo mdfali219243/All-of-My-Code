@@ -153,6 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (endChat) {
                 if (chatMessages) chatMessages.innerHTML = '';
                 chatInput.value = '';
+
+                // Tell server to reset conversation history
+                fetch('http://127.0.0.1:5000/api/reset', {
+                    method: 'POST'
+                }).catch(err => console.error("Failed to reset chat:", err));
             }
         };
 
@@ -194,6 +199,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingBubble.remove();
                     const reply = data.reply || "I'm having trouble connecting to my brain right now.";
                     addMessage(reply, 'ai');
+
+                    // Process any actions from the AI
+                    if (data.actions && data.actions.length > 0) {
+                        data.actions.forEach(action => {
+                            if (action.type === 'ADD_TASK' && action.data) {
+                                // Add task directly to the page
+                                createTaskElement(action.data.title, 'todo-list');
+                                saveTasks();
+                            }
+                            if (action.type === 'ADD_EVENT' && action.data) {
+                                // Save event to localStorage (events are on calendar page)
+                                const events = JSON.parse(localStorage.getItem('calendarEvents') || '[]');
+                                events.push({
+                                    id: `event-${Date.now()}`,
+                                    title: action.data.title,
+                                    date: action.data.date,
+                                    allDay: false,
+                                    startTime: action.data.time || '09:00',
+                                    endTime: action.data.time ? `${parseInt(action.data.time.split(':')[0]) + 1}:00` : '10:00',
+                                    description: '',
+                                    color: '#4285F4'
+                                });
+                                localStorage.setItem('calendarEvents', JSON.stringify(events));
+                            }
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);

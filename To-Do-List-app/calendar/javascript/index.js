@@ -1352,7 +1352,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const idx = calendarEvents.findIndex(ev => ev.id === id);
+            // Find event by ID (handle both string and number IDs)
+            const idx = calendarEvents.findIndex(ev => String(ev.id) === String(id));
             if (idx !== -1) {
                 calendarEvents[idx].title = editEventTitle.value;
                 calendarEvents[idx].date = editEventDate.value;
@@ -1647,6 +1648,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (endChat) {
                 if (chatMessages) chatMessages.innerHTML = '';
                 chatInput.value = '';
+
+                // Tell server to reset conversation history
+                fetch('http://127.0.0.1:5000/api/reset', {
+                    method: 'POST'
+                }).catch(err => console.error("Failed to reset chat:", err));
             }
         };
 
@@ -1688,6 +1694,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     loadingBubble.remove();
                     const reply = data.reply || "I'm having trouble connecting to my brain right now.";
                     addMessage(reply, 'ai');
+
+                    // Process any actions from the AI
+                    if (data.actions && data.actions.length > 0) {
+                        data.actions.forEach(action => {
+                            if (action.type === 'ADD_EVENT' && action.data) {
+                                // Use existing createEventFromAI function
+                                createEventFromAI({
+                                    title: action.data.title,
+                                    date: action.data.date,
+                                    time: action.data.time || '09:00'
+                                });
+                            }
+                            if (action.type === 'ADD_TASK' && action.data) {
+                                // Save task to localStorage (tasks are on separate page)
+                                const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
+                                if (!savedState['todo-list']) savedState['todo-list'] = [];
+                                savedState['todo-list'].push(action.data.title);
+                                localStorage.setItem('kanban-board', JSON.stringify(savedState));
+                            }
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
