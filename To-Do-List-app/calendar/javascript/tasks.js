@@ -62,26 +62,128 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function createTaskElement(text, columnId) {
+    // Confetti celebration animation
+    function createConfetti(x, y) {
+        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#a8e6cf', '#dfe6e9', '#fd79a8', '#6c5ce7'];
+        const confettiCount = 50;
+
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = x + 'px';
+            confetti.style.top = y + 'px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.setProperty('--tx', (Math.random() - 0.5) * 300 + 'px');
+            confetti.style.setProperty('--ty', (Math.random() - 0.5) * 300 + 'px');
+            confetti.style.setProperty('--r', Math.random() * 720 - 360 + 'deg');
+            confetti.style.animationDelay = Math.random() * 0.3 + 's';
+            document.body.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 1500);
+        }
+    }
+
+    // Show celebration message
+    function showCelebration(taskText) {
+        const celebration = document.createElement('div');
+        celebration.className = 'celebration-message';
+        celebration.innerHTML = `
+            <div class="celebration-icon">🎉</div>
+            <div class="celebration-text">Task Completed!</div>
+            <div class="celebration-task">${taskText}</div>
+        `;
+        document.body.appendChild(celebration);
+
+        setTimeout(() => {
+            celebration.classList.add('fade-out');
+            setTimeout(() => celebration.remove(), 500);
+        }, 2000);
+    }
+
+    function createTaskElement(text, columnId, isCompleted = false) {
         const card = document.createElement('div');
         card.classList.add('task-card');
+        if (isCompleted) {
+            card.classList.add('completed');
+        }
         card.setAttribute('draggable', 'true');
-        card.textContent = text;
 
-        // Add delete button (optional, simple implementation)
-        const deleteBtn = document.createElement('span');
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.style.float = 'right';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.style.color = '#9ca3af';
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevent drag start
-            if (confirm('Delete this task?')) {
-                card.remove();
+        // Create task content wrapper
+        const taskContent = document.createElement('div');
+        taskContent.className = 'task-content';
+
+        // Add circle check button
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'check-btn' + (isCompleted ? ' checked' : '');
+        checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+        checkBtn.title = isCompleted ? 'Mark as incomplete' : 'Mark as complete';
+        checkBtn.onclick = (e) => {
+            e.stopPropagation();
+            const wasCompleted = card.classList.contains('completed');
+
+            if (!wasCompleted) {
+                // Completing the task - celebrate!
+                const rect = checkBtn.getBoundingClientRect();
+                createConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+                // Get task text for celebration message
+                const taskTextContent = taskText.textContent;
+                showCelebration(taskTextContent);
+
+                // Add completion animations
+                card.classList.add('completing');
+                checkBtn.classList.add('checked');
+
+                setTimeout(() => {
+                    card.classList.remove('completing');
+                    card.classList.add('completed');
+
+                    // Move to Done column
+                    const doneColumn = document.getElementById('done-list');
+                    if (doneColumn && card.parentElement.id !== 'done-list') {
+                        doneColumn.insertBefore(card, doneColumn.firstChild);
+                    }
+                    saveTasks();
+                }, 600);
+            } else {
+                // Uncompleting the task
+                card.classList.remove('completed');
+                checkBtn.classList.remove('checked');
+
+                // Move back to To Do column
+                const todoColumn = document.getElementById('todo-list');
+                if (todoColumn && card.parentElement.id !== 'todo-list') {
+                    todoColumn.appendChild(card);
+                }
                 saveTasks();
             }
         };
-        card.appendChild(deleteBtn);
+
+        // Task text
+        const taskText = document.createElement('span');
+        taskText.className = 'task-text';
+        taskText.textContent = text;
+
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.title = 'Delete task';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this task?')) {
+                card.classList.add('deleting');
+                setTimeout(() => {
+                    card.remove();
+                    saveTasks();
+                }, 300);
+            }
+        };
+
+        taskContent.appendChild(checkBtn);
+        taskContent.appendChild(taskText);
+        taskContent.appendChild(deleteBtn);
+        card.appendChild(taskContent);
 
         addDragListeners(card);
 
@@ -96,11 +198,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const colId = col.id;
             const tasks = [];
             col.querySelectorAll('.task-card').forEach(card => {
-                // Get text content excluding the delete button
-                const clone = card.cloneNode(true);
-                const delBtn = clone.querySelector('span');
-                if (delBtn) delBtn.remove();
-                tasks.push(clone.textContent.trim());
+                // Get text content from the task-text element
+                const taskTextEl = card.querySelector('.task-text');
+                const isCompleted = card.classList.contains('completed');
+                if (taskTextEl) {
+                    tasks.push({
+                        text: taskTextEl.textContent.trim(),
+                        completed: isCompleted
+                    });
+                }
             });
             boardState[colId] = tasks;
         });
@@ -111,15 +217,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedState = JSON.parse(localStorage.getItem('kanban-board'));
         if (savedState) {
             for (const [colId, tasks] of Object.entries(savedState)) {
-                tasks.forEach(taskText => {
-                    createTaskElement(taskText, colId);
+                tasks.forEach(task => {
+                    // Handle both old format (string) and new format (object)
+                    if (typeof task === 'string') {
+                        const isCompleted = colId === 'done-list';
+                        createTaskElement(task, colId, isCompleted);
+                    } else {
+                        createTaskElement(task.text, colId, task.completed);
+                    }
                 });
             }
         } else {
             // Default tasks for demo
-            createTaskElement("Design new dashboard", "todo-list");
-            createTaskElement("Fix login bug", "inprogress-list");
-            createTaskElement("Deploy to production", "done-list");
+            createTaskElement("Design new dashboard", "todo-list", false);
+            createTaskElement("Fix login bug", "inprogress-list", false);
+            createTaskElement("Deploy to production", "done-list", true);
         }
     }
     // Floating Chat Focus Effects (Replicated from index.js)
@@ -155,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatInput.value = '';
 
                 // Tell server to reset conversation history
-                fetch('http://127.0.0.1:5000/api/reset', {
+                fetch('http://127.0.0.1:5001/api/reset', {
                     method: 'POST'
                 }).catch(err => console.error("Failed to reset chat:", err));
             }
@@ -187,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chatMessages.appendChild(loadingBubble);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            fetch('http://127.0.0.1:5000/api/chat', {
+            fetch('http://127.0.0.1:5001/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1619,6 +1619,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Floating Chat Focus Effects
     const chatInput = document.getElementById('calendarChatInput');
+    const aiChatToggleBtn = document.getElementById('aiChatToggleBtn');
+
+    if (aiChatToggleBtn && chatInput) {
+        aiChatToggleBtn.addEventListener('click', () => {
+            chatInput.focus();
+        });
+    }
+
     const chatSendBtn = document.getElementById('calendarChatSendBtn');
     const chatMessages = document.getElementById('chatMessages');
     const mainView = document.getElementById('main_view');
@@ -1638,6 +1646,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Function to close chat focus
         // param endChat: boolean, if true, clears the chat session (for close button)
         const closeChatFocus = (endChat = false) => {
+            console.log('closeChatFocus called', { endChat });
             if (mainView) mainView.classList.remove('blur-content');
             if (header) header.classList.remove('blur-content');
             if (chatOverlay) chatOverlay.classList.remove('active');
@@ -1646,11 +1655,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Clear chat session ONLY if requested (Close button)
             if (endChat) {
+                console.log('Clearing chat history due to endChat=true');
                 if (chatMessages) chatMessages.innerHTML = '';
                 chatInput.value = '';
 
                 // Tell server to reset conversation history
-                fetch('http://127.0.0.1:5000/api/reset', {
+                fetch('http://127.0.0.1:5001/api/reset', {
                     method: 'POST'
                 }).catch(err => console.error("Failed to reset chat:", err));
             }
@@ -1666,8 +1676,16 @@ document.addEventListener('DOMContentLoaded', function () {
             closeChatBtn.addEventListener('click', () => closeChatFocus(true));
         }
 
+        // Debug: Check for page unload
+        window.addEventListener('beforeunload', (e) => {
+            console.log('Page is unloading/reloading!');
+            // Uncomment next line to pause on reload for debugging
+            // e.preventDefault(); e.returnValue = ''; 
+        });
+
         // Chat Logic
         const handleChatSubmit = () => {
+            console.log('handleChatSubmit called');
             const text = chatInput.value.trim();
             if (!text) return;
 
@@ -1682,24 +1700,31 @@ document.addEventListener('DOMContentLoaded', function () {
             chatMessages.appendChild(loadingBubble);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            fetch('http://127.0.0.1:5000/api/chat', {
+            console.log('Sending fetch request to backend...');
+            fetch('http://127.0.0.1:5001/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ message: text })
             })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Fetch response received:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Data received from backend:', data);
                     loadingBubble.remove();
                     const reply = data.reply || "I'm having trouble connecting to my brain right now.";
                     addMessage(reply, 'ai');
 
                     // Process any actions from the AI
                     if (data.actions && data.actions.length > 0) {
+                        console.log('Processing actions:', data.actions);
                         data.actions.forEach(action => {
                             if (action.type === 'ADD_EVENT' && action.data) {
                                 // Use existing createEventFromAI function
+                                console.log('Creating event from AI');
                                 createEventFromAI({
                                     title: action.data.title,
                                     date: action.data.date,
@@ -1708,6 +1733,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                             if (action.type === 'ADD_TASK' && action.data) {
                                 // Save task to localStorage (tasks are on separate page)
+                                console.log('Creating task from AI');
                                 const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
                                 if (!savedState['todo-list']) savedState['todo-list'] = [];
                                 savedState['todo-list'].push(action.data.title);
@@ -1717,14 +1743,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Fetch Error:', error);
                     loadingBubble.remove();
                     addMessage("Sorry, I can't connect to the server. Is it running?", 'ai');
                 });
         };
 
         const addMessage = (text, sender) => {
-            if (!chatMessages) return;
+            console.log('addMessage called', { text, sender });
+            if (!chatMessages) {
+                console.error('chatMessages container missing!');
+                return;
+            }
             const bubble = document.createElement('div');
             bubble.classList.add('message-bubble', sender);
             bubble.textContent = text;
@@ -1737,9 +1767,12 @@ document.addEventListener('DOMContentLoaded', function () {
             chatSendBtn.addEventListener('click', handleChatSubmit);
         }
 
-        // Use keydown for better compatibility
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+        // Use global keydown to ensure we catch it
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.activeElement === chatInput) {
+                console.log('Global Enter detected on chat input');
+                e.preventDefault();
+                e.stopPropagation(); // Stop other listeners
                 handleChatSubmit();
             }
         });

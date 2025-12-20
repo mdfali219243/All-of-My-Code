@@ -126,7 +126,17 @@ function sendMessage() {
             })
             .catch(error => {
                 console.error('Error from AI backend:', error);
-                addMessage("Sorry, I had a problem talking to the AI backend.", 'assistant');
+
+                let errorMessage = "Sorry, I couldn't connect to the AI server.";
+
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage += "<br><br><strong>Troubleshooting:</strong><br>" +
+                        "1. Make sure <code>app.py</code> is running<br>" +
+                        "2. Make sure <code>ollama serve</code> is running<br>" +
+                        "3. Check the documentation for setup steps";
+                }
+
+                addMessage(errorMessage, 'assistant');
             });
     }, 500);
 }
@@ -188,7 +198,7 @@ function addMessage(content, sender) {
 
 // Generate AI response via Python backend
 function generateAIResponse(message) {
-    return fetch('http://127.0.0.1:5000/api/chat', {
+    return fetch('http://127.0.0.1:5001/api/chat', { // Use port 5001 to avoid AirPlay conflict on macOS
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -294,7 +304,7 @@ function loadChatHistory() {
 
 // Mobile responsiveness
 window.addEventListener('resize', function () {
-    if (window.innerWidth > 768) {
+    if (aiSidebar && window.innerWidth > 768) {
         aiSidebar.classList.remove('open');
         isSidebarOpen = false;
     }
@@ -302,9 +312,9 @@ window.addEventListener('resize', function () {
 
 // Click outside to close AI sidebar on mobile
 document.addEventListener('click', function (e) {
-    if (window.innerWidth <= 768 &&
+    if (aiSidebar && window.innerWidth <= 768 &&
         !aiSidebar.contains(e.target) &&
-        !aiSidebarToggle.contains(e.target)) {
+        aiSidebarToggle && !aiSidebarToggle.contains(e.target)) {
         aiSidebar.classList.remove('open');
         isSidebarOpen = false;
     }
