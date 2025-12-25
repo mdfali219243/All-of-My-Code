@@ -5,22 +5,30 @@ let calendarEvents = [];
 
 // Allow AI chat to create events programmatically
 function createEventFromAI(event) {
-    if (!event || !event.date || !event.time || !event.title) {
+    if (!event || !event.date || !event.title) {
         console.warn('createEventFromAI called with incomplete event:', event);
         return;
     }
 
-    const timeParts = event.time.split(':').map(Number);
-    const hour = Number.isFinite(timeParts[0]) ? timeParts[0] : 9;
-    const minute = Number.isFinite(timeParts[1]) ? timeParts[1] : 0;
-    const endHour = Math.min(hour + 1, 23);
+    // Support both old format (time) and new format (startTime/endTime)
+    let startTime = event.startTime || event.time || '09:00';
+    let endTime = event.endTime;
+
+    // If no end time, calculate it (start + 1 hour)
+    if (!endTime) {
+        const timeParts = startTime.split(':').map(Number);
+        const hour = Number.isFinite(timeParts[0]) ? timeParts[0] : 9;
+        const minute = Number.isFinite(timeParts[1]) ? timeParts[1] : 0;
+        const endHour = (hour + 1) % 24;
+        endTime = `${String(endHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    }
 
     const newEvent = {
         id: Date.now(),
         title: event.title,
         date: event.date,
-        startTime: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-        endTime: `${String(endHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+        startTime: startTime,
+        endTime: endTime,
         allDay: false,
         color: null,
     };
@@ -708,7 +716,7 @@ function renderWeekView(date) {
                 });
 
                 dayCell.style.position = 'relative';
-                dayCell.style.overflow = 'visible';
+                dayCell.style.overflow = 'hidden';
                 dayCell.appendChild(evDiv);
             });
             // Add event by clicking empty week cell (only if not dragging)
@@ -1728,7 +1736,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 createEventFromAI({
                                     title: action.data.title,
                                     date: action.data.date,
-                                    time: action.data.time || '09:00'
+                                    startTime: action.data.startTime || action.data.time,
+                                    endTime: action.data.endTime
                                 });
                             }
                             if (action.type === 'ADD_TASK' && action.data) {

@@ -607,7 +607,6 @@ body.dark .day-view .day-view-header {
     border: 1px solid #e0e0e0 !important;
     transition: background 0.2s;
     position: relative;
-    width: 90vw !important;
     margin: 0 !important;
     display: flex;
     align-items: stretch;

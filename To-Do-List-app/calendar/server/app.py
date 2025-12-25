@@ -24,27 +24,37 @@ except Exception as e:
 
 # Ollama configuration
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL_NAME = "llama3.2:1b"
+MODEL_NAME = "llama3.2:3b"  # Upgraded from 1b for better time parsing
 
 # System prompt that instructs AI to return structured actions
-SYSTEM_PROMPT = """You are a calendar assistant that helps users manage tasks and events.
+SYSTEM_PROMPT = """You are a calendar assistant. You MUST follow this format EXACTLY.
 
-IMPORTANT: When the user wants to ADD a task or event, you MUST respond with a JSON action block.
+RULE 1: For tasks, you MUST write:
+[ACTION:ADD_TASK]{"title": "the task"}[/ACTION]
+Done!
 
-For adding a TASK, respond with:
-[ACTION:ADD_TASK]{"title": "task description here"}[/ACTION]
-Then add a brief confirmation message.
+RULE 2: For events, you MUST write:
+[ACTION:ADD_EVENT]{"title": "event name", "date": "YYYY-MM-DD", "startTime": "HH:MM", "endTime": "HH:MM"}[/ACTION]
+Done!
 
-For adding an EVENT, respond with:
-[ACTION:ADD_EVENT]{"title": "event title", "date": "YYYY-MM-DD", "time": "HH:MM"}[/ACTION]
-Then add a brief confirmation message. Use today's date if not specified.
+Times are 24-hour format. If user says "5 AM", write "05:00". If "8 PM", write "20:00".
+If user says "from X to Y", include both startTime and endTime.
 
-Examples:
-- User: "add task finish homework" -> [ACTION:ADD_TASK]{"title": "finish homework"}[/ACTION] Done! I've added "finish homework" to your tasks.
-- User: "add event meeting at 3pm" -> [ACTION:ADD_EVENT]{"title": "meeting", "date": "2024-12-06", "time": "15:00"}[/ACTION] Done! I've added "meeting" at 3:00 PM today.
+EXAMPLES - COPY THIS FORMAT EXACTLY:
 
-For general questions, just respond normally without action blocks.
-Keep responses short and helpful."""
+User: "add task finish homework"
+You: [ACTION:ADD_TASK]{"title": "finish homework"}[/ACTION]
+Done!
+
+User: "meeting at 3pm"
+You: [ACTION:ADD_EVENT]{"title": "meeting", "date": "2025-12-24", "startTime": "15:00", "endTime": "16:00"}[/ACTION]
+Done!
+
+User: "add event 5 AM to 8 AM study session"
+You: [ACTION:ADD_EVENT]{"title": "study session", "date": "2025-12-24", "startTime": "05:00", "endTime": "08:00"}[/ACTION]
+Done!
+
+ALWAYS include the [ACTION:...][/ACTION] tags. This is critical."""
 
 # Global conversation history
 conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -105,6 +115,9 @@ def chat():
         result = response.json()
         reply = result.get('message', {}).get('content', 'No response from AI')
         
+        # Debug: Log the raw AI reply
+        logger.info(f"Raw AI reply: {reply}")
+        
         conversation_history.append({"role": "assistant", "content": reply})
         
         # Save assistant response to database
@@ -135,12 +148,26 @@ def chat():
             try:
                 action_data = json.loads(match.strip())
                 actions.append({"type": "ADD_EVENT", "data": action_data})
+                
+                # Determine times
+                start_time = action_data.get('startTime') or action_data.get('time', '09:00')
+                end_time = action_data.get('endTime')
+                
+                # Default end time if missing (start + 1 hour)
+                if not end_time and start_time:
+                    try:
+                        h, m = map(int, start_time.split(':'))
+                        end_h = (h + 1) % 24
+                        end_time = f"{end_h:02d}:{m:02d}"
+                    except:
+                        end_time = '10:00'
+
                 # Also save to database
                 create_event(
                     title=action_data.get('title', ''),
                     date=action_data.get('date', get_today()),
-                    start_time=action_data.get('time', '09:00'),
-                    end_time=action_data.get('time', '10:00')
+                    start_time=start_time,
+                    end_time=end_time
                 )
             except Exception as e:
                 logger.error(f"Error creating event from AI: {e}")
