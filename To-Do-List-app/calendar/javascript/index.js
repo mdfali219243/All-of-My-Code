@@ -57,7 +57,70 @@ function createEventFromAI(event) {
 }
 
 // Expose to global scope so ai-chat.js can call it
-window.createEventFromAI = createEventFromAI;
+// Update current time indicator position
+function updateTimeIndicator() {
+    const today = new Date();
+
+    // Only proceed if today is in the current view
+    if (today.getFullYear() !== currentDate.getFullYear()) return; // Very basic check, refined below
+
+    // Week View Indicator
+    if (currentView === 'week') {
+        // Check if "today" is in the currently displayed week
+        const startOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        if (today >= startOfWeek && today <= endOfWeek) {
+            // It is in the week!
+            let indicator = document.getElementById('weekCurrentTimeIndicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'weekCurrentTimeIndicator';
+                indicator.className = 'absolute z-20 pointer-events-none flex items-center';
+                indicator.style.height = '2px';
+                indicator.style.backgroundColor = '#ea4335';
+
+                // Add the knob on the left (time axis) side if possible, 
+                // but placing it on the day column is easier for now.
+                // Google Calendar puts a line across the day column.
+
+                // Also add a small circle at the start of the line
+                const knob = document.createElement('div');
+                knob.className = 'w-3 h-3 rounded-full bg-red-600 absolute -left-1.5 -top-1';
+                indicator.appendChild(knob);
+
+                if (weekTimeGrid) weekTimeGrid.appendChild(indicator);
+            }
+
+            // Calculate vertical position
+            // 48px per hour (according to CSS .time-slot height)
+            const minutes = today.getHours() * 60 + today.getMinutes();
+            const topPosition = (minutes / 60) * 48;
+
+            // Calculate horizontal position (column)
+            // weekTimeGrid has columns: 4rem (time) + 7 days
+            // Grid column indices are 1-based. Time is 1. Sun is 2, Mon is 3...
+            // today.getDay() returns 0 for Sun. So column index is today.getDay() + 2.
+            const colIndex = today.getDay() + 2;
+
+            indicator.style.top = `${topPosition}px`;
+            indicator.style.gridColumnStart = colIndex;
+            indicator.style.gridColumnEnd = colIndex + 1; // Span just 1 column
+
+            // Ensure it's visible
+            indicator.style.display = 'block';
+        } else {
+            // Hide if not in current week
+            const indicator = document.getElementById('weekCurrentTimeIndicator');
+            if (indicator) indicator.style.display = 'none';
+        }
+    }
+}
+
+// Global update interval
+setInterval(updateTimeIndicator, 60000); // Update every minute
+// Also call on render
 
 // DOM elements will be initialized after DOM is loaded
 let monthView, weekView, dayView, yearView, monthGrid, weekTimeGrid, dayTimeGrid, yearGrid, currentDisplay, todayBtn;
@@ -1077,10 +1140,20 @@ function renderYearView(date) {
             miniGrid.appendChild(document.createElement('div'));
         }
         // Day numbers
+        const today = new Date();
+        const isCurrentYear = year === today.getFullYear();
+        const isCurrentMonth = m === today.getMonth();
+
         for (let d = 1; d <= daysInMonth; d++) {
             const dayCell = document.createElement('div');
             dayCell.textContent = d;
-            dayCell.className = 'text-center';
+            dayCell.className = 'text-center text-xs p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full';
+
+            if (isCurrentYear && isCurrentMonth && d === today.getDate()) {
+                // Highlight today with RED background and WHITE text
+                dayCell.setAttribute('style', 'background-color: #ef4444 !important; color: #ffffff !important; font-weight: 700 !important; border-radius: 50%;');
+            }
+
             miniGrid.appendChild(dayCell);
         }
 
@@ -1145,9 +1218,73 @@ function openAddEventModal(date, hour, isAllDay = false, endHour = null, endDate
 
     const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
     modal.show();
+    // Initial call to set position
+    updateTimeIndicator();
 }
 
-// Utility to format time to 12-hour AM/PM format
+// Update current time indicator position
+function updateTimeIndicator() {
+    const today = new Date();
+
+    // Calculate vertical position
+    // 48px per hour (according to CSS .time-slot height)
+    const minutes = today.getHours() * 60 + today.getMinutes();
+    const topPosition = (minutes / 60) * 48;
+
+    // Week View Indicator
+    if (currentView === 'week' && weekTimeGrid) {
+        // Check if "today" is in the currently displayed week
+        // Note: currentDate in renderWeekView represents the central reference, but let's re-calculate start of week
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+        const currentDay = currentDate.getDate();
+        const startOfWeek = new Date(currentYear, currentMonth, currentDay - currentDate.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        // Reset hours to start of day for accurate date comparison
+        const checkToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const checkStart = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate());
+        const checkEnd = new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate());
+
+        if (checkToday >= checkStart && checkToday <= checkEnd) {
+            let indicator = document.getElementById('weekCurrentTimeIndicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'weekCurrentTimeIndicator';
+                // Using inline styles for critical positioning, classes for basic styling
+                indicator.style.position = 'absolute';
+                indicator.style.zIndex = '50';
+                indicator.style.pointerEvents = 'none';
+                indicator.style.height = '2px';
+                indicator.style.backgroundColor = '#ea4335';
+                indicator.style.width = '100%'; // Full width of the grid cell
+
+                const knob = document.createElement('div');
+                knob.style.position = 'absolute';
+                knob.style.width = '12px';
+                knob.style.height = '12px';
+                knob.style.backgroundColor = '#ea4335';
+                knob.style.borderRadius = '50%';
+                knob.style.top = '-5px';
+                knob.style.left = '-6px';
+                indicator.appendChild(knob);
+
+                weekTimeGrid.appendChild(indicator);
+            }
+
+            // Grid column indices: Time is 1. Sun is 2, Mon is 3...
+            const colIndex = today.getDay() + 2;
+
+            indicator.style.top = `${topPosition}px`;
+            indicator.style.gridColumn = `${colIndex} / span 1`;
+            indicator.style.display = 'block';
+        } else {
+            const indicator = document.getElementById('weekCurrentTimeIndicator');
+            if (indicator) indicator.style.display = 'none';
+        }
+    }
+}
 function formatTime12Hour(timeString) {
     if (!timeString) return '';
     const [hour, minute] = timeString.split(':').map(Number);
