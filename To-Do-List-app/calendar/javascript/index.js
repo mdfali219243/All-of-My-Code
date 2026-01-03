@@ -746,9 +746,6 @@ function renderWeekView(date) {
             weekTimeGrid.appendChild(dayCell);
         }
     }
-
-    // Update time indicator for week view
-    updateTimeIndicator();
 }
 
 // Helper to darken color for border
@@ -1038,9 +1035,6 @@ function renderDayView(date) {
 
     console.log('dayTimeGrid children after render:', dayTimeGrid.children.length);
     console.log('dayTimeGrid:', dayTimeGrid, 'children:', dayTimeGrid.children.length, 'dayView.style.display:', dayView.style.display, 'computed display:', getComputedStyle(dayView).display);
-
-    // Update time indicator for day view
-    updateTimeIndicator();
 }
 
 // Year view
@@ -1206,38 +1200,42 @@ function updateTimeIndicator() {
 
     const todayISO = formatDateToISO(today);
 
-    // Handle Week View
+    let activeViews = [];
     if (currentView === 'week' && weekTimeGrid) {
+        activeViews.push(weekTimeGrid);
+    } else if (currentView === 'day') {
+        const dayGrid = document.getElementById('dayTimeGrid');
+        if (dayGrid) activeViews.push(dayGrid);
+    }
+
+    activeViews.forEach(viewContainer => {
+        // Selector needs to handle the structure: .day-cell[data-date="YYYY-MM-DD"][data-hour="H"]
         const selector = `.day-cell[data-date="${todayISO}"][data-hour="${currentHour}"]`;
-        const cell = weekTimeGrid.querySelector(selector);
+        const cell = viewContainer.querySelector(selector);
 
         if (cell) {
             const indicator = createIndicator();
             indicator.style.top = `${topPercent}%`;
-            cell.style.position = 'relative';
-            cell.style.overflow = 'visible';
             cell.appendChild(indicator);
+            // Allow knob to be visible outside the cell
+            cell.style.overflow = 'visible';
         }
-    }
+    });
 
-    // Handle Day View
+    // Special handling for Day View if it uses a different structure or simply didn't catch above
+    // (e.g. if dayTimeGrid is rebuilt dynamically differently)
     if (currentView === 'day') {
-        // Try both possible containers for day view
+        // Double check specific id container if generic dayTimeGrid query failed or if structure is nested
         const dayContainer = document.querySelector('.day-time-grid-container');
-        const dayGrid = document.getElementById('dayTimeGrid');
-
-        const containerToSearch = dayContainer || dayGrid;
-
-        if (containerToSearch) {
+        if (dayContainer) {
             const selector = `.day-cell[data-date="${todayISO}"][data-hour="${currentHour}"]`;
-            const cell = containerToSearch.querySelector(selector);
-
-            if (cell) {
+            const cell = dayContainer.querySelector(selector);
+            // Avoid adding duplicate if we already added it via dayTimeGrid
+            if (cell && !cell.querySelector('.current-time-indicator-line')) {
                 const indicator = createIndicator();
                 indicator.style.top = `${topPercent}%`;
-                cell.style.position = 'relative';
-                cell.style.overflow = 'visible';
                 cell.appendChild(indicator);
+                cell.style.overflow = 'visible';
             }
         }
     }
