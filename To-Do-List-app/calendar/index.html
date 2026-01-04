@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="style/event_blocks.css">
     <link rel="stylesheet" href="style/tasks.css">
     <link rel="stylesheet" href="style/dark_mode.css">
+    <link rel="stylesheet" href="style/blocking_task.css">
   </head>
 
   <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -30,6 +31,8 @@
     <button class="ai-chat-toggle-btn" id="aiChatToggleBtn" title="Open AI Chat">
       <i class="fas fa-robot"></i>
     </button>
+
+    <audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
     <!-- Feature Menu -->
     <div class="feature-menu" id="featureMenu">
@@ -107,6 +110,10 @@
             <option value="year">Year</option>
           </select>
         </div>
+
+        <button id="tasksToggleBtn" class="tasks-toggle-btn mr-2" title="Toggle Tasks Sidebar">
+          <i class="fas fa-tasks"></i>
+        </button>
 
         <button class="icon-button" aria-label="Settings">
           <img src="image/gear.svg" alt="Settings Icon" style="width: 20px; height: 20px;">
@@ -208,6 +215,23 @@
           </button>
         </div>
       </div>
+
+      <!-- Tasks Sidebar -->
+      <aside id="tasksSidebar" class="tasks-sidebar collapsed">
+        <div class="tasks-sidebar-header">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Tasks</h3>
+          <button id="closeTasksSidebarBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="tasksSidebarContent" class="tasks-sidebar-content">
+          <!-- Tasks will be loaded here -->
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-spinner fa-spin mb-2"></i>
+            <p class="text-sm">Loading tasks...</p>
+          </div>
+        </div>
+      </aside>
     </div>
 
     <!-- Bootstrap JS Bundle (Popper included) -->
@@ -254,6 +278,7 @@
           </div>
           <div class="modal-body">
             <form id="addEventForm">
+              <input type="hidden" id="eventTaskId" />
               <div class="mb-3">
                 <label for="eventTitle" class="form-label">Title</label>
                 <input type="text" class="form-control" id="eventTitle" required />
@@ -279,6 +304,34 @@
               <div class="mb-3">
                 <label for="eventDescription" class="form-label">Description</label>
                 <textarea class="form-control" id="eventDescription" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="eventAlarm" class="form-label">Alarm</label>
+                <select class="form-select" id="eventAlarm">
+                  <option value="none" selected>None</option>
+                  <option value="at_time">At time of event</option>
+                  <option value="5_min_before">5 minutes before</option>
+                  <option value="10_min_before">10 minutes before</option>
+                  <option value="1_hour_before">1 hour before</option>
+                  <option value="1_day_before">1 day before</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="eventRingtone" class="form-label">Ringtone</label>
+                <select class="form-select" id="eventRingtone">
+                  <option value="default" selected>Default Ringtone</option>
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="eventRecurrence" class="form-label">Recurrence</label>
+                <select class="form-select" id="eventRecurrence">
+                  <option value="none" selected>None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
               </div>
               <div class="mb-3">
                 <label class="form-label">Color</label>
@@ -336,6 +389,34 @@
                 <textarea class="form-control" id="editEventDescription" rows="2"></textarea>
               </div>
               <div class="mb-3">
+                <label for="editEventAlarm" class="form-label">Alarm</label>
+                <select class="form-select" id="editEventAlarm">
+                  <option value="none" selected>None</option>
+                  <option value="at_time">At time of event</option>
+                  <option value="5_min_before">5 minutes before</option>
+                  <option value="10_min_before">10 minutes before</option>
+                  <option value="1_hour_before">1 hour before</option>
+                  <option value="1_day_before">1 day before</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editEventRingtone" class="form-label">Ringtone</label>
+                <select class="form-select" id="editEventRingtone">
+                  <option value="default" selected>Default Ringtone</option>
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editEventRecurrence" class="form-label">Recurrence</label>
+                <select class="form-select" id="editEventRecurrence">
+                  <option value="none" selected>None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <div class="mb-3">
                 <label class="form-label">Color</label>
                 <div class="d-flex gap-2">
                   <div class="color-option" data-color="#4285F4" style="background-color: #4285F4;"></div>
@@ -356,6 +437,7 @@
       </div>
     </div>
 
+    <script src="javascript/alarm-utils.js"></script>
     <script src="javascript/openAddEventModal.global.js"></script>
     <script src="javascript/theme.js"></script>
     <script src="javascript/index.js"></script>

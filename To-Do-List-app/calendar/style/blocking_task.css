@@ -1,0 +1,143 @@
+/* Tasks Sidebar Styling */
+.tasks-sidebar {
+    width: 300px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.dark .tasks-sidebar {
+    background: rgba(31, 41, 55, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tasks-sidebar.collapsed {
+    width: 0;
+    overflow: hidden;
+    border-left: none;
+}
+
+.tasks-sidebar-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dark .tasks-sidebar-header {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.tasks-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Sidebar Task Card */
+.sidebar-task-card {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.dark .sidebar-task-card {
+    background: #374151;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #3b82f6;
+}
+
+.sidebar-task-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.sidebar-task-card .task-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #1f2937;
+}
+
+.dark .sidebar-task-card .task-title {
+    color: #f3f4f6;
+}
+
+.sidebar-task-card .task-meta {
+    font-size: 0.75rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dark .sidebar-task-card .task-meta {
+    color: #9ca3af;
+}
+
+/* Drag & Drop Overlays */
+.day-cell.drag-over {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border: 2px dashed #3b82f6 !important;
+}
+
+.dark .day-cell.drag-over {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Toggle Button */
+.tasks-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #6b7280;
+}
+
+.dark .tasks-toggle-btn {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+}
+
+.tasks-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #3b82f6;
+}
+
+.dark .tasks-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tasks-toggle-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}

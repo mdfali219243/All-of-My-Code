@@ -59,9 +59,112 @@ function createEventFromAI(event) {
 // Expose to global scope so ai-chat.js can call it
 // Duplicate updateTimeIndicator removed
 
+// --- Alarm Feature Logic ---
+function checkAlarms() {
+    const now = new Date();
+    const currentISO = formatDateToISO(now);
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+
+    calendarEvents.forEach(event => {
+        if (!event.alarm || event.alarm === 'none' || event.allDay) return;
+
+        // Parse event time
+        if (!event.startTime) return;
+        const [eventH, eventM] = event.startTime.split(':').map(Number);
+
+        // Parse date precisely as local date (YYYY-MM-DD)
+        const [y, m, d] = event.date.split('-').map(Number);
+        const eventDateTime = new Date(y, m - 1, d, eventH, eventM);
+
+        // Calculate alarm time
+        let alarmTime = new Date(eventDateTime);
+        switch (event.alarm) {
+            case 'at_time':
+                // alarmTime is eventDateTime
+                break;
+            case '5_min_before':
+                alarmTime.setMinutes(alarmTime.getMinutes() - 5);
+                break;
+            case '10_min_before':
+                alarmTime.setMinutes(alarmTime.getMinutes() - 10);
+                break;
+            case '1_hour_before':
+                alarmTime.setHours(alarmTime.getHours() - 1);
+                break;
+            case '1_day_before':
+                alarmTime.setDate(alarmTime.getDate() - 1);
+                break;
+        }
+
+        // Check if current time matches alarm time (precise to minute)
+        if (alarmTime.getFullYear() === now.getFullYear() &&
+            alarmTime.getMonth() === now.getMonth() &&
+            alarmTime.getDate() === now.getDate() &&
+            alarmTime.getHours() === now.getHours() &&
+            alarmTime.getMinutes() === now.getMinutes()) {
+
+            if (!event.alarmTriggered) {
+                triggerAlarm(event);
+                event.alarmTriggered = true;
+            }
+        }
+    });
+}
+
+function triggerAlarm(event) {
+    const alarmSound = document.getElementById('alarmSound');
+    if (alarmSound) {
+        // Use event ringtone if set, otherwise global default
+        const ringtoneId = (event.ringtone && event.ringtone !== 'default')
+            ? event.ringtone
+            : getDefaultRingtone();
+        alarmSound.src = getRingtoneUrl(ringtoneId);
+        alarmSound.play().catch(e => console.warn("Audio play failed (user interaction needed first):", e));
+    }
+
+    // Show Alert / Notification
+    if (Notification.permission === 'granted') {
+        new Notification(`Alarm: ${event.title}`, {
+            body: `Event starting at ${event.startTime}`,
+            icon: '/image/icon.png' // Optional
+        });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+
+    // Use a custom modal or simple alert
+    // Simple alert for now as requested
+    // alert(`ALARM! ${event.title} is coming up!`); 
+    // Alert blocks code, let's use a nice toast or modal if possible, but for MVP standard alert is reliable.
+    // Better: Create a temporary visual element.
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg z-50 flex items-center gap-4 animate-bounce';
+    alertDiv.innerHTML = `
+        <div>
+            <div class="font-bold">🔔 Alarm</div>
+            <div>${event.title}</div>
+        </div>
+        <button class="bg-white text-red-600 px-2 py-1 rounded text-sm font-bold">Dismiss</button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    alertDiv.querySelector('button').addEventListener('click', () => {
+        alertDiv.remove();
+        if (alarmSound) {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        }
+    });
+
+    // Auto dismiss after 1 minute? No, alarm should stick.
+}
+
+
 
 // Global update interval
-setInterval(updateTimeIndicator, 60000); // Update every minute
+setInterval(updateTimeIndicator, 60000); // Update time indicator every minute
+setInterval(checkAlarms, 30000); // Check alarms every 30 seconds
 // Also call on render
 
 // DOM elements will be initialized after DOM is loaded
@@ -323,6 +426,65 @@ function formatDateToISO(date) {
     return `${year}-${month}-${day}`;
 }
 
+/**
+ * Generates all occurrences of events (including recurring ones) within a date range.
+ */
+function getEventsForRange(startDate, endDate) {
+    const results = [];
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    calendarEvents.forEach(event => {
+        const eventDate = new Date(event.date);
+        eventDate.setHours(0, 0, 0, 0);
+
+        if (event.recurrence === 'none' || !event.recurrence) {
+            if (eventDate >= start && eventDate <= end) {
+                results.push(event);
+            }
+        } else {
+            // Recurring event
+            let current = new Date(eventDate);
+
+            // Limit generation to avoid infinite loops or excessive memory
+            const limit = new Date(start);
+            limit.setFullYear(limit.getFullYear() + 2); // 2 years max projection
+
+            while (current <= end && current <= limit) {
+                if (current >= start) {
+                    results.push({
+                        ...event,
+                        date: formatDateToISO(current),
+                        originalId: event.id,
+                        id: `${event.id}-${formatDateToISO(current)}` // Unique ID for the instance
+                    });
+                }
+
+                // Increment based on recurrence rule
+                switch (event.recurrence) {
+                    case 'daily':
+                        current.setDate(current.getDate() + 1);
+                        break;
+                    case 'weekly':
+                        current.setDate(current.getDate() + 7);
+                        break;
+                    case 'monthly':
+                        current.setMonth(current.setMonth() + 1);
+                        break;
+                    case 'yearly':
+                        current.setFullYear(current.getFullYear() + 1);
+                        break;
+                    default:
+                        current = new Date(end.getTime() + 1); // Break
+                }
+            }
+        }
+    });
+    return results;
+}
+
 // for the month view function
 function renderMonthView(date) {
     // Show month view, hide week view
@@ -384,7 +546,7 @@ function renderMonthView(date) {
 
             // Render events for this date
             const cellDateStr = formatDateToISO(currentDayDate);
-            const eventsForDay = calendarEvents.filter(ev => ev.date === cellDateStr);
+            const eventsForDay = getEventsForRange(currentDayDate, currentDayDate);
             if (eventsForDay.length > 0) {
                 const eventsList = document.createElement('div');
                 eventsList.className = 'month-events-list';
@@ -468,8 +630,13 @@ function renderWeekView(date) {
     if (yearGrid) yearGrid.style.display = 'none';
     if (dayView) dayView.style.display = 'none';
 
-    // Clear all-day events row
+    // Clear all-day events container if needed (though we populate it below)
     const weekAllDayEvents = document.getElementById('weekAllDayEvents');
+    const weekGridContent = document.getElementById('weekGridContent');
+    if (weekGridContent) {
+        weekGridContent.innerHTML = '';
+        // The time grid is actually rendered in the loop below creating rows
+    }
     if (weekAllDayEvents) {
         weekAllDayEvents.innerHTML = '';
 
@@ -480,9 +647,8 @@ function renderWeekView(date) {
             dayCell.dataset.date = formatDateToISO(new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + d));
 
             // Find all-day events for this day
-            const allDayEvents = calendarEvents.filter(ev =>
-                ev.date === dayCell.dataset.date && ev.allDay
-            );
+            const startOfThisDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + d);
+            const allDayEvents = getEventsForRange(startOfThisDay, startOfThisDay).filter(ev => ev.allDay);
 
             // Add each all-day event
             allDayEvents.forEach(ev => {
@@ -628,34 +794,17 @@ function renderWeekView(date) {
             dayCell.dataset.hour = rowHour;
 
             // Check if any event spans this hour for this day
-            const eventsForCell = [];
-            calendarEvents.forEach(ev => {
-                // Skip all-day events as they are handled separately
-                if (ev.allDay) return;
+            const startOfHour = new Date(currentDay);
+            startOfHour.setHours(rowHour, 0, 0, 0);
+            const endOfHour = new Date(currentDay);
+            endOfHour.setHours(rowHour, 59, 59, 999);
 
-                // Parse event date and time
-                const eventDate = new Date(ev.date);
-                const cellDate = new Date(cellDateStr);
-
-                // Only process events for this specific day
-                if (eventDate.toDateString() !== cellDate.toDateString()) {
-                    return;
-                }
-
-                // Parse start and end times
+            const eventsForCell = getEventsForRange(startOfHour, endOfHour).filter(ev => {
+                if (ev.allDay) return false;
                 const [startH, startM] = ev.startTime ? ev.startTime.split(":").map(Number) : [0, 0];
                 let [endH, endM] = ev.endTime ? ev.endTime.split(":").map(Number) : [23, 59];
-
-                // If end time is on the hour, include the previous hour
-                if (endM === 0 && endH > 0) {
-                    endH--;
-                    endM = 59;
-                }
-
-                // Check if current hour is within event's time range
-                if (rowHour >= startH && rowHour <= endH) {
-                    eventsForCell.push(ev);
-                }
+                if (endM === 0 && endH > 0) { endH--; endM = 59; }
+                return rowHour >= startH && rowHour <= endH;
             });
 
             // Process events for this cell
@@ -858,9 +1007,7 @@ function renderDayView(date) {
         dayAllDayEvents.innerHTML = '';
 
         // Find all-day events for this day
-        const allDayEvents = calendarEvents.filter(ev =>
-            ev.date === formatDateToISO(date) && ev.allDay
-        );
+        const allDayEvents = getEventsForRange(date, date).filter(ev => ev.allDay);
 
         // Add each all-day event
         allDayEvents.forEach(ev => {
@@ -916,7 +1063,7 @@ function renderDayView(date) {
     }
 
     // Filter timed events for the current day once
-    const timedEvents = calendarEvents.filter(ev => ev.date === formatDateToISO(date) && !ev.allDay);
+    const timedEvents = getEventsForRange(date, date).filter(ev => !ev.allDay);
 
     // Create one row per hour; draw half-hour guideline via CSS
     for (let h = 0; h < 24; h++) {
@@ -1126,6 +1273,8 @@ function openAddEventModal(date, hour, isAllDay = false, endHour = null, endDate
 
     // Clear previous values
     if (eventTitle) eventTitle.value = '';
+    const eventRingtone = document.getElementById('eventRingtone');
+    if (eventRingtone) eventRingtone.value = 'default';
 
     if (eventDateInput && date) eventDateInput.value = date;
 
@@ -1249,7 +1398,12 @@ function formatTime12Hour(timeString) {
 }
 
 function openViewEventModal(eventId) {
-    const event = calendarEvents.find(e => e.id === eventId);
+    let event = calendarEvents.find(e => e.id === eventId);
+    if (!event) {
+        // Check if it's an instance ID
+        const masterId = eventId.split('-').slice(0, 2).join('-'); // Reconstruct event-Date.now()
+        event = calendarEvents.find(e => e.id === masterId);
+    }
     if (!event) return;
 
     document.getElementById('viewEventTitle').textContent = event.title;
@@ -1270,12 +1424,12 @@ function openViewEventModal(eventId) {
 
     document.getElementById('editEventBtn').onclick = () => {
         viewModal.hide();
-        openEditEventModal(eventId);
+        openEditEventModal(event.id);
     };
 
     document.getElementById('deleteEventBtn').onclick = () => {
         if (confirm('Are you sure you want to delete this event?')) {
-            calendarEvents = calendarEvents.filter(e => e.id !== eventId);
+            calendarEvents = calendarEvents.filter(e => e.id !== event.id);
             if (window.localStorage) {
                 localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
             }
@@ -1289,7 +1443,12 @@ function openViewEventModal(eventId) {
 }
 
 function openEditEventModal(eventId) {
-    const event = calendarEvents.find(ev => ev.id === eventId);
+    let event = calendarEvents.find(ev => ev.id === eventId);
+    if (!event) {
+        // Check if it's an instance ID
+        const masterId = eventId.split('-').slice(0, 2).join('-');
+        event = calendarEvents.find(e => e.id === masterId);
+    }
     if (!event) return;
 
     editEventId.value = event.id;
@@ -1300,6 +1459,11 @@ function openEditEventModal(eventId) {
     editEventEndTime.value = event.endTime || '';
     editEventDescription.value = event.description || '';
     editEventColor.value = event.color || '#4285F4';
+    const ringtoneSelect = document.getElementById('editEventRingtone');
+    if (ringtoneSelect) ringtoneSelect.value = event.ringtone || 'default';
+    const recurrenceSelect = document.getElementById('editEventRecurrence');
+    if (recurrenceSelect) recurrenceSelect.value = event.recurrence || 'none';
+    document.getElementById('editEventAlarm').value = event.alarm || 'none';
 
     // Set the color picker
     const color = event.color || '#4285F4';
@@ -1325,6 +1489,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextBtn = document.getElementById('nextBtn');
     const todayNavBtn2 = document.querySelector('.today-button');
     const addEventBtn = document.getElementById('addEventBtn');
+
+    // Populate ringtone dropdowns
+    const eventRingtone = document.getElementById('eventRingtone');
+    const editEventRingtone = document.getElementById('editEventRingtone');
+    if (eventRingtone) populateRingtoneSelect(eventRingtone, true);
+    if (editEventRingtone) populateRingtoneSelect(editEventRingtone, true);
 
     // View switch event listeners
     // View switch event listeners for the new select element
@@ -1464,6 +1634,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 calendarEvents[idx].endTime = (!editEventAllDay.checked && editEventEndTime) ? editEventEndTime.value : null;
                 calendarEvents[idx].description = editEventDescription.value;
                 calendarEvents[idx].color = editEventColor.value || '#4285F4';
+                const ringtoneSelect = document.getElementById('editEventRingtone');
+                calendarEvents[idx].ringtone = ringtoneSelect ? ringtoneSelect.value : 'default';
+                calendarEvents[idx].alarm = document.getElementById('editEventAlarm').value;
+                const recurrenceSelect = document.getElementById('editEventRecurrence');
+                calendarEvents[idx].recurrence = recurrenceSelect ? recurrenceSelect.value : 'none';
                 // Save to localStorage
                 if (window.localStorage) {
                     try { localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents)); } catch (e) { }
@@ -1496,6 +1671,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const endTime = document.getElementById('eventEndTime').value;
             const description = document.getElementById('eventDescription').value;
             const color = document.getElementById('eventColor').value;
+            const ringtoneSelect = document.getElementById('eventRingtone');
+            const ringtone = ringtoneSelect ? ringtoneSelect.value : 'default';
+            const alarm = document.getElementById('eventAlarm').value;
 
             // Basic validation
             if (!allDay && (!startTime || !endTime)) {
@@ -1516,7 +1694,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 startTime: allDay ? null : startTime,
                 endTime: allDay ? null : endTime,
                 description: description,
-                color: color || '#4285F4'
+                color: color || '#4285F4',
+                alarm: alarm || 'none',
+                ringtone: ringtone || 'default',
+                recurrence: document.getElementById('eventRecurrence').value || 'none'
             };
 
             calendarEvents.push(newEvent);
@@ -1556,7 +1737,37 @@ document.addEventListener('DOMContentLoaded', function () {
             if (eventColorInput) eventColorInput.value = '#4285F4';
             // Reset all day toggle
             if (eventAllDay) eventAllDay.dispatchEvent(new Event('change'));
+
+            // If this event was created from a task, mark the task as scheduled
+            const taskId = document.getElementById('eventTaskId').value;
+            if (taskId) {
+                syncScheduledTask(taskId);
+                document.getElementById('eventTaskId').value = '';
+            }
         });
+    }
+
+    function syncScheduledTask(taskId) {
+        const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
+        let taskFound = false;
+        Object.keys(savedState).forEach(colId => {
+            if (Array.isArray(savedState[colId])) {
+                savedState[colId] = savedState[colId].map(task => {
+                    if (String(task.id) === String(taskId)) {
+                        taskFound = true;
+                        return { ...task, scheduled: true };
+                    }
+                    return task;
+                });
+            }
+        });
+
+        if (taskFound) {
+            localStorage.setItem('kanban-board', JSON.stringify(savedState));
+            loadTasksToSidebar();
+            // Also notify the tasks page if it's open (via storage event)
+            window.dispatchEvent(new Event('storage'));
+        }
     }
 
     // Initialize view buttons in global scope and set up event listeners
@@ -1880,4 +2091,213 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // --- Task Time Blocking Logic ---
+    const tasksSidebar = document.getElementById('tasksSidebar');
+    const tasksToggleBtn = document.getElementById('tasksToggleBtn');
+    const closeTasksSidebarBtn = document.getElementById('closeTasksSidebarBtn');
+    const tasksSidebarContent = document.getElementById('tasksSidebarContent');
+
+    if (tasksToggleBtn && tasksSidebar) {
+        tasksToggleBtn.addEventListener('click', () => {
+            tasksSidebar.classList.toggle('collapsed');
+            tasksToggleBtn.classList.toggle('active');
+            if (!tasksSidebar.classList.contains('collapsed')) {
+                loadTasksToSidebar();
+            }
+        });
+    }
+
+    if (closeTasksSidebarBtn && tasksSidebar) {
+        closeTasksSidebarBtn.addEventListener('click', () => {
+            tasksSidebar.classList.add('collapsed');
+            tasksToggleBtn.classList.remove('active');
+        });
+    }
+
+    function loadTasksToSidebar() {
+        if (!tasksSidebarContent) return;
+
+        const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
+        const allTasks = [];
+
+        // Flatten tasks from all columns
+        Object.keys(savedState).forEach(colId => {
+            if (Array.isArray(savedState[colId])) {
+                savedState[colId].forEach(task => {
+                    // Only show tasks that are NOT completed and NOT already scheduled
+                    if (!task.completed && !task.scheduled) {
+                        allTasks.push(task);
+                    }
+                });
+            }
+        });
+
+        renderTasksToSidebar(allTasks);
+    }
+
+    function renderTasksToSidebar(tasks) {
+        if (!tasksSidebarContent) return;
+        tasksSidebarContent.innerHTML = '';
+
+        if (tasks.length === 0) {
+            tasksSidebarContent.innerHTML = '<div class="text-center text-gray-500 py-8">No active tasks found.</div>';
+            return;
+        }
+
+        tasks.forEach(task => {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'sidebar-task-card drag-item';
+            taskEl.draggable = true;
+            taskEl.dataset.taskId = task.id;
+            taskEl.dataset.taskTitle = task.text;
+            taskEl.dataset.taskDuration = task.duration || '60';
+
+            taskEl.innerHTML = `
+                <div class="task-title">${task.text}</div>
+                <div class="task-meta">
+                    ${task.duration ? `<span><i class="far fa-clock"></i> ${task.duration}m</span>` : ''}
+                    ${task.dueDate ? `<span><i class="far fa-calendar-alt"></i> ${task.dueDate}</span>` : ''}
+                </div>
+            `;
+
+            taskEl.addEventListener('dragstart', (e) => {
+                taskEl.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    id: task.id,
+                    title: task.text,
+                    duration: task.duration || '60'
+                }));
+            });
+
+            taskEl.addEventListener('dragend', () => {
+                taskEl.classList.remove('dragging');
+            });
+
+            tasksSidebarContent.appendChild(taskEl);
+        });
+    }
+
+    // Initialize Drop Targets for all day cells
+    function setupCalendarDropTargets() {
+        document.querySelectorAll('.day-cell').forEach(cell => {
+            if (cell.dataset.dropSetup) return;
+            cell.dataset.dropSetup = 'true';
+
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                cell.classList.add('drag-over');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('drag-over');
+            });
+
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('drag-over');
+
+                try {
+                    const taskData = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const date = cell.dataset.date;
+                    const hour = parseInt(cell.dataset.hour);
+
+                    if (date && !isNaN(hour)) {
+                        const duration = parseInt(taskData.duration) || 60;
+                        const startH = hour;
+                        const startM = 0;
+                        const endM = (startM + duration) % 60;
+                        const endH = startH + Math.floor((startM + duration) / 60);
+
+                        const startTime = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
+                        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+                        // Open modal with prefilled data
+                        const eventTitle = document.getElementById('eventTitle');
+                        const eventDate = document.getElementById('eventDate');
+                        const eventStartTime = document.getElementById('eventStartTime');
+                        const eventEndTime = document.getElementById('eventEndTime');
+                        const eventDescription = document.getElementById('eventDescription');
+
+                        if (eventTitle) eventTitle.value = taskData.title;
+                        if (eventDate) eventDate.value = date;
+                        if (eventStartTime) eventStartTime.value = startTime;
+                        if (eventEndTime) eventEndTime.value = endTime;
+                        if (eventDescription) eventDescription.value = `Scheduled from task: ${taskData.title}`;
+                        const eventTaskId = document.getElementById('eventTaskId');
+                        if (eventTaskId) eventTaskId.value = taskData.id;
+
+                        const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+                        modal.show();
+                    }
+                } catch (err) {
+                    console.error('Drop error:', err);
+                }
+            });
+        });
+    }
+
+    // Hook into render functions to re-setup drop targets
+    const originalRenderWeekView = renderWeekView;
+    renderWeekView = function (date) {
+        originalRenderWeekView(date);
+        setupCalendarDropTargets();
+    };
+
+    const originalRenderDayView = renderDayView;
+    renderDayView = function (date) {
+        originalRenderDayView(date);
+        setupCalendarDropTargets();
+    };
+
+    const originalRenderMonthView = renderMonthView;
+    renderMonthView = function (date) {
+        originalRenderMonthView(date);
+        // For month view, we might want different drop logic or just basic day selection
+        setupCalendarDropTargetsForMonth();
+    };
+
+    function setupCalendarDropTargetsForMonth() {
+        document.querySelectorAll('.month-day').forEach(cell => {
+            if (cell.dataset.dropSetup) return;
+            cell.dataset.dropSetup = 'true';
+
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                cell.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
+            });
+
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
+
+                try {
+                    const taskData = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const date = cell.dataset.date;
+
+                    if (date) {
+                        openAddEventModal(date, 9, false, 10); // Default to 9 AM - 10 AM on that day
+                        const eventTitle = document.getElementById('eventTitle');
+                        const eventTaskId = document.getElementById('eventTaskId');
+                        if (eventTitle) eventTitle.value = taskData.title;
+                        if (eventTaskId) eventTaskId.value = taskData.id;
+                    }
+                } catch (err) {
+                    console.error('Drop error:', err);
+                }
+            });
+        });
+    }
+
+    // Initial load
+    if (tasksSidebar && !tasksSidebar.classList.contains('collapsed')) {
+        loadTasksToSidebar();
+    }
+    setupCalendarDropTargets();
+    setupCalendarDropTargetsForMonth();
+
 });

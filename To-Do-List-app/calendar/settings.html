@@ -573,6 +573,36 @@
                 </div>
             </div>
 
+            <!-- Sound Settings Card -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <div class="card-icon"
+                        style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <h2 class="card-title">Sound Settings</h2>
+                </div>
+                <p class="card-description">
+                    Choose your default alarm ringtone. You can also customize this for individual events.
+                </p>
+
+                <div class="mb-4">
+                    <label for="defaultRingtone"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Alarm
+                        Ringtone</label>
+                    <div class="flex gap-2">
+                        <select id="defaultRingtone"
+                            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:text-gray-200">
+                            <!-- Populated by JS -->
+                        </select>
+                        <button id="previewRingtoneBtn"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <i class="fas fa-play"></i> Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- About Card -->
             <div class="settings-card">
                 <div class="card-header">
@@ -608,8 +638,12 @@
             </a>
         </div>
 
+        <audio id="previewAudio" style="display: none;"></audio>
+
+        <script src="javascript/alarm-utils.js"></script>
         <script src="javascript/theme.js"></script>
         <script src="javascript/menu.js"></script>
+        <script src="javascript/settings.js"></script>
     </body>
 
 </html>
