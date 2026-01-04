@@ -579,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 miniCard.textContent = task.text;
                 miniCard.draggable = true;
                 miniCard.onclick = () => openTaskModal(task, task.element);
+                addDragListeners(miniCard);
                 targetList.appendChild(miniCard);
             }
         });
@@ -600,8 +601,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedItem = null;
 
     function addDragListeners(item) {
-        item.addEventListener('dragstart', () => {
+        item.addEventListener('dragstart', (e) => {
             draggedItem = item;
+            // Required for some browsers like Firefox to allow dragging
+            if (e.dataTransfer) {
+                e.dataTransfer.setData('text/plain', '');
+                e.dataTransfer.effectAllowed = 'move';
+            }
             setTimeout(() => item.classList.add('dragging'), 0);
         });
 
