@@ -98,13 +98,25 @@ function checkAlarms() {
         }
 
         // Check if current time matches alarm time (precise to minute)
-        if (alarmTime.getFullYear() === now.getFullYear() &&
+        const isAlarmTime = alarmTime.getFullYear() === now.getFullYear() &&
             alarmTime.getMonth() === now.getMonth() &&
             alarmTime.getDate() === now.getDate() &&
             alarmTime.getHours() === now.getHours() &&
-            alarmTime.getMinutes() === now.getMinutes()) {
+            alarmTime.getMinutes() === now.getMinutes();
+
+        const isSnoozeTime = event.snoozeTime &&
+            event.snoozeTime.getFullYear() === now.getFullYear() &&
+            event.snoozeTime.getMonth() === now.getMonth() &&
+            event.snoozeTime.getDate() === now.getDate() &&
+            event.snoozeTime.getHours() === now.getHours() &&
+            event.snoozeTime.getMinutes() === now.getMinutes();
+
+        if (isAlarmTime || isSnoozeTime) {
 
             if (!event.alarmTriggered) {
+                // If it was a snooze, clear the snooze time
+                if (isSnoozeTime) delete event.snoozeTime;
+
                 triggerAlarm(event);
                 event.alarmTriggered = true;
             }
@@ -120,6 +132,7 @@ function triggerAlarm(event) {
             ? event.ringtone
             : getDefaultRingtone();
         alarmSound.src = getRingtoneUrl(ringtoneId);
+        alarmSound.loop = true; // Ensure continuous sound
         alarmSound.play().catch(e => console.warn("Audio play failed (user interaction needed first):", e));
     }
 
@@ -139,22 +152,82 @@ function triggerAlarm(event) {
     // Alert blocks code, let's use a nice toast or modal if possible, but for MVP standard alert is reliable.
     // Better: Create a temporary visual element.
     const alertDiv = document.createElement('div');
-    alertDiv.className = 'fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg z-50 flex items-center gap-4 animate-bounce';
+    alertDiv.id = 'fullScreenAlarm';
+    alertDiv.className = 'fixed inset-0 bg-black/95 backdrop-blur-2xl z-[10000] flex flex-col items-center justify-between py-20 text-white animate-in-ios';
     alertDiv.innerHTML = `
-        <div>
-            <div class="font-bold">🔔 Alarm</div>
-            <div>${event.title}</div>
+        <div class="flex flex-col items-center gap-10 mt-16 text-center px-6">
+            <div class="text-[120px] filter drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-pulse-ios">🔔</div>
+            <div>
+                <div class="text-xl opacity-60 font-semibold tracking-[0.2em] uppercase mb-4">Alarm</div>
+                <h1 class="text-7xl font-black tracking-tight leading-tight drop-shadow-2xl">${event.title}</h1>
+            </div>
         </div>
-        <button class="bg-white text-red-600 px-2 py-1 rounded text-sm font-bold">Dismiss</button>
+        
+        <div class="flex flex-col gap-6 w-full max-w-md px-10 mb-12">
+            <button id="snoozeBtn" class="w-full bg-white/10 hover:bg-white/20 active:scale-95 text-white py-8 rounded-[40px] text-3xl font-bold transition-all border-2 border-white/10 backdrop-blur-xl">Snooze (10m)</button>
+            <button id="stopBtn" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white py-10 rounded-[40px] text-5xl font-black transition-all shadow-[0_20px_60px_-15px_rgba(220,38,38,0.6)]">STOP</button>
+        </div>
+
+        <style>
+            @keyframes iphone-vibrate {
+                0% { transform: scale(1); }
+                10%, 30%, 50%, 70%, 90% { transform: scale(1.02) rotate(0.5deg); }
+                20%, 40%, 60%, 80% { transform: scale(0.98) rotate(-0.5deg); }
+                100% { transform: scale(1); }
+            }
+            @keyframes pulse-ios {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.1); opacity: 0.8; }
+            }
+            .animate-in-ios {
+                animation: fade-in-ios 0.5s ease-out, zoom-in-ios 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .animate-pulse-ios {
+                animation: pulse-ios 2s ease-in-out infinite;
+            }
+            #fullScreenAlarm h1 {
+                animation: iphone-vibrate 0.4s ease-in-out infinite;
+            }
+            @keyframes fade-in-ios { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes zoom-in-ios { from { transform: scale(0.9); } to { transform: scale(1); } }
+            .fade-out-ios {
+                opacity: 0;
+                transform: scale(1.1);
+                transition: opacity 0.4s ease-in, transform 0.4s ease-in;
+            }
+        </style>
     `;
     document.body.appendChild(alertDiv);
 
-    alertDiv.querySelector('button').addEventListener('click', () => {
-        alertDiv.remove();
+    alertDiv.querySelector('#stopBtn').addEventListener('click', () => {
+        alertDiv.classList.add('fade-out-ios');
+        setTimeout(() => alertDiv.remove(), 400);
         if (alarmSound) {
             alarmSound.pause();
             alarmSound.currentTime = 0;
+            alarmSound.loop = false;
         }
+    });
+
+    alertDiv.querySelector('#snoozeBtn').addEventListener('click', () => {
+        alertDiv.classList.add('fade-out-ios');
+        setTimeout(() => alertDiv.remove(), 400);
+        if (alarmSound) {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            alarmSound.loop = false;
+        }
+
+        // Snooze logic: set a new alarm time 10 minutes from now
+        const snoozeDate = new Date();
+        snoozeDate.setMinutes(snoozeDate.getMinutes() + 10);
+
+        // We create a temporary event for snooze or just update the current event's time for the alarm logic
+        // For simplicity, let's mark the original as NOT triggered and store a "snoozeTime"
+        event.alarmTriggered = false;
+        event.snoozeTime = snoozeDate;
+
+        console.log(`Alarm snoozed until: ${snoozeDate.toLocaleTimeString()}`);
     });
 
     // Auto dismiss after 1 minute? No, alarm should stick.
