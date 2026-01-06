@@ -519,15 +519,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Rename Column
         titleSpan.addEventListener('click', () => {
-            const newTitle = prompt("Rename list:", title);
-            if (newTitle && newTitle.trim() && newTitle.trim() !== title) {
-                const colIndex = columnsState.findIndex(c => c.id === id);
-                if (colIndex !== -1) {
-                    columnsState[colIndex].title = newTitle.trim();
-                    titleSpan.textContent = newTitle.trim();
-                    saveColumns();
+            // Check if already editing to prevent double input
+            if (titleSpan.querySelector('input')) return;
+
+            const currentTitle = title;
+
+            // Create Input Element
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentTitle;
+            // Style to match the UI: clean, rounded, borders
+            input.className = 'w-full bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded px-1.5 py-0.5 outline-none border-2 border-blue-500 text-sm font-semibold max-w-[150px]';
+
+            // Clear span and show input
+            titleSpan.innerHTML = '';
+            titleSpan.appendChild(input);
+            input.focus();
+            input.select();
+
+            let isSaving = false;
+
+            const finishEditing = (save) => {
+                if (isSaving) return;
+                isSaving = true;
+
+                if (save) {
+                    const newTitle = input.value.trim();
+                    if (newTitle && newTitle !== currentTitle) {
+                        const colIndex = columnsState.findIndex(c => c.id === id);
+                        if (colIndex !== -1) {
+                            columnsState[colIndex].title = newTitle;
+                            title = newTitle; // Update closure variable so subsequent edits or deletes see the new title
+                            titleSpan.textContent = newTitle;
+                            saveColumns();
+                        } else {
+                            titleSpan.textContent = currentTitle;
+                        }
+                    } else {
+                        titleSpan.textContent = currentTitle;
+                    }
+                } else {
+                    titleSpan.textContent = currentTitle; // Revert
                 }
-            }
+            };
+
+            // Event Listeners for Input
+            input.addEventListener('blur', () => {
+                // Determine if the blur was caused by pressing Enter (which we handle separately to avoid race conditions if needed, 
+                // but usually blur fires anyway). We'll set a small timeout or just trust isSaving flag.
+                // Actually, if Enter removes the element, blur might fire. `isSaving` guards this.
+                finishEditing(true);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    finishEditing(true);
+                    input.blur(); // Ensure blur logic doesn't double-fire if listeners linger (though removed from DOM)
+                } else if (e.key === 'Escape') {
+                    finishEditing(false);
+                }
+            });
+
+            // Stop propagation to prevent dragging the column header while editing
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('mousedown', (e) => e.stopPropagation());
         });
 
         // Delete Column
