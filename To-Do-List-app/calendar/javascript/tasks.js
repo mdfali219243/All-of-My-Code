@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State for Columns and Tasks
     let columnsState = [];
     let allTasks = [];
+    let draggedColumn = null;
 
     // Initialize the board
     initializeBoard();
@@ -480,13 +481,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderColumn(id, title) {
         const columnDiv = document.createElement('div');
-        columnDiv.className = 'column';
+        columnDiv.className = 'column group'; // Added group for hover effects
+        columnDiv.dataset.columnId = id;
+        columnDiv.draggable = true;
+
         columnDiv.innerHTML = `
-            <div class="column-header">
-                <span>${title}</span>
-                <span class="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full count-badge">0</span>
+            <div class="column-header flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <i class="fas fa-grip-vertical text-gray-400 cursor-grab hover:text-gray-600 dark:hover:text-gray-300" title="Drag to reorder"></i>
+                    <span class="column-title font-semibold truncate hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer" title="Click to rename">${title}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full count-badge font-mono">0</span>
+                    <button class="delete-column-btn opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Delete List">
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
+                </div>
             </div>
-            <div class="task-list" id="${id}">
+            <div class="task-list flex-1 p-2 overflow-y-auto space-y-2" id="${id}">
                 <!-- Tasks injected here -->
             </div>
             <button class="add-task-btn" data-column="${id}">
@@ -502,6 +514,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const taskList = columnDiv.querySelector('.task-list');
         const addTaskBtn = columnDiv.querySelector('.add-task-btn');
+        const deleteBtn = columnDiv.querySelector('.delete-column-btn');
+        const titleSpan = columnDiv.querySelector('.column-title');
+
+        // Rename Column
+        titleSpan.addEventListener('click', () => {
+            const newTitle = prompt("Rename list:", title);
+            if (newTitle && newTitle.trim() && newTitle.trim() !== title) {
+                const colIndex = columnsState.findIndex(c => c.id === id);
+                if (colIndex !== -1) {
+                    columnsState[colIndex].title = newTitle.trim();
+                    titleSpan.textContent = newTitle.trim();
+                    saveColumns();
+                }
+            }
+        });
+
+        // Delete Column
+        deleteBtn.addEventListener('click', () => {
+            if (confirm(`Are you sure you want to delete the list "${title}"? All tasks in it will be removed.`)) {
+                // Remove from DOM
+                columnDiv.remove();
+
+                // Update State
+                columnsState = columnsState.filter(c => c.id !== id);
+                saveColumns();
+
+                // Cleanup tasks in this column from allTasks (optional but good practice)
+                // This will happen naturally on next load/save cycle as we filter by valid columns, 
+                // but we can force a saveTasks here to be clean.
+                // However, saveTasks iterates DOM, and we just removed the DOM element, so tasks are gone.
+                // We should just call saveTasks to sync localStorage 'kanban-board' with current DOM.
+                saveTasks();
+            }
+        });
 
         taskList.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -518,6 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
         addTaskBtn.addEventListener('click', () => {
             openAddTaskModal(id);
         });
+
+        // Add column drag listeners
+        addColumnDragListeners(columnDiv);
     }
 
     function renderTaskWeekView() {
@@ -599,6 +648,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let draggedItem = null;
+
+    function addColumnDragListeners(column) {
+        column.addEventListener('dragstart', (e) => {
+            draggedColumn = column;
+            if (e.dataTransfer) {
+                e.dataTransfer.setData('text/plain', '');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+            setTimeout(() => column.classList.add('dragging-column'), 0);
+        });
+
+        column.addEventListener('dragend', () => {
+            setTimeout(() => {
+                column.classList.remove('dragging-column');
+                draggedColumn = null;
+                saveColumns();
+            }, 0);
+        });
+
+        column.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (draggedColumn && draggedColumn !== column) {
+                const rect = column.getBoundingClientRect();
+                const midpoint = rect.left + rect.width / 2;
+
+                if (e.clientX < midpoint) {
+                    boardContainer.insertBefore(draggedColumn, column);
+                } else {
+                    boardContainer.insertBefore(draggedColumn, column.nextSibling);
+                }
+            }
+        });
+    }
 
     function addDragListeners(item) {
         item.addEventListener('dragstart', (e) => {
@@ -850,6 +932,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveColumns() {
+        // Update columnsState based on current DOM order
+        const columns = Array.from(boardContainer.querySelectorAll('.column'));
+        columnsState = columns.map(col => {
+            const id = col.dataset.columnId;
+            const title = col.querySelector('.column-header span:nth-child(2)').textContent;
+            return { id, title };
+        }).filter(col => col.id && col.title);
+
         localStorage.setItem('kanban-columns', JSON.stringify(columnsState));
     }
 
