@@ -248,12 +248,15 @@ let weekViewBtn, dayViewBtn, monthViewBtn, yearViewBtn;
 let isDragging = false;
 let dragStartDate = null;
 let dragStartHour = null;
+let dragStartMinute = 0;
 let currentHighlighted = [];
 
 // ---- Enhanced Drag-select helper functions (global) ----
 function clearDragHighlight() {
     currentHighlighted.forEach(cell => cell.classList.remove('selecting'));
     currentHighlighted = [];
+    const ghost = document.getElementById('drag-ghost-event');
+    if (ghost) ghost.remove();
     // Remove dragging class from grids
     document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
 }
@@ -266,18 +269,113 @@ function isDarkModeEnabled() {
     );
 }
 
-function highlightRange(gridEl, date, startH, endH) {
-    clearDragHighlight();
-    const [minH, maxH] = startH < endH ? [startH, endH] : [endH, startH];
-    const selector = `.day-cell[data-date="${date}"]`;
-    const cells = Array.from(gridEl.querySelectorAll(selector));
-    cells.forEach(cell => {
-        const h = Number(cell.dataset.hour);
-        if (h >= minH && h <= maxH) {
-            cell.classList.add('selecting');
-            currentHighlighted.push(cell);
-        }
-    });
+// Helper to manage the ghost event element
+function updateGhostEvent(gridEl, startH, startM, endH, endM, baseCell) {
+    let ghost = document.getElementById('drag-ghost-event');
+    if (!ghost) {
+        ghost = document.createElement('div');
+        ghost.id = 'drag-ghost-event';
+        ghost.className = 'drag-ghost-event';
+        // When creating, append to the same container as the day cell to ensure correct positioning relative to the column
+        baseCell.parentNode.appendChild(ghost); // baseCell is a day-cell, we want to be in the same column/day container if possible, or usually just absolute over the cell
+        // Actually, for Week View, baseCell is inside weekTimeGrid. day-cell has relative position.
+        // It's better to append to the day-cell's COLUMN. 
+        // In week view: weekTimeGrid contains day cells. Day cells are absolute or relative? 
+        // Let's verify structure: weekTimeGrid -> day-cell. 
+        // If we append to baseCell, position:absolute is relative to baseCell.
+        // But we draw across multiple cells? No, dragging is usually vertical within the same day for time selection.
+        // If dragging across days, that's complex. Let's assume day-constrained vertical drag for now as per previous logic.
+
+        // REVISION: The current logic finds day-cell by hour. 
+        // To draw a continuous block across multiple hour-cells, we need a common parent.
+        // For WeekView, `weekTimeGrid` contains all DayCells but they are children? No, 7 day cells are COLUMNS? 
+        // Let's look at renderWeekView: 
+        // It creates 24 rows? NO, it creates 24 rows in my original code, or 7 columns?
+        // Wait, renderWeekView structure in current code (reverted to 24 rows):
+        // weekTimeGrid -> TimeLabel + 7 DayCells (for that hour).
+        // This means DayCells are rows segments. 
+        // To draw a vertical block across segments, we must append to `weekTimeGrid` and use absolute positioning calculated from the top.
+        // But `weekTimeGrid` has `position: relative`.
+
+        // Correct approach: Append ghost to `weekTimeGrid` (or `dayTimeGrid`).
+        // Calculate Top/Height based on time.
+        // Left/Width based on the column index of the baseCell.
+
+        // Find which day column index we are in.
+        // This is tricky because the DOM structure is Row-based (TR-like), not Column-based.
+        // weekTimeGrid children: [Label, Day0_H0, Day1_H0...], [Label, Day0_H1...]
+        // So DayCells for the same day are NOT in a common container.
+        // Positioning a single div across multiple rows is hard if appended to grid.
+        // UNLESS we use absolute positioning relative to the Grid.
+
+        gridEl.appendChild(ghost);
+    }
+
+    // Ensure ghost is in the grid
+    if (ghost.parentNode !== gridEl) gridEl.appendChild(ghost);
+
+    const startTotal = startH * 60 + startM;
+    const endTotal = endH * 60 + endM;
+    const [minTotal, maxTotal] = startTotal <= endTotal ? [startTotal, endTotal] : [endTotal, startTotal];
+    const duration = maxTotal - minTotal;
+
+    // Calculate vertical position (Top % and Height %)
+    // Grid spans 24 hours.
+    const topPercent = (minTotal / (24 * 60)) * 100;
+    const heightPercent = (duration / (24 * 60)) * 100;
+
+    ghost.style.top = `${topPercent}%`;
+    ghost.style.height = `${heightPercent}%`;
+
+    // Calculate horizontal position
+    // We need to match the `baseCell`'s left/width. 
+    // Since baseCell is a child of the grid, we can use its offsetLeft/offsetWidth? 
+    // NO, baseCell is inside a flex/grid row? 
+    // Actually the revert code: weekTimeGrid has `display: grid key`. 
+    // `grid-template-columns: 4rem repeat(7, minmax(0, 1fr))`.
+    // So distinct columns exist.
+    // If we append ghost to gridEl, we can just assign it to the correct grid column!
+    // But exact grid column index is needed.
+    // We can find the index of the day in the row.
+
+    // Attempt to use `baseCell.offsetLeft` and `width`.
+    const cellRect = baseCell.getBoundingClientRect();
+    const gridRect = gridEl.getBoundingClientRect();
+
+    const relativeLeft = cellRect.left - gridRect.left;
+    const relativeWidth = cellRect.width;
+
+    ghost.style.left = `${relativeLeft}px`;
+    ghost.style.width = `${relativeWidth}px`;
+
+    // Text Content
+    const startH_disp = Math.floor(minTotal / 60);
+    const startM_disp = minTotal % 60;
+    const endH_disp = Math.floor(maxTotal / 60);
+    const endM_disp = maxTotal % 60;
+
+    const formatTime = (h, m) => {
+        const ampm = h < 12 ? 'AM' : 'PM';
+        const h12 = h % 12 || 12;
+        const mStr = m === 0 ? '' : `:${String(m).padStart(2, '0')}`;
+        return `${h12}${mStr} ${ampm}`;
+    };
+
+    const timeStr = `${formatTime(startH_disp, startM_disp)} - ${formatTime(endH_disp, endM_disp)}`;
+
+    // Format duration
+    let durStr = '';
+    const hDur = Math.floor(duration / 60);
+    const mDur = duration % 60;
+    if (hDur > 0) durStr += `${hDur}h `;
+    if (mDur > 0) durStr += `${mDur}m`;
+
+    ghost.innerHTML = `
+        <div class="ghost-time-label">${timeStr}</div>
+        ${duration >= 30 ? `<div class="ghost-duration-label">(${durStr.trim()})</div>` : ''}
+    `;
+
+    return ghost;
 }
 
 // Enhanced function to support month view drag selection
@@ -315,6 +413,10 @@ function enableDragSelection(gridEl, viewType = 'time') {
         dragStartDate = targetCell.dataset.date;
         if (viewType !== 'month') {
             dragStartHour = Number(targetCell.dataset.hour);
+            const rect = targetCell.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            const quarter = Math.floor((clickY / rect.height) * 4);
+            dragStartMinute = quarter * 15;
         }
 
         gridEl.classList.add('dragging');
@@ -333,7 +435,33 @@ function enableDragSelection(gridEl, viewType = 'time') {
             highlightMonthRange(dragStartDate, overCell.dataset.date);
         } else {
             const currentHour = Number(overCell.dataset.hour);
-            highlightRange(gridEl, dragStartDate, dragStartHour, currentHour);
+            const rect = overCell.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            const quarter = Math.floor((clickY / rect.height) * 4);
+            const currentMinute = quarter * 15;
+
+            // Calculate end time (snapped to 15 mins)
+            // If dragging, we want to visually show the selected range using the ghost event
+            // We use dragStartCell as the horizontal anchor (assuming vertical drag logic for now)
+
+            // Determine the "Edge" time. 
+            // If dragging down, edge is current time + 15m.
+            // If dragging up, edge is current time (start of the block).
+            // Actually, simplest visual logic: 
+            // Start Point: dragStartHour:dragStartMinute
+            // End Point: currentHour:currentMinute + 15 (if we treat the mouse as selecting a block)
+            // But for precision dragging, usually the mouse point IS the end time.
+            // Let's create a range from Start to Current + 15?
+            // Wait, Notion style: 
+            // Click at 9:15 -> Start 9:15.
+            // Drag to 10:00 -> End 10:00.
+            // Range: 9:15 - 10:00.
+
+            let targetH = currentHour;
+            let targetM = currentMinute + 15;
+            if (targetM >= 60) { targetH++; targetM = 0; }
+
+            updateGhostEvent(gridEl, dragStartHour, dragStartMinute, targetH, targetM, dragStartCell);
         }
     };
 
@@ -342,12 +470,40 @@ function enableDragSelection(gridEl, viewType = 'time') {
 
         const endCell = viewType === 'month' ? e.target.closest('.month-cell') : e.target.closest('.day-cell');
 
-        if (dragStartCell && endCell && dragStartCell !== endCell) {
+        if (dragStartCell && endCell) {
             if (viewType === 'month') {
-                openAddEventModal(dragStartDate, null, true, null, endCell.dataset.date);
+                if (dragStartCell !== endCell) {
+                    openAddEventModal(dragStartDate, null, true, null, endCell.dataset.date);
+                }
             } else {
-                const endHour = Number(endCell.dataset.hour) + 1;
-                openAddEventModal(dragStartDate, dragStartHour, false, endHour);
+                const endH = Number(endCell.dataset.hour);
+                const rect = endCell.getBoundingClientRect();
+                const clickY = e.clientY - rect.top;
+                const quarter = Math.floor((clickY / rect.height) * 4);
+                const endM = quarter * 15;
+
+                // If dragging downwards, the end time should be 15 mins after the end cell start position
+                let finalEndH = endH;
+                let finalEndM = endM + 15;
+                if (finalEndM >= 60) {
+                    finalEndH++;
+                    finalEndM = 0;
+                }
+
+                const startT = dragStartHour * 60 + dragStartMinute;
+                const endT = endH * 60 + endM;
+
+                if (startT <= endT) {
+                    openAddEventModal(dragStartDate, dragStartHour, false, finalEndH, null, dragStartMinute, finalEndM);
+                } else {
+                    // Dragged upwards
+                    let actualStartH = endH;
+                    let actualStartM = endM;
+                    let actualEndH = dragStartHour;
+                    let actualEndM = dragStartMinute + 15;
+                    if (actualEndM >= 60) { actualEndH++; actualEndM = 0; }
+                    openAddEventModal(dragStartDate, actualStartH, false, actualEndH, null, actualStartM, actualEndM);
+                }
             }
         }
 
@@ -844,21 +1000,21 @@ function renderWeekView(date) {
     const startOfWeek = new Date(year, month, day - date.getDay());
 
     // For each hour, create a row: first column is time label, next 7 columns are days
-    for (let i = 0; i < hours.length; i++) {
-        const rowHour = hours[i];
+    for (let h = 0; h < 24; h++) {
+        const rowHour = h;
 
         // Time label cell
         const timeCell = document.createElement('div');
         timeCell.classList.add('time-label', 'text-xs', 'text-right', 'pr-2', 'py-1');
-        const hourStr = rowHour < 12 ? `${rowHour} AM` : rowHour === 12 ? '12 PM' : rowHour === 24 ? '12 AM' : rowHour === 25 ? '1 AM' : `${rowHour - 12} PM`;
-        timeCell.textContent = hourStr;
+        const displayHour = rowHour === 0 ? 12 : rowHour > 12 ? rowHour - 12 : rowHour;
+        const ampm = rowHour < 12 ? 'AM' : 'PM';
+        timeCell.textContent = `${displayHour} ${ampm}`;
         weekTimeGrid.appendChild(timeCell);
 
         // 7 day cells
         for (let d = 0; d < 7; d++) {
             const dayCell = document.createElement('div');
-            dayCell.classList.add('day-cell', 'relative', 'h-12');
-
+            dayCell.classList.add('day-cell', 'relative', 'h-12'); // Fixed height of 48px (h-12)
             // For future event placement, store date and hour
             const currentDay = new Date(startOfWeek);
             currentDay.setDate(startOfWeek.getDate() + d);
@@ -866,108 +1022,110 @@ function renderWeekView(date) {
             dayCell.dataset.date = cellDateStr;
             dayCell.dataset.hour = rowHour;
 
-            // Check if any event spans this hour for this day
-            const startOfHour = new Date(currentDay);
-            startOfHour.setHours(rowHour, 0, 0, 0);
-            const endOfHour = new Date(currentDay);
-            endOfHour.setHours(rowHour, 59, 59, 999);
-
-            const eventsForCell = getEventsForRange(startOfHour, endOfHour).filter(ev => {
-                if (ev.allDay) return false;
-                const [startH, startM] = ev.startTime ? ev.startTime.split(":").map(Number) : [0, 0];
-                let [endH, endM] = ev.endTime ? ev.endTime.split(":").map(Number) : [23, 59];
-                if (endM === 0 && endH > 0) { endH--; endM = 59; }
-                return rowHour >= startH && rowHour <= endH;
-            });
-
-            // Process events for this cell
-            eventsForCell.forEach(ev => {
-                const [startH, startM] = ev.startTime ? ev.startTime.split(":").map(Number) : [0, 0];
-                let [endH, endM] = ev.endTime ? ev.endTime.split(":").map(Number) : [23, 59];
-
-                // Create event element
-                const evDiv = document.createElement('div');
-                evDiv.className = 'time-event';
-
-                // Set color-related styles
-                const bgColor = ev.color ? `${ev.color}CC` : '#4285F4CC';
-                const borderColor = ev.color || '#4285F4';
-
-                // Apply styles as CSS properties
-                evDiv.style.setProperty('--event-bg-color', bgColor);
-                evDiv.style.setProperty('--event-border-color', borderColor);
-
-                // Reset any problematic styles
-                evDiv.style.margin = '0';
-                evDiv.style.position = 'absolute';
-                evDiv.style.left = '2px';
-                evDiv.style.right = '2px';
-                evDiv.style.width = 'calc(100% - 4px)';
-                evDiv.style.boxSizing = 'border-box';
-
-                // Set cursor and z-index
-                evDiv.style.cursor = 'pointer';
-                evDiv.style.zIndex = '5';
-
-                // Calculate position and height based on time
-                const startMinute = rowHour === startH ? startM : 0;
-                const endMinute = rowHour === endH ? endM : 60;
-                const heightPercent = ((endMinute - startMinute) / 60) * 100;
-                const topPercent = (startMinute / 60) * 100;
-
-                evDiv.style.top = `${topPercent}%`;
-                evDiv.style.height = `calc(${heightPercent}% - 1px)`; // Subtract 1px for border
-
-                // Only show title in the starting hour cell
-                if (rowHour === startH) {
-                    const titleDiv = document.createElement('div');
-                    titleDiv.className = 'font-semibold truncate';
-                    titleDiv.textContent = ev.title;
-                    titleDiv.style.overflow = 'hidden';
-                    titleDiv.style.textOverflow = 'ellipsis';
-                    titleDiv.style.whiteSpace = 'nowrap';
-                    evDiv.appendChild(titleDiv);
-
-                    const timeDiv = document.createElement('div');
-                    timeDiv.className = 'text-xxs opacity-90';
-                    timeDiv.textContent = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')} - ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-                    timeDiv.style.overflow = 'hidden';
-                    timeDiv.style.textOverflow = 'ellipsis';
-                    timeDiv.style.whiteSpace = 'nowrap';
-                    evDiv.appendChild(timeDiv);
-                }
-
-                evDiv.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    openViewEventModal(ev.id);
-                });
-
-                dayCell.style.position = 'relative';
-                dayCell.style.overflow = 'hidden';
-                dayCell.appendChild(evDiv);
-            });
-            // Add event by clicking empty week cell (only if not dragging)
             dayCell.addEventListener('click', function (e) {
-                // Don't open modal if we're dragging or just finished dragging
-                if (isDragging || weekTimeGrid.classList.contains('dragging')) {
-                    return;
-                }
-                console.log('Week cell clicked:', { target: e.target, classList: e.target.classList, cellDateStr, rowHour });
-                if (!e.target.classList.contains('week-event')) {
-                    console.log('Opening Add Event modal for', cellDateStr, rowHour);
-                    openAddEventModal(cellDateStr, rowHour);
-                } else {
-                    console.log('Click was on an event, not opening Add Event modal.');
-                }
+                if (isDragging || weekTimeGrid.classList.contains('dragging') || e.target.closest('.time-event')) return;
+                const rect = dayCell.getBoundingClientRect();
+                const clickY = e.clientY - rect.top;
+                const quarter = Math.floor((clickY / rect.height) * 4);
+                const minute = quarter * 15;
+                openAddEventModal(cellDateStr, rowHour, false, null, null, minute);
             });
-            // Enable drag selection for the grid
-            if (!weekTimeGrid.dataset.dragSetup) {
-                enableDragSelection(weekTimeGrid);
-            }
-            // All-day events are now handled in the dedicated all-day row above
+
             weekTimeGrid.appendChild(dayCell);
         }
     }
+
+    // --- Create Absolute Events Layer for Week View ---
+    const eventsOverlay = document.createElement('div');
+    eventsOverlay.className = 'week-events-overlay';
+    eventsOverlay.style.position = 'absolute';
+    eventsOverlay.style.top = '0';
+    eventsOverlay.style.left = '0';
+    eventsOverlay.style.width = '100%';
+    eventsOverlay.style.height = '100%';
+    eventsOverlay.style.display = 'grid';
+    // Match the 4rem + 7 cols structure
+    eventsOverlay.style.gridTemplateColumns = '4rem repeat(7, minmax(0, 1fr))';
+    eventsOverlay.style.pointerEvents = 'none'; // Clicks pass through to grid
+
+    // Append spacer
+    eventsOverlay.appendChild(document.createElement('div'));
+
+    // Create 7 column containers for events
+    for (let d = 0; d < 7; d++) {
+        const colContainer = document.createElement('div');
+        colContainer.style.position = 'relative';
+        colContainer.style.height = '100%';
+        colContainer.style.pointerEvents = 'none';
+
+        const currentDay = new Date(startOfWeek);
+        currentDay.setDate(startOfWeek.getDate() + d);
+
+        // Filter events for this day
+        // We use getOverlappingEvents helper for correct layout
+        const startOfDay = new Date(currentDay); startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(currentDay); endOfDay.setHours(23, 59, 59, 999);
+        const dayEvents = getEventsForRange(startOfDay, endOfDay).filter(ev => !ev.allDay);
+
+        // Simple overlap logic similar to Day View
+        // Or simpler: just absolute positioning for now. 
+        // If we want Notion-style overlapping (side-by-side), we need logic.
+        // For now, let's just render them absolute to confirm "continuous block" look.
+
+        dayEvents.forEach(ev => {
+            const [startH, startM] = ev.startTime ? ev.startTime.split(':').map(Number) : [0, 0];
+            const [endH, endM] = ev.endTime ? ev.endTime.split(':').map(Number) : [startH, 30]; // Default 30 min?
+
+            const startTotal = startH * 60 + startM;
+            const endTotal = endH * 60 + endM;
+            const duration = endTotal - startTotal;
+
+            const evDiv = document.createElement('div');
+            evDiv.className = 'time-event';
+            evDiv.textContent = ev.title;
+            // Styling
+            const bgColor = ev.color ? `${ev.color}E6` : '#4285F4E6'; // Slightly higher opacity
+            const borderColor = ev.color || '#4285F4';
+            evDiv.style.backgroundColor = bgColor;
+            evDiv.style.borderLeft = `3px solid ${borderColor}`;
+            evDiv.style.color = '#fff';
+            evDiv.style.borderRadius = '4px';
+            evDiv.style.padding = '2px 4px';
+            evDiv.style.fontSize = '12px';
+            evDiv.style.overflow = 'hidden';
+            evDiv.style.boxSizing = 'border-box';
+
+            // Positioning (Full height 24h = 100%)
+            evDiv.style.position = 'absolute';
+            evDiv.style.top = `${(startTotal / 1440) * 100}%`;
+            evDiv.style.height = `${(duration / 1440) * 100}%`;
+            // Temporary: full width until overlap logic is refined
+            evDiv.style.left = '2px';
+            evDiv.style.right = '2px';
+            evDiv.style.pointerEvents = 'auto'; // allow clicking events
+            evDiv.style.cursor = 'pointer';
+
+            // Details
+            // Title (already set textContent, but structured is better)
+            evDiv.innerHTML = `
+                <div class="font-semibold truncate" style="font-size:11px;">${ev.title}</div>
+                <div class="text-xxs opacity-90" style="font-size:10px;">${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')} - ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}</div>
+              `;
+
+            evDiv.addEventListener('click', function (e) {
+                e.stopPropagation();
+                openViewEventModal(ev.id);
+            });
+
+            colContainer.appendChild(evDiv);
+        });
+
+        eventsOverlay.appendChild(colContainer);
+    }
+
+    // Append overlay to grid. Note: Grid MUST be relative for this to work relative to it
+    // weekTimeGrid has style.position = 'relative' set above.
+    weekTimeGrid.appendChild(eventsOverlay);
 }
 
 // Helper to darken color for border
@@ -1139,6 +1297,7 @@ function renderDayView(date) {
     const timedEvents = getEventsForRange(date, date).filter(ev => !ev.allDay);
 
     // Create one row per hour; draw half-hour guideline via CSS
+    // Create one row per hour (24 rows total)
     for (let h = 0; h < 24; h++) {
         const row = document.createElement('div');
         row.className = 'day-time-row';
@@ -1148,27 +1307,29 @@ function renderDayView(date) {
         timeLabelCell.className = 'time-label-cell';
         const timeLabel = document.createElement('div');
         timeLabel.className = 'time-label';
-        let displayHour = h % 12 || 12;
+
+        const displayHour = h % 12 || 12;
         const ampm = h < 12 ? 'AM' : 'PM';
-        if (h === 0) displayHour = 12; // Midnight
         timeLabel.textContent = `${displayHour} ${ampm}`;
+
         timeLabelCell.appendChild(timeLabel);
         row.appendChild(timeLabelCell);
 
         // Day cell for the hour
         const dayCell = document.createElement('div');
-        dayCell.className = 'day-cell hour-start';
+        dayCell.className = 'day-cell';
+        dayCell.style.height = '48px';
+
         dayCell.dataset.date = formatDateToISO(date);
         dayCell.dataset.hour = h;
-        dayCell.dataset.minute = 0;
 
         dayCell.addEventListener('click', (e) => {
             if (isDragging || dayTimeGrid.classList.contains('dragging') || e.target.closest('.time-event')) return;
             const rect = dayCell.getBoundingClientRect();
             const clickY = e.clientY - rect.top;
-            const minute = clickY < rect.height / 2 ? 0 : 30;
-            const time = `${String(h).padStart(2, '0')}:${minute === 0 ? '00' : '30'}`;
-            openAddEventModal(formatDateToISO(date), h, false, null, null, time);
+            const quarter = Math.floor((clickY / rect.height) * 4);
+            const minute = quarter * 15;
+            openAddEventModal(formatDateToISO(date), h, false, null, null, minute);
         });
 
         row.appendChild(dayCell);
@@ -1336,7 +1497,7 @@ function renderYearView(date) {
 // Utility: open Add Event modal with date/time prefilled
 // Enhanced to support multi-day events with endDate parameter
 
-function openAddEventModal(date, hour, isAllDay = false, endHour = null, endDate = null) {
+function openAddEventModal(date, hour, isAllDay = false, endHour = null, endDate = null, minute = 0, endMinute = null) {
     const eventDateInput = document.getElementById('eventDate');
     const eventStartTime = document.getElementById('eventStartTime');
     const eventEndTime = document.getElementById('eventEndTime');
@@ -1372,9 +1533,25 @@ function openAddEventModal(date, hour, isAllDay = false, endHour = null, endDate
         if (eventAllDay) eventAllDay.checked = false;
         if (timeFields) timeFields.style.display = 'block';
         if (hour !== undefined && hour !== null) {
-            const computedEnd = endHour !== null ? endHour : (hour + 1);
-            const startVal = `${String(hour).padStart(2, '0')}:00`;
-            const endVal = `${String(computedEnd).padStart(2, '0')}:00`;
+            let startH = hour;
+            let startM = minute || 0;
+            let endH, endM;
+
+            if (endHour !== null) {
+                endH = endHour;
+                endM = endMinute !== null ? endMinute : 0;
+            } else {
+                // Default duration 1 hour
+                endH = startH + 1;
+                endM = startM;
+                if (endH >= 24) {
+                    endH = 23;
+                    endM = 59;
+                }
+            }
+
+            const startVal = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
+            const endVal = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
             if (eventStartTime) eventStartTime.value = startVal;
             if (eventEndTime) eventEndTime.value = endVal;
         }
@@ -2274,16 +2451,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     const taskData = JSON.parse(e.dataTransfer.getData('text/plain'));
                     const date = cell.dataset.date;
                     const hour = parseInt(cell.dataset.hour);
+                    const minute = parseInt(cell.dataset.minute || 0);
 
                     if (date && !isNaN(hour)) {
                         const duration = parseInt(taskData.duration) || 60;
                         const startH = hour;
-                        const startM = 0;
-                        const endM = (startM + duration) % 60;
-                        const endH = startH + Math.floor((startM + duration) / 60);
+                        const rect = cell.getBoundingClientRect();
+                        const dropY = e.clientY - rect.top;
+                        const quarter = Math.floor((dropY / rect.height) * 4);
+                        const startM = quarter * 15;
+
+                        const totalStartMinutes = startH * 60 + startM;
+                        const totalEndMinutes = totalStartMinutes + duration;
+
+                        const endM = totalEndMinutes % 60;
+                        const endH = Math.min(23, Math.floor(totalEndMinutes / 60));
+                        const finalEndM = totalEndMinutes >= 24 * 60 ? 59 : endM;
 
                         const startTime = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
-                        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+                        const endTime = `${String(endH).padStart(2, '0')}:${String(finalEndM).padStart(2, '0')}`;
 
                         // Open modal with prefilled data
                         const eventTitle = document.getElementById('eventTitle');
