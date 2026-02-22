@@ -1,0 +1,6 @@
+# Project Antigravity Confidential
+
+Project Antigravity is a secret initiative to build the world's best AI coding assistant.
+The lead developer is named Foysal.
+The AI is powered by Google Deepmind technology.
+The project's mascot is a flying squirrel named "Glider".

@@ -2180,169 +2180,159 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDropdownText();
     initializeView();
 
-    // Floating Chat Focus Effects
-    const chatInput = document.getElementById('calendarChatInput');
+    // --- Chat Sidebar Logic ---
+    const chatSidebar = document.getElementById('chatSidebar');
     const aiChatToggleBtn = document.getElementById('aiChatToggleBtn');
-
-    if (aiChatToggleBtn && chatInput) {
-        aiChatToggleBtn.addEventListener('click', () => {
-            chatInput.focus();
-        });
-    }
-
+    const closeChatSidebarBtn = document.getElementById('closeChatSidebarBtn');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const chatInput = document.getElementById('calendarChatInput');
     const chatSendBtn = document.getElementById('calendarChatSendBtn');
     const chatMessages = document.getElementById('chatMessages');
-    const mainView = document.getElementById('main_view');
-    const header = document.querySelector('.header');
-    const chatOverlay = document.getElementById('chatOverlay');
-    const closeChatBtn = document.getElementById('closeChatBtn');
 
-    if (chatInput) {
-        // When chat is focused, blur background and show overlay
-        chatInput.addEventListener('focus', () => {
-            if (mainView) mainView.classList.add('blur-content');
-            if (header) header.classList.add('blur-content');
-            if (chatOverlay) chatOverlay.classList.add('active');
-            if (closeChatBtn) closeChatBtn.style.display = 'flex';
-        });
+    let isChatOpen = false;
 
-        // Function to close chat focus
-        // param endChat: boolean, if true, clears the chat session (for close button)
-        const closeChatFocus = (endChat = false) => {
-            console.log('closeChatFocus called', { endChat });
-            if (mainView) mainView.classList.remove('blur-content');
-            if (header) header.classList.remove('blur-content');
-            if (chatOverlay) chatOverlay.classList.remove('active');
-            if (closeChatBtn) closeChatBtn.style.display = 'none';
-            chatInput.blur(); // Remove focus from input
-
-            // Clear chat session ONLY if requested (Close button)
-            if (endChat) {
-                console.log('Clearing chat history due to endChat=true');
-                if (chatMessages) chatMessages.innerHTML = '';
-                chatInput.value = '';
-
-                // Tell server to reset conversation history
-                fetch('http://127.0.0.1:5001/api/reset', {
-                    method: 'POST'
-                }).catch(err => console.error("Failed to reset chat:", err));
-            }
-        };
-
-        // Clicking the overlay closes the chat session (removes blur) - PRESERVE HISTORY
-        if (chatOverlay) {
-            chatOverlay.addEventListener('click', () => closeChatFocus(false));
-        }
-
-        // Clicking the close button also closes the chat session - CLEAR HISTORY
-        if (closeChatBtn) {
-            closeChatBtn.addEventListener('click', () => closeChatFocus(true));
-        }
-
-        // Debug: Check for page unload
-        window.addEventListener('beforeunload', (e) => {
-            console.log('Page is unloading/reloading!');
-            // Uncomment next line to pause on reload for debugging
-            // e.preventDefault(); e.returnValue = ''; 
-        });
-
-        // Chat Logic
-        const handleChatSubmit = () => {
-            console.log('handleChatSubmit called');
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            // 1. Add User Message
-            addMessage(text, 'user');
-            chatInput.value = '';
-
-            // 2. Call AI Backend
-            const loadingBubble = document.createElement('div');
-            loadingBubble.classList.add('message-bubble', 'ai', 'loading');
-            loadingBubble.textContent = '...';
-            chatMessages.appendChild(loadingBubble);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            console.log('Sending fetch request to backend...');
-            fetch('http://127.0.0.1:5001/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: text })
-            })
-                .then(response => {
-                    console.log('Fetch response received:', response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Data received from backend:', data);
-                    loadingBubble.remove();
-                    const reply = data.reply || "I'm having trouble connecting to my brain right now.";
-                    addMessage(reply, 'ai');
-
-                    // Process any actions from the AI
-                    if (data.actions && data.actions.length > 0) {
-                        console.log('Processing actions:', data.actions);
-                        data.actions.forEach(action => {
-                            if (action.type === 'ADD_EVENT' && action.data) {
-                                // Use existing createEventFromAI function
-                                console.log('Creating event from AI');
-                                createEventFromAI({
-                                    title: action.data.title,
-                                    date: action.data.date,
-                                    startTime: action.data.startTime || action.data.time,
-                                    endTime: action.data.endTime
-                                });
-                            }
-                            if (action.type === 'ADD_TASK' && action.data) {
-                                // Save task to localStorage (tasks are on separate page)
-                                console.log('Creating task from AI');
-                                const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
-                                if (!savedState['todo-list']) savedState['todo-list'] = [];
-                                savedState['todo-list'].push(action.data.title);
-                                localStorage.setItem('kanban-board', JSON.stringify(savedState));
-                            }
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch Error:', error);
-                    loadingBubble.remove();
-                    addMessage("Sorry, I can't connect to the server. Is it running?", 'ai');
-                });
-        };
-
-        const addMessage = (text, sender) => {
-            console.log('addMessage called', { text, sender });
-            if (!chatMessages) {
-                console.error('chatMessages container missing!');
-                return;
-            }
-            const bubble = document.createElement('div');
-            bubble.classList.add('message-bubble', sender);
-            bubble.textContent = text;
-            chatMessages.appendChild(bubble);
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-
-        if (chatSendBtn) {
-            chatSendBtn.addEventListener('click', handleChatSubmit);
-        }
-
-        // Use global keydown to ensure we catch it
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && document.activeElement === chatInput) {
-                console.log('Global Enter detected on chat input');
-                e.preventDefault();
-                e.stopPropagation(); // Stop other listeners
-                handleChatSubmit();
+    // Toggle Chat Sidebar
+    if (aiChatToggleBtn && chatSidebar) {
+        aiChatToggleBtn.addEventListener('click', () => {
+            isChatOpen = !isChatOpen;
+            if (isChatOpen) {
+                chatSidebar.classList.remove('collapsed');
+                loadChatHistory();
+                setTimeout(() => chatInput.focus(), 300);
+            } else {
+                chatSidebar.classList.add('collapsed');
             }
         });
     }
 
-    // --- Task Time Blocking Logic ---
+    // Close Button
+    if (closeChatSidebarBtn) {
+        closeChatSidebarBtn.addEventListener('click', () => {
+            isChatOpen = false;
+            chatSidebar.classList.add('collapsed');
+        });
+    }
+
+    // Clear History Button
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                fetch('http://127.0.0.1:5001/api/reset', { method: 'POST' })
+                    .then(() => {
+                        chatMessages.innerHTML = '';
+                        addMessage("Chat history cleared. How can I help?", 'ai');
+                    })
+                    .catch(e => console.error("Failed to clear chat:", e));
+            }
+        });
+    }
+
+    // Load Chat History
+    const loadChatHistory = () => {
+        fetch('http://127.0.0.1:5001/api/chat/history')
+            .then(res => res.json())
+            .then(history => {
+                if (chatMessages.childElementCount === 0 && Array.isArray(history)) {
+                    // Only load if empty to prevent duplicates on re-open
+                    // Or ideally clear and reload every time if synched
+                    chatMessages.innerHTML = '';
+                    if (history.length === 0) {
+                        addMessage("Hello! I'm your calendar assistant. How can I help you today?", 'ai');
+                    } else {
+                        history.forEach(msg => {
+                            // Filter system messages? Or show them? Usually hid system.
+                            if (msg.role !== 'system') {
+                                // "assistant" -> "ai", "user" -> "user"
+                                addMessage(msg.content, msg.role === 'assistant' ? 'ai' : 'user');
+                            }
+                        });
+                        // Scroll to bottom
+                        setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 100);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Error loading history:", err);
+                chatMessages.innerHTML = '';
+                addMessage("Hello! I'm your calendar assistant. (Offline mode)", 'ai');
+            });
+    };
+
+    // Chat Message Rendering
+    const addMessage = (text, sender) => {
+        if (!chatMessages) return;
+        const bubble = document.createElement('div');
+        bubble.classList.add('message-bubble', sender);
+        // Clean up any potential raw JSON or action tags if they leak
+        let displayText = text.replace(/\[ACTION:.*?\](.*?)\[\/ACTION\]/g, '$1');
+        displayText = displayText.replace(/\[ACTION:.*?\]/g, ''); // Remove empty tags if any
+        bubble.textContent = displayText || text; // Fallback
+        chatMessages.appendChild(bubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    const handleChatSubmit = () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        chatInput.value = '';
+
+        // AI Loading State
+        const loadingBubble = document.createElement('div');
+        loadingBubble.classList.add('message-bubble', 'ai', 'loading');
+        loadingBubble.textContent = '...';
+        chatMessages.appendChild(loadingBubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        fetch('http://127.0.0.1:5001/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        })
+            .then(res => res.json())
+            .then(data => {
+                loadingBubble.remove();
+                const reply = data.reply || "I'm not sure how to respond.";
+                addMessage(reply, 'ai');
+
+                if (data.actions && data.actions.length > 0) {
+                    data.actions.forEach(action => {
+                        if (action.type === 'ADD_EVENT') {
+                            createEventFromAI(action.data);
+                        }
+                        if (action.type === 'ADD_TASK') {
+                            // Add to local storage
+                            const saved = JSON.parse(localStorage.getItem('kanban-board') || '{}');
+                            if (!saved['todo-list']) saved['todo-list'] = [];
+                            saved['todo-list'].push({
+                                id: `task-${Date.now()}`,
+                                text: action.data.title,
+                                duration: '60',
+                                dueDate: ''
+                            });
+                            localStorage.setItem('kanban-board', JSON.stringify(saved));
+                            // Refresh sidebar if open
+                            loadTasksToSidebar();
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                loadingBubble.remove();
+                addMessage("Sorry, I can't connect to the server.", 'ai');
+                console.error(err);
+            });
+    };
+
+    if (chatSendBtn) chatSendBtn.addEventListener('click', handleChatSubmit);
+    if (chatInput) {
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleChatSubmit();
+        });
+    }
+
+    // --- Task Sidebar Logic (Updated) ---
     const tasksSidebar = document.getElementById('tasksSidebar');
     const tasksToggleBtn = document.getElementById('tasksToggleBtn');
     const closeTasksSidebarBtn = document.getElementById('closeTasksSidebarBtn');
@@ -2371,13 +2361,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const savedState = JSON.parse(localStorage.getItem('kanban-board') || '{}');
         const allTasks = [];
 
-        // Flatten tasks from all columns
         Object.keys(savedState).forEach(colId => {
             if (Array.isArray(savedState[colId])) {
                 savedState[colId].forEach(task => {
-                    // Only show tasks that are NOT completed and NOT already scheduled
-                    if (!task.completed && !task.scheduled) {
-                        allTasks.push(task);
+                    // Normalize task object if it's just a string (old format)
+                    let taskObj = typeof task === 'string' ? { id: `task-${Math.random()}`, text: task } : task;
+                    if (!taskObj.completed && !taskObj.scheduled) {
+                        allTasks.push(taskObj);
                     }
                 });
             }
@@ -2399,29 +2389,42 @@ document.addEventListener('DOMContentLoaded', function () {
             const taskEl = document.createElement('div');
             taskEl.className = 'sidebar-task-card drag-item';
             taskEl.draggable = true;
-            taskEl.dataset.taskId = task.id;
-            taskEl.dataset.taskTitle = task.text;
-            taskEl.dataset.taskDuration = task.duration || '60';
+
+            // Handle both string and object tasks
+            const title = typeof task === 'object' ? task.text : task;
+            const id = typeof task === 'object' ? task.id : `task-${Date.now()}`;
+            const duration = (typeof task === 'object' && task.duration) ? task.duration : '60';
+            const dueDate = (typeof task === 'object' && task.dueDate) ? task.dueDate : '';
 
             taskEl.innerHTML = `
-                <div class="task-title">${task.text}</div>
+                <div class="task-title">${title}</div>
                 <div class="task-meta">
-                    ${task.duration ? `<span><i class="far fa-clock"></i> ${task.duration}m</span>` : ''}
-                    ${task.dueDate ? `<span><i class="far fa-calendar-alt"></i> ${task.dueDate}</span>` : ''}
+                    ${duration ? `<span><i class="far fa-clock"></i> ${duration}m</span>` : ''}
+                    ${dueDate ? `<span><i class="far fa-calendar-alt"></i> ${dueDate}</span>` : ''}
                 </div>
             `;
 
+            // Drag Events
             taskEl.addEventListener('dragstart', (e) => {
                 taskEl.classList.add('dragging');
                 e.dataTransfer.setData('text/plain', JSON.stringify({
-                    id: task.id,
-                    title: task.text,
-                    duration: task.duration || '60'
+                    id: id,
+                    title: title,
+                    duration: duration
                 }));
             });
+            taskEl.addEventListener('dragend', () => taskEl.classList.remove('dragging'));
 
-            taskEl.addEventListener('dragend', () => {
-                taskEl.classList.remove('dragging');
+            // Click Event for Details
+            taskEl.addEventListener('click', () => {
+                // Populate Modal
+                document.getElementById('viewTaskText').textContent = title;
+                document.getElementById('viewTaskDuration').querySelector('.value').textContent = duration + ' mins';
+                document.getElementById('viewTaskDueDate').querySelector('.value').textContent = dueDate || 'No Date';
+
+                // Show Modal
+                const modal = new bootstrap.Modal(document.getElementById('viewTaskModal'));
+                modal.show();
             });
 
             tasksSidebarContent.appendChild(taskEl);

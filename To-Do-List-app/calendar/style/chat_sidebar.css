@@ -1,0 +1,262 @@
+/* ChatGPT-Style Premium Sidebar */
+.chat-sidebar {
+    width: 400px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-left: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 2000;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    font-family: 'Söhne', 'Segoe UI', sans-serif;
+    /* Mimic OpenAI font feel */
+}
+
+.dark .chat-sidebar {
+    background-color: #343541;
+    /* ChatGPT Dark BG */
+    border-left: 1px solid #2a2b32;
+    color: #ececf1;
+}
+
+.chat-sidebar.collapsed {
+    transform: translateX(100%);
+}
+
+/* Header */
+.chat-sidebar-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+}
+
+.dark .chat-sidebar-header {
+    background-color: #343541;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-sidebar-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #40414f;
+    margin: 0;
+}
+
+.dark .chat-sidebar-header h3 {
+    color: #ececf1;
+}
+
+.chat-sidebar-header button {
+    color: #8e8ea0;
+    transition: color 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.chat-sidebar-header button:hover {
+    color: #202123;
+    background-color: #f7f7f8;
+}
+
+.dark .chat-sidebar-header button:hover {
+    color: #d9d9e3;
+    background-color: #40414f;
+}
+
+/* Content Area */
+.chat-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background-color: #ffffff;
+}
+
+.dark .chat-sidebar-content {
+    background-color: #343541;
+}
+
+/* Input Area */
+.chat-input-area {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-top: 1px solid transparent;
+    /* Cleaner look */
+    position: relative;
+}
+
+.dark .chat-input-area {
+    background-color: #343541;
+}
+
+.chat-input-box {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    /* Capsule/Pill shape */
+    padding: 8px 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dark .chat-input-box {
+    background-color: #40414f;
+    border-color: rgba(32, 33, 35, 0.5);
+    box-shadow: none;
+}
+
+.chat-input-box:focus-within {
+    border-color: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.dark .chat-input-box:focus-within {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+#calendarChatInput {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #40414f;
+    padding: 8px 0;
+}
+
+.dark #calendarChatInput {
+    color: #ececf1;
+}
+
+#calendarChatInput::placeholder {
+    color: #8e8ea0;
+}
+
+/* Buttons in Input */
+.voice-input-btn,
+#calendarChatSendBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    /* Squircle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: #8e8ea0;
+}
+
+.voice-input-btn:hover,
+#calendarChatSendBtn:hover {
+    background-color: #ececf1;
+    color: #10a37f;
+    /* OpenAI Green brand color */
+}
+
+.dark .voice-input-btn:hover,
+.dark #calendarChatSendBtn:hover {
+    background-color: #565869;
+    color: #19c37d;
+}
+
+/* Review: Override blocking_task.css specific voice button if needed */
+.voice-input-btn {
+    background: transparent !important;
+    /* Force override */
+    margin-right: 0;
+    box-shadow: none !important;
+}
+
+/* Message Bubbles */
+.message-bubble {
+    padding: 0;
+    border-radius: 0;
+    max-width: 100%;
+    /* Use full width blocks mainly */
+    font-size: 1rem;
+    line-height: 1.6;
+    animation: fadeIn 0.3s ease-out;
+    display: flex;
+    gap: 12px;
+    background: transparent;
+    /* Remove bubble background for "chat" view */
+    color: #374151;
+    box-shadow: none;
+    border: none;
+}
+
+.dark .message-bubble {
+    color: #d1d5db;
+}
+
+/* User Message */
+.message-bubble.user {
+    align-self: flex-end;
+    /* Keep alignment */
+    background-color: #f7f7f8;
+    padding: 12px 16px;
+    border-radius: 12px;
+    max-width: 85%;
+    color: #374151;
+    border-bottom-right-radius: 2px;
+}
+
+.dark .message-bubble.user {
+    background-color: #444654;
+    color: #ececf1;
+}
+
+/* AI Message */
+.message-bubble.ai {
+    align-self: flex-start;
+    width: 100%;
+    padding: 0 4px;
+    /* Slight padding */
+}
+
+/* Icons/Avatars for messages (Optional: Add via CSS pseudo-elements or JS) */
+.message-bubble.ai::before {
+    content: '✨';
+    /* or an SVG icon */
+    font-size: 1.2rem;
+    margin-top: 2px;
+    display: block;
+    min-width: 24px;
+}
+
+.message-bubble.user::after {
+    /* Optional user avatar */
+}
+
+/* Loading State */
+.message-bubble.loading {
+    opacity: 0.5;
+}
+
+/* Scrollbar */
+.chat-sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-sidebar-content::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.dark .chat-sidebar-content::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login - Injustice</title>
+        <link rel="stylesheet" href="/static/css/login.css">
+    </head>
+
+    <body>
+        <div class="login-page-wrapper">
+            <!-- Decorative animated background shapes -->
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>Welcome Back</h1>
+                    <p class="subtitle">Sign in to your Injustice account</p>
+                </div>
+
+                <form action="/login" method="post" class="login-form">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" autocomplete="username"
+                            placeholder="Enter your username" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" autocomplete="current-password"
+                            placeholder="Enter your password" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Sign In</button>
+
+                    <div class="login-footer">
+                        <a href="/home" class="nav-link">Back to Home</a>
+                        <span class="divider">•</span>
+                        <a href="/register" class="nav-link">Create Account</a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </body>
+
+</html>
