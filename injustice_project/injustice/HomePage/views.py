@@ -28,13 +28,21 @@ def register(request):
         username = request.POST.get('username')
         email = request.POST.get('email', '') # Ensure email field is collected
         password = request.POST.get('password')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
         
         # Check if username exists
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists.')
             return render(request, 'register.html')
             
-        user = User.objects.create_user(username=username, email=email, password=password)
+        user = User.objects.create_user(
+            username=username, 
+            email=email, 
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
         auth_login(request, user)
         return redirect('home')
         
