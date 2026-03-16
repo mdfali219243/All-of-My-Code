@@ -1,16 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Home Page</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Project Injustice</title>
+    <!-- Add Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    animation: {
+                        'fadeIn': 'fadeIn 0.5s ease-out forwards',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
 
-    <body>
-        <h1>Home Page</h1>
-        <p>Welcome, {{ user.username }}!</p>
-        <a href="{% url 'logout' %}">Logout</a>
-    </body>
+<body class="bg-slate-950 text-slate-50 min-h-screen flex flex-col font-sans selection:bg-indigo-500/30">
+
+    <!-- Header / Navigation Bar -->
+    <header class="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo/Brand -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{% url 'home' %}" class="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">
+                        Injustice.
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="{% url 'home' %}" class="text-indigo-400 font-medium px-3 py-2 rounded-md text-sm transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-indigo-400 after:rounded-full">
+                        Home
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white font-medium px-3 py-2 rounded-md text-sm transition-colors">
+                        Reels
+                    </a>
+                </nav>
+
+                <!-- Right side (Account/User profile) -->
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:flex items-center gap-2 mr-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-indigo-500/20 shadow-inner border border-white/10 uppercase">
+                            {{ user.username|make_list|first|default:"U" }}
+                        </div>
+                        <span class="text-sm font-medium text-slate-200">{{ user.username|default:"User" }}</span>
+                    </div>
+
+                    <!-- Account Dropdown Button -->
+                    <a href="#" class="text-slate-300 hover:text-white font-medium px-3 py-2 rounded-md text-sm transition-colors hidden sm:block">
+                        Account
+                    </a>
+
+                    <!-- Logout Button -->
+                    <a href="{% url 'logout' %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-slate-500">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div class="md:hidden border-t border-slate-800 bg-slate-900/50">
+            <div class="flex justify-around py-2">
+                <a href="{% url 'home' %}" class="text-indigo-400 px-3 py-2 text-sm font-medium">Home</a>
+                <a href="#" class="text-slate-400 hover:text-slate-200 px-3 py-2 text-sm font-medium">Reels</a>
+                <a href="#" class="text-slate-400 hover:text-slate-200 px-3 py-2 text-sm font-medium">Account</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+        
+        <!-- Welcome Card -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-8 mb-8 shadow-xl animate-fadeIn relative overflow-hidden">
+            <!-- Decorative background blob -->
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[80px] opacity-20"></div>
+            
+            <div class="relative z-10">
+                <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Welcome back, {{ user.username|default:"User" }}!</h1>
+                <p class="text-slate-400 text-lg">We're glad to see you on Project Injustice today.</p>
+                
+                {% if user.first_name %}
+                <div class="mt-6 inline-flex border border-indigo-500/30 bg-indigo-500/10 rounded-lg p-4">
+                    <p class="text-sm text-indigo-300 font-medium">
+                        <span class="opacity-70">Profile Name:</span> {{ user.first_name }} {{ user.last_name }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Placeholder Content Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn" style="animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards;">
+            <!-- Main Feed Area -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- Example Post/Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm hover:border-slate-700 transition-colors">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700"></div>
+                        <div>
+                            <div class="h-4 w-24 bg-slate-800 rounded animate-pulse"></div>
+                            <div class="h-3 w-16 bg-slate-800/60 rounded mt-2 animate-pulse"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="h-4 w-full bg-slate-800 rounded animate-pulse"></div>
+                        <div class="h-4 w-5/6 bg-slate-800 rounded animate-pulse"></div>
+                        <div class="h-4 w-4/6 bg-slate-800 rounded animate-pulse"></div>
+                    </div>
+                    <div class="mt-6 h-48 w-full bg-slate-800 rounded-lg border border-slate-700/50 flex items-center justify-center">
+                        <span class="text-slate-500 font-medium">Content Area</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-white mb-4">Trending Topics</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="text-indigo-400 font-bold">#1</div>
+                            <div class="text-slate-300 text-sm hover:text-indigo-300 cursor-pointer">Global Initiatives</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-indigo-400 font-bold">#2</div>
+                            <div class="text-slate-300 text-sm hover:text-indigo-300 cursor-pointer">Community Action</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-indigo-400 font-bold">#3</div>
+                            <div class="text-slate-300 text-sm hover:text-indigo-300 cursor-pointer">Platform Updates</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</body>
 
 </html>
