@@ -5,9 +5,39 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 # Create your views here.
+from .models import VideoPost
+
 @login_required(login_url='login')
 def home(request):
-    return render(request, 'home.html', {'user': request.user})
+    if request.method == 'POST':
+        caption = request.POST.get('caption', '')
+        video_file = request.FILES.get('video_file')
+        
+        if video_file:
+            # Create a new VideoPost if a valid user uploaded a video
+            VideoPost.objects.create(
+                user=request.user,
+                caption=caption,
+                video_file=video_file
+            )
+            return redirect('home')
+
+    # Fetch all video posts dynamically
+    posts = VideoPost.objects.all().order_by('-created_at')
+    
+    return render(request, 'home.html', {
+        'user': request.user,
+        'posts': posts
+    })
+
+@login_required(login_url='login')
+
+def reels(request):
+    return render(request, 'reels.html', {'user': request.user})
+
+@login_required(login_url='login')
+def feed(request):
+    return render(request, 'feed.html', {'user': request.user})
 
 def login_view(request):
     if request.method == 'POST':
