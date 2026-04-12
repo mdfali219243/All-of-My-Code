@@ -1,11 +1,22 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-# Create your views here.
-from .models import VideoPost
+from .models import VideoPost, Comment
+
+@login_required(login_url='login')
+def profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    posts = VideoPost.objects.filter(user=profile_user).order_by('-created_at')
+    return render(request, 'profile.html', {
+        'user': request.user,
+        'profile_user': profile_user,
+        'posts': posts
+    })
 
 @login_required(login_url='login')
 def home(request):
@@ -13,12 +24,12 @@ def home(request):
         caption = request.POST.get('caption', '')
         video_file = request.FILES.get('video_file')
         
-        if video_file:
-            # Create a new VideoPost if a valid user uploaded a video
+        if video_file or caption.strip():
+            # Create a new VideoPost if a valid user uploaded a video or text
             VideoPost.objects.create(
                 user=request.user,
                 caption=caption,
-                video_file=video_file
+                video_file=video_file if video_file else None
             )
             return redirect('home')
 
@@ -31,13 +42,30 @@ def home(request):
     })
 
 @login_required(login_url='login')
-
 def reels(request):
-    return render(request, 'reels.html', {'user': request.user})
+    posts = VideoPost.objects.all().order_by('-created_at')
+    return render(request, 'reels.html', {'user': request.user, 'posts': posts})
 
 @login_required(login_url='login')
-def feed(request):
-    return render(request, 'feed.html', {'user': request.user})
+@require_POST
+def like_post(request, post_id):
+    post = get_object_or_404(VideoPost, id=post_id)
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'likes_count': post.likes.count()})
+
+@login_required(login_url='login')
+@require_POST
+def add_comment(request, post_id):
+    post = get_object_or_404(VideoPost, id=post_id)
+    text = request.POST.get('comment_text', '').strip()
+    if text:
+        Comment.objects.create(post=post, user=request.user, text=text)
+    return redirect('home')
 
 def login_view(request):
     if request.method == 'POST':

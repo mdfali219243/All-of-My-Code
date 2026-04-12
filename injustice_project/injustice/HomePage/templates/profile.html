@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home | Project Injustice</title>
+    <title>{{ profile_user.first_name }} {{ profile_user.last_name }} | Injustice</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
 </head>
 <body class="bg-[#18191a] text-slate-200 font-sans min-h-screen overflow-y-scroll overflow-x-hidden">
 
-    <!-- Top Navigation Bar (Facebook Style) -->
+    <!-- Top Navigation Bar -->
     <header class="sticky top-0 z-50 w-full h-[56px] bg-[#242526] border-b border-[#393a3b] shadow-sm flex items-center justify-between px-4">
         <!-- Left: Logo & Search -->
         <div class="flex items-center gap-2">
@@ -30,7 +30,7 @@
         
         <!-- Center: Tabs -->
         <div class="hidden sm:flex flex-1 justify-center max-w-2xl gap-2 h-full">
-            <a href="{% url 'home' %}" class="w-24 h-full flex items-center justify-center text-indigo-500 relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-indigo-500 after:rounded-t-md">
+            <a href="{% url 'home' %}" class="w-24 h-full flex items-center justify-center hover:bg-[#3a3b3c] rounded-lg text-gray-400 hover:text-gray-200 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" /></svg>
             </a>
             <a href="{% url 'reels' %}" class="w-24 h-full flex items-center justify-center hover:bg-[#3a3b3c] rounded-lg text-gray-400 hover:text-gray-200 transition">
@@ -47,62 +47,97 @@
         </div>
     </header>
 
-    <!-- Main Page Body -->
-    <div class="flex justify-center w-full max-w-[1920px] mx-auto pt-4 relative">
-        
-        <!-- Left Sidebar (Shortcuts) -->
-        <aside class="hidden lg:block w-[360px] sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto px-4 pb-4 overscroll-contain">
-            <ul class="space-y-1">
-                <li><a href="{% url 'profile' user.username %}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <img src="https://ui-avatars.com/api/?name={{ user.username|default:'U' }}&background=2563eb&color=fff" class="w-9 h-9 rounded-full bg-gray-600">
-                    <span class="font-medium text-[15px]">{{ user.first_name }} {{ user.last_name|default:user.username }}</span>
-                </a></li>
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <span class="w-9 h-9 flex items-center justify-center rounded-full bg-blue-500/20 text-blue-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
-                    </span>
-                    <span class="font-medium text-[15px]">Friends</span>
-                </a></li>
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <span class="w-9 h-9 flex items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
-                    </span>
-                    <span class="font-medium text-[15px]">Groups</span>
-                </a></li>
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <span class="w-9 h-9 flex items-center justify-center rounded-full bg-pink-500/20 text-pink-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" /></svg>
-                    </span>
-                    <span class="font-medium text-[15px]">Saved</span>
-                </a></li>
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <span class="w-9 h-9 flex items-center justify-center rounded-full bg-purple-500/20 text-purple-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>
-                    </span>
-                    <span class="font-medium text-[15px]">Memories</span>
-                </a></li>
-            </ul>
-            <div class="border-t border-[#393a3b] my-4 mx-2"></div>
-            <h3 class="font-semibold text-gray-400 mb-4 px-2 tracking-wide text-sm">Your shortcuts</h3>
-            <ul class="space-y-1">
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition">
-                    <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="w-9 h-9 rounded-lg object-cover border border-[#393a3b]">
-                    <span class="font-medium text-[15px]">Eco Warriors Community</span>
-                </a></li>
-            </ul>
-        </aside>
+    <!-- Profile Header Section -->
+    <div class="w-full bg-[#242526] shadow-sm mb-4">
+        <div class="max-w-[1095px] mx-auto relative">
+            <!-- Cover Photo -->
+            <div class="w-full h-[350px] relative rounded-b-xl overflow-hidden bg-gradient-to-r from-gray-700 via-gray-900 to-black group cursor-pointer border border-[#393a3b] border-t-0">
+                <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Cover Photo" class="w-full h-full object-cover mix-blend-overlay opacity-80">
+                {% if request.user == profile_user %}
+                <button class="absolute bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg font-semibold text-[15px] flex items-center gap-2 hover:bg-gray-200 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>
+                    Edit cover photo
+                </button>
+                {% endif %}
+            </div>
 
-        <!-- Center Feed (Posts) -->
-        <main class="w-full max-w-[680px] px-0 sm:px-4 flex-shrink-0 flex flex-col gap-4 pb-12">
+            <!-- Profile Info Overlay -->
+            <div class="px-8 pb-4 flex flex-col md:flex-row items-center md:items-end justify-between relative -mt-8 md:-mt-16 z-10 bottom-0 top-0">
+                <div class="flex flex-col md:flex-row items-center md:items-end gap-6 mb-4 md:mb-0">
+                    <!-- Profile Picture -->
+                    <div class="relative group cursor-pointer">
+                        <div class="w-[168px] h-[168px] rounded-full p-1 bg-[#242526]">
+                            <img src="https://ui-avatars.com/api/?name={{ profile_user.username }}&background=2563eb&color=fff" alt="Profile Picture" class="w-full h-full rounded-full object-cover border border-[#393a3b]">
+                        </div>
+                        {% if request.user == profile_user %}
+                        <div class="absolute bottom-4 right-4 w-9 h-9 bg-[#3a3b3c] rounded-full flex items-center justify-center border-2 border-[#242526] hover:bg-[#4e4f50] transition shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-200" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- User Name & Details -->
+                    <div class="text-center md:text-left mb-2 md:mb-6">
+                        <h1 class="text-3xl font-bold text-white tracking-tight">{{ profile_user.first_name }} {{ profile_user.last_name|default:profile_user.username }}</h1>
+                        <p class="text-gray-400 font-semibold mt-1">@{{ profile_user.username }}</p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2 mb-6">
+                    {% if request.user == profile_user %}
+                    <button class="bg-[#3a3b3c] hover:bg-[#4e4f50] text-white px-3 py-2 rounded-lg font-semibold text-[15px] flex items-center gap-2 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                        Edit profile
+                    </button>
+                    {% else %}
+                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg font-semibold text-[15px] flex items-center gap-2 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg>
+                        Follow
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
             
+            <!-- Navigation Tabs -->
+            <div class="border-t border-[#393a3b] px-4 flex">
+                <a href="#" class="px-4 py-4 font-semibold text-indigo-500 border-b-4 border-indigo-500">Posts</a>
+                <a href="#" class="px-4 py-4 font-semibold text-gray-400 hover:bg-[#3a3b3c] rounded-lg my-1 transition">About</a>
+                <a href="#" class="px-4 py-4 font-semibold text-gray-400 hover:bg-[#3a3b3c] rounded-lg my-1 transition">Photos</a>
+                <a href="#" class="px-4 py-4 font-semibold text-gray-400 hover:bg-[#3a3b3c] rounded-lg my-1 transition">Videos</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex justify-center w-full max-w-[1095px] mx-auto px-4 gap-4">
+        
+        <!-- Left Sidebar (Intro) -->
+        <main class="w-[360px] hidden lg:flex flex-col gap-4 sticky top-[72px] h-max">
+            <div class="bg-[#242526] rounded-xl shadow-md p-4 border border-[#393a3b]">
+                <h2 class="font-bold text-xl mb-4 text-white">Intro</h2>
+                <div class="flex flex-col gap-4 text-[15px] text-gray-300">
+                    <button class="w-full bg-[#3a3b3c] hover:bg-[#4e4f50] rounded-lg py-1.5 font-semibold transition">Add Bio</button>
+                    <div class="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        <span>Works at <strong>Injustice Content Creator</strong></span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Feed Area -->
+        <main class="flex-1 max-w-[680px] flex flex-col gap-4 pb-12">
+            
+            {% if request.user == profile_user %}
             <!-- Create Post Card -->
             <form method="POST" enctype="multipart/form-data" action="{% url 'home' %}">
                 {% csrf_token %}
-                <div class="bg-[#242526] sm:rounded-xl shadow-md p-3 px-4 border-y sm:border border-[#393a3b]">
+                <div class="bg-[#242526] rounded-xl shadow-md p-3 px-4 border border-[#393a3b]">
                     <div class="flex items-start gap-2 mb-3">
                         <img src="https://ui-avatars.com/api/?name={{ user.username|default:'U' }}&background=2563eb&color=fff" class="w-10 h-10 rounded-full mt-1 border border-[#393a3b]">
                         <div class="flex-1 bg-[#3a3b3c] hover:bg-[#4e4f50] focus-within:bg-[#4e4f50] transition rounded-2xl p-1 px-4 cursor-text">
-                            <textarea name="caption" placeholder="What's on your mind, {{ user.username }}?" class="w-full bg-transparent outline-none resize-none min-h-[48px] py-2 text-slate-200 text-[15px] placeholder-slate-400" oninput="if(this.value.trim() !== '') { document.getElementById('postBtn').classList.add('bg-indigo-600', 'text-white'); document.getElementById('postBtn').classList.remove('bg-[#3a3b3c]', 'text-slate-400'); } else if(!document.getElementById('videoUpload').files.length) { document.getElementById('postBtn').classList.remove('bg-indigo-600', 'text-white'); document.getElementById('postBtn').classList.add('bg-[#3a3b3c]', 'text-slate-400'); }"></textarea>
+                            <textarea name="caption" placeholder="What's on your mind?" class="w-full bg-transparent outline-none resize-none min-h-[48px] py-2 text-slate-200 text-[15px] placeholder-slate-400" oninput="if(this.value.trim() !== '') { document.getElementById('postBtnProfile').classList.add('bg-indigo-600', 'text-white'); document.getElementById('postBtnProfile').classList.remove('bg-[#3a3b3c]', 'text-slate-400'); } else if(!document.getElementById('videoUploadProfile').files.length) { document.getElementById('postBtnProfile').classList.remove('bg-indigo-600', 'text-white'); document.getElementById('postBtnProfile').classList.add('bg-[#3a3b3c]', 'text-slate-400'); }"></textarea>
                         </div>
                     </div>
                     <div class="border-t border-[#393a3b] pt-3 flex flex-wrap justify-between items-center gap-2">
@@ -110,28 +145,31 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.422 4.498a1 1 0 00-.776-1.5H5.354a1 1 0 00-.775 1.5l2.42 2.686A3 3 0 0110 9a3 3 0 012.999-1.815l2.423-2.687zM4.195 2.155A2 2 0 015.354 2h9.292a2 2 0 011.16.155A3 3 0 0118 5v9a3 3 0 01-3 3H5a3 3 0 01-3-3V5a3 3 0 012.195-2.845zM10 13a3 3 0 00-3-3v6a3 3 0 003-3z" clip-rule="evenodd" /></svg>
                             Live video
                         </button>
-                        <input type="file" name="video_file" id="videoUpload" accept="video/*" class="hidden" onchange="document.getElementById('fileNameDesc').innerText = this.files[0].name; document.getElementById('fileNameDesc').classList.remove('hidden'); document.getElementById('postBtn').classList.add('bg-indigo-600', 'text-white'); document.getElementById('postBtn').classList.remove('bg-[#3a3b3c]', 'text-slate-400');">
-                        <label for="videoUpload" class="flex flex-1 items-center justify-center gap-2 py-2 hover:bg-[#3a3b3c] rounded-lg transition text-slate-300 font-medium text-[15px] cursor-pointer">
+                        <input type="file" name="video_file" id="videoUploadProfile" accept="video/*" class="hidden" onchange="document.getElementById('fileNameDescProfile').innerText = this.files[0].name; document.getElementById('fileNameDescProfile').classList.remove('hidden'); document.getElementById('postBtnProfile').classList.add('bg-indigo-600', 'text-white'); document.getElementById('postBtnProfile').classList.remove('bg-[#3a3b3c]', 'text-slate-400');">
+                        <label for="videoUploadProfile" class="flex flex-1 items-center justify-center gap-2 py-2 hover:bg-[#3a3b3c] rounded-lg transition text-slate-300 font-medium text-[15px] cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>
                             Photo/video
                         </label>
-                        <button type="submit" id="postBtn" class="bg-[#3a3b3c] text-slate-400 font-medium px-8 py-2 rounded-lg transition ml-auto border-none">Post</button>
+                        <button type="submit" id="postBtnProfile" class="bg-[#3a3b3c] text-slate-400 font-medium px-8 py-2 rounded-lg transition ml-auto border-none">Post</button>
                     </div>
-                    <div id="fileNameDesc" class="text-xs text-indigo-400 mt-2 px-4 hidden truncate w-full text-center"></div>
+                    <div id="fileNameDescProfile" class="text-xs text-indigo-400 mt-2 px-4 hidden truncate w-full text-center"></div>
                 </div>
             </form>
+            {% else %}
+                <div class="bg-[#242526] rounded-xl shadow-md p-4 border border-[#393a3b]">
+                   <h2 class="font-bold text-xl text-white">Posts</h2>
+                </div>
+            {% endif %}
 
             <!-- Dynamic Post Loop -->
             {% for post in posts %}
-            <article class="bg-[#242526] sm:rounded-xl shadow-md border-y sm:border border-[#393a3b] Post relative">
+            <article class="bg-[#242526] rounded-xl shadow-md border border-[#393a3b] Post relative">
                 <div class="px-4 pt-3 pb-2 flex items-center justify-between">
                     <!-- Post Header -->
                     <div class="flex items-center gap-2">
-                        <a href="{% url 'profile' post.user.username %}">
-                            <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=random" class="w-10 h-10 rounded-full cursor-pointer hover:opacity-90 border border-[#393a3b]">
-                        </a>
+                        <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=random" class="w-10 h-10 rounded-full cursor-pointer hover:opacity-90 border border-[#393a3b]">
                         <div class="flex flex-col">
-                            <a href="{% url 'profile' post.user.username %}" class="font-semibold text-[15px] hover:underline cursor-pointer leading-tight">{{ post.user.first_name|default:post.user.username }}</a>
+                            <span class="font-semibold text-[15px] hover:underline cursor-pointer leading-tight">{{ post.user.first_name|default:post.user.username }}</span>
                             <span class="text-[13px] text-gray-400 hover:underline cursor-pointer">{{ post.created_at|timesince }} ago · <span class="align-baseline text-[12px]">🌎</span></span>
                         </div>
                     </div>
@@ -184,11 +222,9 @@
                 <div class="px-4 py-2 space-y-3 max-h-[300px] overflow-y-auto mb-2">
                     {% for comment in post.comments.all reversed %}
                     <div class="flex gap-2 text-[15px]">
-                        <a href="{% url 'profile' comment.user.username %}">
-                            <img src="https://ui-avatars.com/api/?name={{ comment.user.username }}&background=2563eb&color=fff" class="w-8 h-8 rounded-full flex-shrink-0 mt-0.5 hover:opacity-90 transition">
-                        </a>
+                        <img src="https://ui-avatars.com/api/?name={{ comment.user.username }}&background=2563eb&color=fff" class="w-8 h-8 rounded-full flex-shrink-0 mt-0.5">
                         <div class="bg-[#3a3b3c] rounded-2xl px-3 py-2 max-w-full">
-                            <a href="{% url 'profile' comment.user.username %}" class="font-semibold text-white block leading-tight hover:underline cursor-pointer">{{ comment.user.first_name|default:comment.user.username }}</a>
+                            <span class="font-semibold text-white block leading-tight hover:underline cursor-pointer">{{ comment.user.first_name|default:comment.user.username }}</span>
                             <span class="text-slate-200">{{ comment.text }}</span>
                         </div>
                     </div>
@@ -206,56 +242,16 @@
                 </form>
             </article>
             {% empty %}
-            <div class="p-10 text-center bg-[#242526] sm:rounded-xl shadow-md border-y sm:border border-[#393a3b]">
+            <div class="p-10 text-center bg-[#242526] rounded-xl shadow-md border border-[#393a3b]">
                 <div class="mx-auto w-16 h-16 rounded-full bg-[#3a3b3c] flex items-center justify-center mb-4 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
-                <h3 class="text-xl font-bold text-slate-200 mb-2">No posts yet</h3>
-                <p class="text-gray-400 text-[15px]">When your friends share photos and videos, they'll appear here.</p>
+                <h3 class="text-xl font-bold text-slate-200 mb-2">No posts available</h3>
+                <p class="text-gray-400 text-[15px]">{{ profile_user.first_name }} hasn't posted anything yet.</p>
             </div>
             {% endfor %}
 
         </main>
-
-        <!-- Right Sidebar (Contacts / Sponsored) -->
-        <aside class="hidden xl:block w-[360px] sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto px-4 pb-4">
-            <h3 class="font-semibold text-gray-400 mb-4 px-2 tracking-wide text-[15px]">Sponsored</h3>
-            <div class="mb-6 px-2 hover:bg-[#3a3b3c] rounded-lg p-2 transition cursor-pointer flex gap-3">
-                <div class="w-[100px] h-[100px] bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 border border-[#393a3b]">
-                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60" class="w-full h-full object-cover">
-                </div>
-                <div class="flex flex-col py-1">
-                    <p class="font-medium text-[15px] text-gray-200 leading-tight mb-1">New Kicks Running Shoes</p>
-                    <p class="text-[13px] text-gray-400">sneakers.example.com</p>
-                </div>
-            </div>
-            
-            <div class="border-t border-[#393a3b] my-4 mx-2"></div>
-            
-            <div class="flex items-center justify-between px-2 mb-2">
-                <h3 class="font-semibold text-gray-400 tracking-wide text-[15px]">Contacts</h3>
-                <div class="flex gap-2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[22px] w-[22px] hover:bg-[#3a3b3c] rounded-full p-1 cursor-pointer transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[22px] w-[22px] hover:bg-[#3a3b3c] rounded-full p-1 cursor-pointer transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
-                </div>
-            </div>
-            <ul class="space-y-1">
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition relative">
-                    <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name=AD&background=14b8a6&color=fff" class="w-9 h-9 rounded-full bg-gray-600 border border-[#242526]">
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#18191a]"></div>
-                    </div>
-                    <span class="font-medium text-[15px]">Alice Davis</span>
-                </a></li>
-                <li><a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#3a3b3c] transition relative">
-                    <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name=BS&background=8b5cf6&color=fff" class="w-9 h-9 rounded-full bg-gray-600 border border-[#242526]">
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#18191a]"></div>
-                    </div>
-                    <span class="font-medium text-[15px]">Bob Smith</span>
-                </a></li>
-            </ul>
-        </aside>
     </div>
 
     <!-- Interactive Logic Script -->
