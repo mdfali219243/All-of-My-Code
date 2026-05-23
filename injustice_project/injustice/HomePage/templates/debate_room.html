@@ -34,12 +34,31 @@
         
         <!-- Action Buttons -->
         <div class="flex items-center gap-2">
+            {% if user == room.creator %}
+            <button id="endDebateBtn" onclick="endDebate()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-1.5 rounded-full transition hidden">
+                End Debate & Save
+            </button>
+            {% endif %}
             <button onclick="copyInviteLink(this)" class="bg-[#3a3b3c] hover:bg-[#4e4f50] text-gray-200 text-sm font-semibold px-4 py-1.5 rounded-full flex items-center gap-2 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                 <span class="btn-text">Share Link</span>
             </button>
         </div>
     </header>
+
+    {% if user == room.creator %}
+    <!-- Host Recording Overlay -->
+    <div id="recordingOverlay" class="absolute inset-0 z-40 bg-black/80 flex flex-col items-center justify-center text-center px-4" style="top: 60px;">
+        <div class="bg-[#242526] p-6 rounded-xl border border-[#393a3b] max-w-md">
+            <h2 class="text-xl font-bold text-white mb-2">Start Debate Recording</h2>
+            <p class="text-sm text-gray-400 mb-6">To automatically save this debate to your profile, you must share your screen/audio so we can record the session.</p>
+            <button onclick="startRecording()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition text-lg shadow-lg flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                Share Screen & Start
+            </button>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Jitsi Video Call Area -->
     <main class="flex-1 w-full bg-black relative" id="jitsi-container">
@@ -48,6 +67,11 @@
 
     <!-- Interactive Logic Script -->
     <script>
+        const isHost = {% if user == room.creator %}true{% else %}false{% endif %};
+        let api;
+        let mediaRecorder;
+        let recordedChunks = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             const domain = 'jitsi.riot.im';
             
@@ -65,19 +89,98 @@
                     displayName: "{{ user.first_name|default:user.username|escapejs }}"
                 },
                 configOverwrite: { 
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false // Skip the intermediate prejoin page
+                    startWithAudioMuted: !isHost, // Spectators start muted
+                    startWithVideoMuted: !isHost,
+                    prejoinPageEnabled: false 
                 }
             };
+
+            // Hide toolbars for spectators
+            if (!isHost) {
+                options.interfaceConfigOverwrite = {
+                    TOOLBAR_BUTTONS: ['chat', 'fullscreen', 'hangup', 'tileview']
+                };
+            }
             
-            const api = new JitsiMeetExternalAPI(domain, options);
+            api = new JitsiMeetExternalAPI(domain, options);
             
-            // Redirect to home when user hangs up
+            // Redirect to home when user hangs up manually
             api.addEventListener('videoConferenceLeft', () => {
-                window.location.href = "{% url 'home' %}";
+                if (!isHost) {
+                    window.location.href = "{% url 'home' %}";
+                }
             });
         });
+
+        // Function to get CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Host Recording Functions
+        async function startRecording() {
+            try {
+                // Must request display media (screen) to capture the Jitsi iframe
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = uploadRecording;
+                mediaRecorder.start();
+                
+                // Hide overlay and show end button
+                document.getElementById('recordingOverlay').style.display = 'none';
+                document.getElementById('endDebateBtn').classList.remove('hidden');
+            } catch (err) {
+                console.error("Error starting screen record:", err);
+                alert("You must allow screen recording to save the debate.");
+            }
+        }
+
+        function endDebate() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                document.getElementById('endDebateBtn').innerText = 'Saving Video...';
+                document.getElementById('endDebateBtn').disabled = true;
+                mediaRecorder.stop(); // This triggers uploadRecording
+            } else {
+                uploadRecording(); // Just end it if recording failed
+            }
+        }
+
+        function uploadRecording() {
+            const formData = new FormData();
+            
+            if (recordedChunks.length > 0) {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                formData.append('video_file', blob, 'debate_recording.webm');
+            }
+            
+            fetch("{% url 'end_debate_upload' room.id %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            }).then(res => res.json()).then(data => {
+                window.location.href = "{% url 'home' %}";
+            }).catch(err => {
+                console.error("Upload error", err);
+                alert("Failed to upload recording. The debate is ended.");
+                window.location.href = "{% url 'home' %}";
+            });
+        }
 
         // Copy Invite Link Function
         function copyInviteLink(btn) {
@@ -93,7 +196,7 @@
                     btn.classList.replace('hover:bg-green-700', 'hover:bg-[#4e4f50]');
                 }, 2000);
             }).catch(err => {
-                alert("Failed to copy link. Please manually copy the URL in your browser's address bar.");
+                alert("Failed to copy link.");
             });
         }
     </script>

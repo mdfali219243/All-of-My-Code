@@ -14,4 +14,5 @@ urlpatterns = [
     path('debate/<int:room_id>/', views.debate_room, name='debate_room'),
     path('debate/<int:room_id>/send/', views.send_debate_message, name='send_debate_message'),
     path('debate/<int:room_id>/messages/', views.get_debate_messages, name='get_debate_messages'),
+    path('debate/<int:room_id>/end_upload/', views.end_debate_upload, name='end_debate_upload'),
 ]

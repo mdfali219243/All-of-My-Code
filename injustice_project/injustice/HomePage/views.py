@@ -124,6 +124,9 @@ def create_debate(request):
 @login_required(login_url='login')
 def debate_room(request, room_id):
     room = get_object_or_404(DebateRoom, id=room_id)
+    if not room.is_active:
+        messages.info(request, "This live debate has ended. You can find the recording in the host's posts.")
+        return redirect('home')
     return render(request, 'debate_room.html', {'room': room, 'user': request.user})
 
 @login_required(login_url='login')
@@ -152,3 +155,26 @@ def get_debate_messages(request, room_id):
             'is_me': msg.user == request.user
         })
     return JsonResponse({'messages': data})
+
+@login_required(login_url='login')
+@require_POST
+def end_debate_upload(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+    
+    # Only creator can end debate
+    if request.user != room.creator:
+        return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+        
+    room.is_active = False
+    room.save()
+    
+    video_file = request.FILES.get('video_file')
+    if video_file:
+        # Save as a VideoPost so it shows up in the feed
+        VideoPost.objects.create(
+            user=request.user,
+            caption=f"Live Debate Recording: {room.topic}",
+            video_file=video_file
+        )
+        
+    return JsonResponse({'status': 'ok'})
