@@ -1,0 +1,154 @@
+
+.event-cell {
+    position: relative;
+    overflow: hidden;
+    color: #1a202c !important;
+    transition: opacity 0.2s;
+}
+
+.all-day-event {
+    padding: 2px 6px;
+    margin: 1px 0;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Default style for all-day events without custom color (light mode) */
+.all-day-event.event-default {
+    background-color: #e3f2fd;
+    color: #1a202c;
+    border-left: 3px solid #4285F4;
+}
+
+/* Default style for month view events without custom color (light mode) */
+.month-event.event-default {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    border-left: 3px solid #4285F4;
+}
+
+.week-event-title,
+.day-event-title,
+.event-cell {
+    position: relative;
+    z-index: 10;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    color: inherit !important;
+}
+
+.event-cell:hover {
+    opacity: 0.9;
+}
+
+.event-cell,
+.event-cell * {
+    color: inherit !important;
+}
+
+.week-cell {
+    min-height: 3rem;
+    border: 1px solid #e2e8f0;
+    position: relative;
+    background-color: white !important;
+    transition: background-color 0.1s ease;
+}
+
+.week-cell:hover {
+    background-color: #f8fafc !important;
+}
+
+.week-cell.selecting,
+.week-cell.dragging {
+    background-color: #f0f9ff !important;
+}
+
+.time-event {
+    --event-bg-color: #4285F4CC;
+    --event-border-color: #4285F4;
+    
+    position: absolute;
+    left: 2px !important;
+    right: 2px !important;
+    width: calc(100% - 4px) !important;
+    max-width: none !important;
+    z-index: 2;
+    pointer-events: auto;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 2px;
+    padding: 1px 4px;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    margin: 0 !important;
+    color: #ffffff;
+    background-color: var(--event-bg-color);
+    border-left: 3px solid var(--event-border-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    contain: content;
+}
+
+.time-event > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.time-event:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    z-index: 3;
+}
+
+.week-cell {
+    position: relative;
+    overflow: visible;
+    contain: layout style;
+}
+
+.time-event[style*="width:"] {
+    width: calc(100% - 4px) !important;
+}
+.week-cell:not(.selecting):not(.dragging) {
+    background-color: white !important;
+}
+
+.event-cell {
+    background-color: var(--event-color, #e3f2fd) !important;
+    border-left: 3px solid var(--event-border-color, #4285F4);
+}
+
+.time-event {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.time-event:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+}
+
+.time-event .title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-event .time {
+    font-size: 0.7rem;
+    opacity: 0.9;
+}

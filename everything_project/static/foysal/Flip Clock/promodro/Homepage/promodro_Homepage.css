@@ -1,0 +1,285 @@
+/* Base Styles */
+:root {
+    --bg-dark: #121212;
+    --surface-dark: #1e1e1e;
+    --primary-color: #bb86fc;
+    --text-light: #e0e0e0;
+    --text-muted: #888;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body, html {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* Layout */
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+#feature-menu {
+    background-color: #1e1e1e;
+    min-width: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+    gap: 1rem;
+    border-right: 1px solid #333;
+}
+
+#feature-menu a {
+    transition: var(--transition);
+}
+
+#feature-menu a:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Hero timer section */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.timer-display {
+    background: var(--surface-dark);
+    border: 1px solid #333;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 2rem 2.5rem;
+    text-align: center;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.time {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 800;
+    font-size: 4.5rem;
+    color: var(--text-light);
+    letter-spacing: 2px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    line-height: 1;
+}
+
+.timer-label {
+    margin-top: .5rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Header */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1.5rem;
+}
+
+.top-bar h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+/* User menu */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-name {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333;
+}
+
+.user-avatar i { color: var(--text-light); }
+
+/* Session Cards */
+.session-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.session-card {
+    background: var(--surface-dark);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: var(--transition);
+    border: 1px solid #333;
+    cursor: pointer;
+}
+
+.session-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary-color);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+.session-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.session-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+.session-card p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.start-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 48px;
+    padding: 0.9rem 2rem;
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary-color), #9c7dfc);
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 800;
+    letter-spacing: .5px;
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(187, 134, 252, 0.35);
+}
+
+.start-btn:focus-visible {
+    outline: 3px solid rgba(187, 134, 252, 0.7);
+    outline-offset: 3px;
+}
+
+/* Make session card button full width for clarity */
+.session-card .start-btn {
+    width: 100%;
+    max-width: none;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+    display: none; /* Hidden on desktop */
+}
+
+/* Bottom nav buttons */
+.nav-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding: 1rem;
+    border-top: 1px solid #333;
+}
+
+.nav-button {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .7rem 1.2rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    border: 1px solid #333;
+    color: var(--text-light);
+    background: #1f1f1f;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.nav-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+
+.nav-button.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(187, 134, 252, .25);
+}
+
+.clock-button { background: #222; }
+.promodro-button { background: linear-gradient(135deg, var(--primary-color), #9c7dfc); color: #111; }
+
+/* Feature menu icon sizing */
+#feature-menu img {
+    width: 28px;
+    height: 28px;
+    opacity: 0.85;
+    transition: transform .2s ease, opacity .2s ease;
+}
+
+#feature-menu img:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    #feature-menu {
+        flex-direction: row;
+        width: 100%;
+        min-height: 50px;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding: 0 1rem;
+    }
+
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .time {
+        font-size: 3.5rem;
+    }
+}

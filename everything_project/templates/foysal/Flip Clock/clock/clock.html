@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>Clock</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- ✅ Link to your external CSS fil, which name is clock.css -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/Flip Clock/clock/clock.css') }}">
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- You can still use inline <style> if needed -->
+        <style>
+            /* Optional internal styles */
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div id="feature-menu" class="strip bg-gray-300">
+                <a href="{{ url_for('home') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist"
+                            class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards"
+                            class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar"
+                            class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+            </div>
+            <div class="clock-container">
+
+                <div class="flip-clock">
+                    <div class="flip-unit-container">
+                        <div class="flip-card" data-hours-tens></div>
+                        <div class="flip-card" data-hours-ones></div>
+                    </div>
+                    <div class="separator">:</div>
+                    <div class="flip-unit-container">
+                        <div class="flip-card" data-minutes-tens></div>
+                        <div class="flip-card" data-minutes-ones></div>
+                    </div>
+                    <div class="separator">:</div>
+                    <div class="flip-unit-container">
+                        <div class="flip-card" data-seconds-tens></div>
+                        <div class="flip-card" data-seconds-ones></div>
+                    </div>
+                    <div class="ampm-indicator" data-ampm>AM</div>
+                </div>
+
+            </div>
+            <div class="button-container">
+                <div class="button-wrapper">
+                    <button class="clock-button active" id="clockBtn">
+                        <span class="button-icon">🕒</span>
+                        <span class="button-text">Clock</span>
+                    </button>
+                    <a href="{{ url_for('serve_page', page='foysal/Flip Clock/promodro/Homepage/promodro_Homepage.html') }}" class="promodro-button">
+                        <button id="promodroBtn">
+                            <span class="button-icon">📊</span>
+                            <span class="button-text">Promodro</span>
+                        </button>
+                    </a>
+                </div>
+                <div class="button-hint">Select an option to continue</div>
+            </div>
+        </div>
+
+        <script>
+            const hoursTens = document.querySelector('[data-hours-tens]');
+            const hoursOnes = document.querySelector('[data-hours-ones]');
+            const minutesTens = document.querySelector('[data-minutes-tens]');
+            const minutesOnes = document.querySelector('[data-minutes-ones]');
+            const secondsTens = document.querySelector('[data-seconds-tens]');
+            const secondsOnes = document.querySelector('[data-seconds-ones]');
+            const ampmIndicator = document.querySelector('[data-ampm]');
+
+            function createFlipCard(element) {
+                const top = document.createElement('div');
+                top.classList.add('top');
+                const bottom = document.createElement('div');
+                bottom.classList.add('bottom');
+                const topFlip = document.createElement('div');
+                topFlip.classList.add('top-flip');
+                const bottomFlip = document.createElement('div');
+                bottomFlip.classList.add('bottom-flip');
+
+                // Overlay digit for idle state (shows a single, full digit)
+                const overlay = document.createElement('div');
+                overlay.classList.add('digit-overlay');
+
+                element.appendChild(top);
+                element.appendChild(bottom);
+                element.appendChild(topFlip);
+                element.appendChild(bottomFlip);
+                element.appendChild(overlay);
+
+                return { top, bottom, topFlip, bottomFlip, overlay };
+            }
+
+            const cards = {
+                hoursTens: createFlipCard(hoursTens),
+                hoursOnes: createFlipCard(hoursOnes),
+                minutesTens: createFlipCard(minutesTens),
+                minutesOnes: createFlipCard(minutesOnes),
+                secondsTens: createFlipCard(secondsTens),
+                secondsOnes: createFlipCard(secondsOnes),
+            };
+
+            function setCardValue(card, value) {
+                // Keep faces ready but hidden when idle; overlay shows the digit
+                card.top.textContent = value;
+                card.bottom.textContent = value;
+                card.topFlip.textContent = '';
+                card.bottomFlip.textContent = '';
+                if (card.overlay) card.overlay.textContent = value;
+            }
+
+            let lastTime = null;
+
+            function updateClock() {
+                const now = new Date();
+                let hours = now.getHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                // Convert to 12-hour format
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+
+                const h = hours.toString().padStart(2, '0');
+                const m = now.getMinutes().toString().padStart(2, '0');
+                const s = now.getSeconds().toString().padStart(2, '0');
+
+                // Update AM/PM
+                if (ampmIndicator.textContent !== ampm) {
+                    ampmIndicator.textContent = ampm;
+                }
+
+                if (!lastTime) {
+                    // First render: set all cards without animation
+                    setCardValue(cards.hoursTens, h[0]);
+                    setCardValue(cards.hoursOnes, h[1]);
+                    setCardValue(cards.minutesTens, m[0]);
+                    setCardValue(cards.minutesOnes, m[1]);
+                    setCardValue(cards.secondsTens, s[0]);
+                    setCardValue(cards.secondsOnes, s[1]);
+                    lastTime = now;
+                    return;
+                }
+
+                // For comparison, we need the *previous* time also in 12-hour format to flip correctly
+                let lastHours = lastTime.getHours();
+                lastHours = lastHours % 12;
+                lastHours = lastHours ? lastHours : 12;
+
+                const lastH = lastHours.toString().padStart(2, '0');
+                const lastM = lastTime.getMinutes().toString().padStart(2, '0');
+                const lastS = lastTime.getSeconds().toString().padStart(2, '0');
+
+                flip(cards.hoursTens, h[0], lastH[0]);
+                flip(cards.hoursOnes, h[1], lastH[1]);
+                flip(cards.minutesTens, m[0], lastM[0]);
+                flip(cards.minutesOnes, m[1], lastM[1]);
+                flip(cards.secondsTens, s[0], lastS[0]);
+                flip(cards.secondsOnes, s[1], lastS[1]);
+
+                lastTime = now;
+            }
+
+            function flip(card, newNum, lastNum) {
+                if (newNum === lastNum) return;
+
+                // Prepare faces for animation
+                card.top.textContent = lastNum;
+                card.bottom.textContent = lastNum;
+                card.topFlip.textContent = lastNum;
+                card.bottomFlip.textContent = newNum;
+
+                const parent = card.topFlip.parentElement;
+                parent.classList.add('play');
+
+                // Hide overlay during animation to avoid any duplication
+                if (card.overlay) {
+                    card.overlay.style.visibility = 'hidden';
+                }
+
+                // First animation: flip the top half down
+                card.topFlip.style.transform = 'rotateX(0deg)';
+                card.topFlip.style.zIndex = '4';
+
+                // Trigger reflow to ensure the initial state is applied
+                void card.topFlip.offsetHeight;
+
+                // Start the flip animation
+                card.topFlip.style.transform = 'rotateX(-90deg)';
+
+                // When top flip completes, update the bottom half
+                setTimeout(() => {
+                    card.top.textContent = newNum;
+                    card.bottomFlip.style.transform = 'rotateX(0deg)';
+
+                    // When bottom flip completes, clean up
+                    setTimeout(() => {
+                        card.bottom.textContent = newNum;
+                        if (card.overlay) {
+                            card.overlay.textContent = newNum;
+                            card.overlay.style.visibility = '';
+                        }
+                        parent.classList.remove('play');
+                        // Reset transforms for next flip
+                        card.topFlip.style.transform = '';
+                        card.bottomFlip.style.transform = 'rotateX(90deg)';
+                    }, 250); // Half of the total animation time
+                }, 250); // Half of the total animation time
+            }
+
+            // Initialize the clock with the current time
+            updateClock();
+
+            // Update the clock every second, syncing with the system clock
+            // to avoid drift over time
+            let expected = Date.now() + 1000;
+            const driftCorrection = 1000; // 1 second
+
+            function syncClock() {
+                const now = Date.now();
+                const drift = now - expected;
+
+                // Update the clock
+                updateClock();
+
+                // Calculate next update time, adjusting for drift
+                expected += driftCorrection;
+
+                // Schedule next update, adjusting for drift
+                setTimeout(syncClock, Math.max(0, driftCorrection - drift));
+            }
+
+            // Start the synchronized clock
+            setTimeout(syncClock, 1000 - (Date.now() % 1000));
+
+            // Button interactions
+            const clockBtn = document.getElementById('clockBtn');
+            const promodroBtn = document.getElementById('promodroBtn');
+            const buttonHint = document.querySelector('.button-hint');
+            let isHovering = false;
+
+            // Add ripple effect to buttons
+            function createRipple(event) {
+                const button = event.currentTarget;
+                const circle = document.createElement('span');
+                const diameter = Math.max(button.clientWidth, button.clientHeight);
+                const radius = diameter / 2;
+
+                circle.style.width = circle.style.height = `${diameter}px`;
+                circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+                circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+                circle.classList.add('ripple');
+
+                const ripple = button.getElementsByClassName('ripple')[0];
+                if (ripple) {
+                    ripple.remove();
+                }
+
+                button.appendChild(circle);
+
+                // Remove ripple after animation completes
+                setTimeout(() => {
+                    circle.remove();
+                }, 600);
+            }
+
+            // Add ripple effect to all buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', createRipple);
+
+                // Add hover effect
+                button.addEventListener('mouseenter', () => {
+                    isHovering = true;
+                    buttonHint.style.opacity = '1';
+                    buttonHint.style.transform = 'translateY(0)';
+                });
+
+                button.addEventListener('mouseleave', () => {
+                    isHovering = false;
+                    if (!document.querySelector('button:active')) {
+                        buttonHint.style.opacity = '0.8';
+                        buttonHint.style.transform = 'translateY(5px)';
+                    }
+                });
+
+                button.addEventListener('mousedown', () => {
+                    button.style.transform = 'translateY(1px)';
+                });
+
+                button.addEventListener('mouseup', () => {
+                    button.style.transform = 'translateY(-3px)';
+                });
+            });
+
+            // Update button hint based on which button is active
+            function updateActiveButton(activeBtn) {
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    if (btn === activeBtn) {
+                        btn.classList.add('active');
+                        buttonHint.textContent = `${btn.textContent.trim()} is selected`;
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            // Set initial active button
+            updateActiveButton(clockBtn);
+
+            // Add click handlers
+            clockBtn.addEventListener('click', () => {
+                updateActiveButton(clockBtn);
+            });
+
+            promodroBtn.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default anchor click bubbling
+                e.stopPropagation(); // Stop event from reaching the anchor tag
+
+                updateActiveButton(promodroBtn);
+
+                // Get the href from the parent anchor
+                const link = e.target.closest('a');
+                const href = link ? link.getAttribute('href') : null;
+
+                if (href) {
+                    // Add a small delay before navigation to see the click effect
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 300);
+                }
+            });
+
+            // Handle anchor clicks directly too, just in case
+            document.querySelector('.promodro-button').addEventListener('click', function (e) {
+                e.preventDefault();
+                // The button handler above will handle the logic if the button was clicked.
+                // If the anchor edge was clicked (padding?), we might want to trigger the same logic.
+                // If the user clicked outside the button but on the anchor, we can navigate immediately or with delay.
+                // But the design shows the button IS the content.
+            });
+
+            // Add keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                    const buttons = document.querySelectorAll('button');
+                    const currentIndex = Array.from(buttons).findIndex(btn => btn.classList.contains('active'));
+                    let nextIndex;
+
+                    if (e.key === 'ArrowRight') {
+                        nextIndex = (currentIndex + 1) % buttons.length;
+                    } else {
+                        nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+                    }
+
+                    updateActiveButton(buttons[nextIndex]);
+                    buttons[nextIndex].focus();
+                } else if (e.key === 'Enter') {
+                    const activeButton = document.querySelector('button.active');
+                    if (activeButton) {
+                        activeButton.click();
+                    }
+                }
+            });
+        </script>
+        <style>
+            /* Ripple effect */
+            .ripple {
+                position: absolute;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.3);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                pointer-events: none;
+            }
+
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+
+            /* Button focus styles */
+            button:focus {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.5);
+            }
+
+            /* Button press effect */
+            button:active {
+                transform: translateY(1px) !important;
+            }
+
+            .ampm-indicator {
+                font-size: 4vw;
+                align-self: flex-end;
+                margin-bottom: 0.5rem;
+                margin-left: 0.5rem;
+                font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+                color: #fff;
+                font-weight: 700;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+        </style>
+    </body>
+
+</html>

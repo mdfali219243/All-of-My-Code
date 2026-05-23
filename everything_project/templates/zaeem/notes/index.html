@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Notes</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/notes/style.css') }}">
+
+        
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script type="module">
+            import { SetEmojiPicker } from "{{ url_for('static', filename='zaeem/general_zaeem/script.js') }}";
+            SetEmojiPicker();
+        </script>
+
+        <script src="{{ url_for('static', filename='zaeem/notes/scripts/content.js') }}" type="module" defer></script>
+        <script src="{{ url_for('static', filename='zaeem/notes/scripts/scripts.js') }}" type="module" defer></script>
+        <script src="{{ url_for('static', filename='zaeem/notes/data/page.js') }}" type="module" defer></script>
+
+
+        
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </head>
+    <body class="overflow-hidden">
+        <div id="container" class="flex h-screen w-screen">
+            <div id="feature-menu" class="strip bg-gray-300">
+                <a href="{{ url_for('home') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a> 
+                <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>   
+                <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+            </div>
+            <div id="notes-menu" class="min-w-[255px] flex flex-col p-2 relative bg-gray-100 text-[0.9rem] font-medium">
+                <div class="flex justify-center items-center w-full h-[2.4rem] gap-2 px-2 hover:bg-gray-200 rounded">
+                    <div class="w-[1.2rem] h-[1.2rem] bg-gray-200 rounded-sm p-[2px]">
+                        <img src="{{ url_for('static', filename='zaeem/notes/images/menu/icons8-z-16.png') }}" class="w-full h-full object-contain" alt="profile picture">
+                    </div>
+                    <div class="flex items-center w-full h-full">
+                        Zaeem's School Notion
+                    </div>
+                </div>
+                <div class="w-full h-auto">
+                    <div class="page-container page-header cursor-pointer w-full h-[2rem] flex items-center justify-between hover:bg-gray-200 rounded px-2">
+                        <div class="">Pages</div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-[1.2rem] h-[1.2rem] hover:bg-gray-300 rounded-sm hidden cursor-pointer p-[2px]">
+                                <img src="{{ url_for('static', filename='zaeem/notes/images/menu/icons8-more-16.png') }}" class="w-full h-full object-contain" alt="more icon">
+                            </div>
+                            <div class="universal-add-icon-container w-[1.2rem] h-[1.2rem] hover:bg-gray-300 rounded-sm hidden cursor-pointer p-[2px]">
+                                <img src="{{ url_for('static', filename='zaeem/notes/images/menu/icons8-add-16.png') }}" class="w-full h-full object-contain" alt="add icon">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pages-container w-full h-auto flex flex-col items-center">
+
+                    </div>
+                </div>
+                <div class="h-[100px] w-[239px] absolute bottom-0 left-0 right-0 bottom-0 p-2 flex items-center">
+                    <div class="flex items-center gap-2 h-[2rem] w-full absolute bottom-[0.5rem] cursor-pointer hover:bg-gray-200 rounded pr-2">
+                        <div class="w-[1.2rem] h-[1.2rem] p-[2px]">
+                            <img src="{{ url_for('static', filename='zaeem/notes/images/menu/icons8-settings-16.png') }}" class="w-full h-full object-contain" alt="settings icon">
+                        </div>
+                        <div class=""> 
+                            Settings
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="notes-container" class="w-full flex flex-col">
+                <div class="w-full h-[45px] flex items-center p-1">
+                    <div class="flex items-center gap-2 w-[50%] h-full">
+                        <div>
+                            <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/collapse.png') }}" alt="sidebar icon" class="collapse-icon w-[1.5rem] h-[1.5rem] rounded p-[2px] hover:bg-gray-200 cursor-pointer">
+                        </div>
+                        <div class="flex items-center">
+                            <span class="hover:bg-gray-200 cursor-pointer rounded px-2">Page 1</span>
+                            <span class="text-gray-500">/</span>
+                            <span class="hover:bg-gray-200 cursor-pointer rounded px-2">Page 2</span>
+                            <span class="text-gray-500">/</span>
+                            <span class="hover:bg-gray-200 cursor-pointer rounded px-2">Page 3</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 w-[50%] h-full justify-end">
+                        <div class="more-icon-container relative">
+                            <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/icons8-more-16.png') }}" alt="more icon" class="page-more-icon w-[1.5rem] h-[1.5rem] rounded p-[2px] hover:bg-gray-200 cursor-pointer">
+                            <div class="page-more-icon-menu flex flex-col border-black-[1px] rounded-[4px] absolute right-0 min-w-[10rem] bg-white border border-black box-shadow-normal p-2 hidden">
+                                <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-200 h-[2rem] rounded-sm p-2">
+                                    <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/icons8-arrow-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                    <div>Move To</div>
+                                </div>
+                                <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-200 h-[2rem] rounded-sm p-2">
+                                    <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/icons8-trash-can-50.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                    <div>Delete</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full h-[calc(100%-45px)] p-6 overflow-y-auto">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <div class="page-icon folder-icon hover:bg-gray-200 cursor-pointer rounded px-2">😀 Add Icon</div>
+                        </div>
+                        <div  class="page-title font-bold text-5xl bg-blue-500 px-2 outline-none" contenteditable="true">Page 3</div>
+                    </div>
+                    <div class="content-container h-[calc(100%-60px)] outline-none bg-blue-300 p-4">
+                        <div class=" space-y-2 p-2 bg-white">
+                            <div class="line first-line flex items-start h-auto relative gap-2 line-hover-zone">
+                                <div class="icons flex gap-1 pt-1 absolute left-[-3rem] absolute">
+                                    <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-add-16.png') }}" class="w-[1.2rem] h-[1.2rem] rounded-sm p-[2px] cursor-pointer hover:bg-gray-200 hidden " alt="add block icon"/>
+                                    <div class="w-[10rem] rounded cursor-pointer absolute top-full left-0 bg-white z-[100] h-auto p-2 border border-black box-shadow-normal hidden">
+                                        <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                            <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-text-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                            <div class="block-type">Text</div>
+                                        </div>
+                                        <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                            <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-1-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                            <div class="block-type">Heading 1</div>
+                                        </div>
+                                        <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                            <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-2-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                            <div class="block-type">Heading 2</div>
+                                        </div>
+                                        <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                            <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-3-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                            <div class="block-type">Heading 3</div>
+                                        </div>
+                                    </div>
+                                    <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-menu-16 (1).png') }}" class="line-block-menu-icon w-[1.2rem] h-[1.2rem] rounded-sm p-[2px] cursor-pointer hover:bg-gray-200 hidden " alt="move block icon"/>
+                                    <div class="line-block-menu hidden w-[10rem] rounded absolute top-full left-0 bg-white z-[100] h-auto p-2 border border-black box-shadow-normal">
+                                        <div class="flex w-full  cursor-pointer  rounded-sm p-1 flex-col">
+                                            <div class="text-xs font-bold text-gray-500 rounded-sm p-1">Text</div>
+                                            <div class="flex items-center gap-1 hover:bg-gray-200 cursor-pointer rounded-sm p-1">
+                                                <img src="{{ url_for('static', filename='zaeem/notes/images/main/turn-into.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                                <div>Turn into</div>
+                                            </div>
+                                            <div class="flex items-center gap-1 hover:bg-gray-200 cursor-pointer rounded-sm p-1">
+                                                <img src="{{ url_for('static', filename='zaeem/notes/images/main/paint-roller.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                                <div>Color</div>
+                                            </div>
+                                            <hr class="w-full my-2">
+                                            <div class="flex items-center gap-1 hover:bg-gray-200 cursor-pointer rounded-sm p-1">
+                                                <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/icons8-arrow-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                                <div>Move to</div>
+                                            </div>
+                                            <div class="flex items-center gap-1 hover:bg-gray-200 cursor-pointer rounded-sm p-1">
+                                                <img src="{{ url_for('static', filename='zaeem/notes/images/container-header/icons8-trash-can-50.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                                <div>Delete</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="content w-full outline-none" contenteditable="true"></div>
+                                <div class="content-menu top-full w-[10rem] outline-none flex flex-col items-center p-2 absolute bg-white z-[100] hidden border border-black box-shadow-normal rounded">
+                                    <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                        <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-text-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                        <div class="block-type">Text</div>
+                                    </div>
+                                    <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                        <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-1-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                        <div class="block-type">Heading 1</div>
+                                    </div>
+                                    <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                        <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-2-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                        <div class="block-type">Heading 2</div>
+                                    </div>
+                                    <div class="flex w-full gap-2 items-center cursor-pointer hover:bg-gray-200 rounded-l p-1 ">
+                                        <img src="{{ url_for('static', filename='zaeem/notes/images/main/icons8-3-16.png') }}" class="w-[1.2rem] h-[1.2rem]">
+                                        <div class="block-type">Heading 3</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+

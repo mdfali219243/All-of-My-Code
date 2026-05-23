@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Flashcard</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/header.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/vertical-bar.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/main_content.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/theme.css') }}">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <style>
+            :root {
+                --bg: #f8fafc;
+                --surface: #ffffff;
+                --surface-2: #eef2ff;
+                --border: #e5e7eb;
+                --text: #0f172a;
+                --muted: #94a3b8;
+                --sidebar: #1f2937;
+                --sidebar-text: #cbd5e1;
+                --sidebar-text-strong: #ffffff;
+                --brand: #6366f1;
+            }
+            *, *::before, *::after { box-sizing: border-box; }
+            html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); }
+            body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, sans-serif; line-height: 1.5; }
+
+            /* Layout */
+            .container { display: flex; gap: 0; min-height: 100vh; padding-top: 64px; }
+            .feature-menu { width: 56px; min-width: 40px; height: calc(100vh - 64px); background: linear-gradient(180deg, #eef2ff, #e2e8f0); border-right: 1px solid var(--border); }
+
+            /* Sidebar */
+            .flashcard-container { width: 240px; min-width: 200px; max-width: 280px; height: calc(100vh - 64px); background: var(--sidebar); color: var(--sidebar-text); display: flex; flex-direction: column; position: sticky; top: 64px; box-shadow: 1px 0 6px rgba(0,0,0,0.06); }
+            #flashcard-menu.quizlet-menu { width: 100%; padding: 8px 0; margin: 0; display: flex; flex-direction: column; justify-content: flex-start; flex: 1; }
+            .quizlet-menu { background: transparent !important; box-shadow: none !important; }
+            .menu-section { gap: 6px; padding: 0 0 6px 0; }
+            .menu-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0 8px; }
+            .menu-btn { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 10px 16px; border-radius: 10px; font-size: 1rem; color: var(--sidebar-text); cursor: pointer; transition: background .15s, color .15s; }
+            .menu-btn.active, .menu-btn:hover { background: rgba(255,255,255,0.08); color: var(--sidebar-text-strong); }
+            .menu-icon { font-size: 18px; }
+            .menu-label, .menu-label a { color: inherit; text-decoration: none; display: block; }
+            .folder-container { color: var(--sidebar-text); }
+            .folder-addition-container, .folder-list, .folder-div { padding-left: 20px; }
+            .folder-div { padding: 4px 0; color: var(--sidebar-text); }
+
+            /* Header */
+            .header { background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+
+            /* Main content */
+            .Main-content { background: var(--bg); padding: 24px; height: auto; min-height: calc(100vh - 64px); }
+            .showbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; width: 100%; height: auto; background: transparent; padding: 0; position: relative; top: 0; }
+            .create_box, .recent_box, .reminder_box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: center; min-height: 220px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+            .create_button { width: 100%; height: 100%; background: var(--bg); border: 1px dashed var(--muted); border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+            .create_button:hover { background: var(--surface-2); border-color: var(--brand); }
+            .bi-plus-square { width: 48px; height: 48px; opacity: .85; }
+            .recent_box a, .reminder_box a { color: var(--text); text-decoration: none; font-weight: 500; }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .flashcard-container { display: none; }
+                .feature-menu { width: 0; min-width: 0; border-right: none; }
+                .Main-content { padding: 16px; }
+            }
+        </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+        <script src="{{ url_for('static', filename='foysal/flashcard.2.0/javasript/start.js') }}" defer></script>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Feature menu on the left side -->
+            <div id="feature-menu" class="strip bg-gray-300 min-w-[45px]">
+                <a href="{{ url_for('home') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a> 
+                <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>   
+                <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+                <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                    <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                        <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                    </div>
+                </a>
+            </div>
+
+            <!-- Flashcard container -->
+            <div class="flashcard-container">
+                <div id="flashcard-menu" class="strip quizlet-menu">
+                    <!-- Section: Start Here -->
+                    <div class="menu-section">
+                        <button class="menu-btn">
+                            <span class="menu-icon">&#8962;</span>
+                            <span class="menu-label"><a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">Home</a></span>
+                        </button>
+                        <button class="menu-btn">
+                            <span class="menu-icon">&#9889;</span>
+                            <span class="menu-label"><a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/start.html') }}">Start Here</a></span>
+                        </button>
+                    </div>
+                    <hr class="menu-divider">
+                    <!-- Section: Flashcards -->
+                    <div class="menu-section">
+                        <button class="menu-btn">
+                            <span class="menu-icon">&#128218;</span>
+                            <span class="menu-label"><a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/Library.html') }}">Library</a></span>
+                        </button>
+                    </div>
+                    <hr class="menu-divider">
+                    <!-- Section: Folders -->
+                    <div class="menu-section">
+                        <button class="menu-btn">
+                            <span class="menu-icon">&#128193;</span>
+                            <span class="menu-label js-createFolder">New Folder</span>
+                        </button>
+                        <details class="folder-container">
+                            <summary class="summary-row">
+                                <div class="folder-addition-container">
+                                    <span class="folder-icon fs-6 fw-semibold">📁 Your Folder</span>
+                                </div>
+                            </summary>
+                            <div class="folder-list">
+                                <!-- Filled by renderFoldersSidebar() -->
+                            </div>
+                        </details>
+                    </div>
+                    <hr class="menu-divider">
+                    <!-- Section: Reminder -->
+                    <div class="menu-section">
+                        <button class="menu-btn">
+                            <span class="menu-icon">&#9201;</span>
+                            <span class="menu-label">Reminder</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!--Header of the page-->
+                <div class="header">
+                    <div class="left-section"> 
+                        <img class="hamburger-menu" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/hamburger-menu.svg') }}">
+                        <img class="youtube-logo" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/icon.webp') }}">
+                    </div>
+                    <div class="middle-section">
+                        <input class="search-bar" type="text" placeholder="Search">
+                        <button class="search-button">
+                            <img class="search-ion" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/search.svg') }}">
+                            <div class="tooltip">Search</div>
+                            </button>
+                            
+                    </div>
+
+                    <div class="right-section"> 
+                        <div class="upload-icon-container">
+                            <img class="upload-icon" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/blue-add-button-12025.svg') }}">
+                            <div class="tooltip">Create</div>
+                        </div>
+                        
+                        <div class="upgrade_button">
+                            <button class="btn btn-primary" type="button">Upgrade feature</button>
+                        </div>
+                            <img class="current-user-pictures" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/download.jpeg') }}">
+                    </div>
+                </div>
+
+
+            <!-- Main area -->
+            <div class="Main-content">
+                <div class="showbox">
+                    <div class="create_box">
+                        <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/start.html') }}">
+                            <button class="create_button" type="button">
+                                <img class="bi-plus-square" src="{{ url_for('static', filename='foysal/flashcard.2.0/image/plus-square.svg') }}">
+                            </button>
+                        </a>
+                    </div>
+                    <div class="recent_box">
+                        <p><a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/Library.html') }}">your recent flashcard</a> </p>
+                    </div>
+                    <div class="reminder_box">
+                        <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">Reminder</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar and Library/Folder rendering are handled by javasript/start.js -->
+                
+        </div>
+        </body>
+        </html>

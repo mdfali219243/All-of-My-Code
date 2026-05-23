@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>Calendar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+      xintegrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/home_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/event_blocks.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/dark_mode.css') }}">
+    <style>
+      #feature-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 4rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+      }
+
+      body {
+        padding-left: 4rem;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div id="feature-menu" class="strip bg-gray-300">
+      <a href="{{ url_for('home') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+        </div>
+      </a>
+      <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+        <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+          <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+        </div>
+      </a>
+    </div>
+    <!-- Feature Menu -->
+    <div class="feature-menu" id="featureMenu">
+      <div class="p-4 flex items-center justify-between border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Calendar Menu</h2>
+        <button class="icon-button" id="closeMenuBtn" aria-label="Close navigation menu">
+          <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <ul class="py-2">
+        <li><a href="#"
+            class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">My
+            Calendar</a></li>
+        <li><a href="{{ url_for('serve_page', page='calendar/events.html') }}"
+            class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Events</a>
+        </li>
+        <li><a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}"
+            class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Tasks</a>
+        </li>
+        <li><a href="{{ url_for('serve_page', page='calendar/settings.html') }}"
+            class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Overlay for when the menu is open -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="left-section">
+        <button class="icon-button" id="openMenuBtn" aria-label="Open navigation menu">
+          <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+          </svg>
+        </button>
+        <img class="calendar-logo" src="{{ url_for('static', filename='calendar/image/calendar_5_2x.png') }}" alt="Calendar Logo">
+      </div>
+      <div class="middle-section">
+        <button class="today-button">Today</button>
+        <button id="prevBtn" class="icon-button" aria-label="Previous Month">
+          <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fill-rule="evenodd"
+              d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div id="currentDisplay" class="current-display">July 2025</div>
+        <button id="nextBtn" class="icon-button" aria-label="Next Month">
+          <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fill-rule="evenodd"
+              d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+        <button class="icon-button" aria-label="Search">
+          <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+          </svg>
+        </button>
+      </div>
+      <div class="right-section">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            month
+          </button>
+          <ul class="dropdown-menu">
+            <li><button class="weekViewBtn" type="button">Week</button></li>
+            <li><button class="dayViewBtn" type="button">Day</button></li>
+            <li><button class="monthViewBtn" type="button">Month</button></li>
+            <li><button class="yearViewBtn" type="button">Year</button></li>
+          </ul>
+        </div>
+        <!-- Placeholder for other Google Calendar header elements -->
+        <button class="icon-button" aria-label="Settings">
+          <img src="{{ url_for('static', filename='calendar/image/gear.svg') }}" alt="Settings Icon">
+        </button>
+        <button class="icon-button" aria-label="help">
+          <img src="{{ url_for('static', filename='calendar/image/question-circle.svg') }}" alt="Help Icon">
+        </button>
+        <button id="mobileToggleSidebar" class="icon-button md:hidden" aria-label="Toggle sidebar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <button id="mobileToggleSidebar" class="icon-button md:hidden" aria-label="Toggle sidebar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <!-- Placeholder for user profile picture -->
+        <img class="user-profile-pic" src="https://placehold.co/32x32/FFC107/FFFFFF?text=U" alt="User Profile Picture">
+      </div>
+    </div>
+
+    <div class="main-container flex flex-1">
+      <div id="main_view" class="flex-1 flex flex-col p-4 text-gray-900 dark:text-gray-100 rounded-lg shadow-md">
+
+        <!-- Month View Container -->
+        <div id="monthView" class="month-view">
+          <div class="add_event"></div>
+          <div id="daysOfWeekHeader"
+            class="grid grid-cols-7 text-center font-medium text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+          </div>
+          <!-- Month calendar grid will be populated here -->
+          <div id="monthGrid" class="month-grid">
+            <!-- Month dates will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Week View Container -->
+        <div id="weekView" class="week-view" style="display: none;">
+          <div class="week-date-range-container mb-2">
+            <div id="weekDateRange" class="font-semibold text-lg text-center"></div>
+          </div>
+          <div class="week-grid border rounded-lg overflow-hidden">
+            <!-- Days of Week Header -->
+            <div id="weekDaysHeader" class="grid week-grid-header">
+              <div class="time-label"></div>
+              <div>Sun</div>
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+            </div>
+
+            <!-- All-day events row -->
+            <div id="weekAllDayRow" class="week-all-day-row">
+              <div class="time-label">All-day</div>
+              <div id="weekAllDayEvents" class="all-day-events-container">
+                <!-- All-day events will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Time grid -->
+            <div id="weekTimeGrid" class="week-time-grid">
+              <!-- Time grid will be populated by JavaScript -->
+            </div>
+          </div> <!-- close week-grid -->
+        </div> <!-- close weekView -->
+
+        <!-- Day View Container -->
+        <div id="dayView" class="day-view" style="display:none;">
+          <!-- Date header will be inserted here by JavaScript -->
+          <div class="day-view-content">
+            <!-- All-day events row -->
+            <div id="dayAllDayRow" class="day-all-day-row">
+              <div class="time-label">All-day</div>
+              <div id="dayAllDayEvents" class="all-day-events-container">
+                <!-- All-day events will be populated by JavaScript -->
+              </div>
+            </div>
+            <!-- Time grid -->
+            <div id="dayTimeGrid" class="day-time-grid"></div>
+          </div>
+        </div>
+        <div id="yearView" class="year-view" style="display:none;">
+          <div id="yearGrid"></div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div id="calendarSidebar" class="sidebar w-64 border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
+        style="display: block !important;">
+        <!-- Empty sidebar -->
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle (Popper included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+      xintegrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+      crossorigin="anonymous"></script>
+
+    <!-- Floating Add Event Button -->
+    <button id="addEventBtn"
+      class="fixed bottom-8 right-8 bg-blue-600 text-white rounded-full w-16 h-16 shadow-lg flex items-center justify-center text-3xl z-50"
+      title="Add Event" style="position:fixed;bottom:2rem;right:3rem;">
+      +
+    </button>
+
+    <!-- View Event Modal -->
+    <div class="modal fade" id="viewEventModal" tabindex="-1" aria-labelledby="viewEventModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="viewEventTitle">Event Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Date:</strong> <span id="viewEventDate"></span></p>
+            <p><strong>Time:</strong> <span id="viewEventTime"></span></p>
+            <p><strong>Description:</strong> <span id="viewEventDescription"></span></p>
+            <p><strong>Color:</strong> <span id="viewEventColor"></span></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" id="deleteEventBtn">Delete</button>
+            <button type="button" class="btn btn-primary" id="editEventBtn">Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="addEventModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Event</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addEventForm">
+              <div class="mb-3">
+                <label for="eventTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="eventTitle" required />
+              </div>
+              <div class="mb-3">
+                <label for="eventDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="eventDate" required />
+              </div>
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="eventAllDay" />
+                <label class="form-check-label" for="eventAllDay">All Day</label>
+              </div>
+              <div class="mb-3 row" id="eventTimeFields">
+                <div class="col">
+                  <label for="eventStartTime" class="form-label">Start Time</label>
+                  <input type="time" class="form-control" id="eventStartTime" />
+                </div>
+                <div class="col">
+                  <label for="eventEndTime" class="form-label">End Time</label>
+                  <input type="time" class="form-control" id="eventEndTime" />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="eventDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="eventDescription" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Color</label>
+                <div class="d-flex gap-2">
+                  <div class="color-option" data-color="#4285F4" style="background-color: #4285F4;"></div>
+                  <div class="color-option" data-color="#34A853" style="background-color: #34A853;"></div>
+                  <div class="color-option" data-color="#FBBC05" style="background-color: #FBBC05;"></div>
+                  <div class="color-option" data-color="#EA4335" style="background-color: #EA4335;"></div>
+                  <div class="color-option" data-color="#673AB7" style="background-color: #673AB7;"></div>
+                </div>
+                <input type="hidden" id="eventColor" value="#4285F4" />
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Add Event</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div id="editEventModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Event</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editEventForm">
+              <input type="hidden" id="editEventId" />
+              <div class="mb-3">
+                <label for="editEventTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="editEventTitle" required />
+              </div>
+              <div class="mb-3">
+                <label for="editEventDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="editEventDate" required />
+              </div>
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="editEventAllDay" />
+                <label class="form-check-label" for="editEventAllDay">All Day</label>
+              </div>
+              <div class="mb-3 row" id="editEventTimeFields">
+                <div class="col">
+                  <label for="editEventStartTime" class="form-label">Start Time</label>
+                  <input type="time" class="form-control" id="editEventStartTime" />
+                </div>
+                <div class="col">
+                  <label for="editEventEndTime" class="form-label">End Time</label>
+                  <input type="time" class="form-control" id="editEventEndTime" />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="editEventDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="editEventDescription" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Color</label>
+                <div class="d-flex gap-2">
+                  <div class="color-option" data-color="#4285F4" style="background-color: #4285F4;"></div>
+                  <div class="color-option" data-color="#34A853" style="background-color: #34A853;"></div>
+                  <div class="color-option" data-color="#FBBC05" style="background-color: #FBBC05;"></div>
+                  <div class="color-option" data-color="#EA4335" style="background-color: #EA4335;"></div>
+                  <div class="color-option" data-color="#673AB7" style="background-color: #673AB7;"></div>
+                </div>
+                <input type="hidden" id="editEventColor" value="#4285F4" />
+              </div>
+              <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success">Save Changes</button>
+                <button type="button" class="btn btn-danger" id="deleteEventBtn">Delete</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='calendar/javascript/openAddEventModal.global.js') }}"></script>
+    <script src="{{ url_for('static', filename='calendar/javascript/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='calendar/javascript/index.js') }}"></script>
+    <script src="{{ url_for('static', filename='calendar/javascript/sidebar.js') }}"></script>
+  </body>
+
+</html>

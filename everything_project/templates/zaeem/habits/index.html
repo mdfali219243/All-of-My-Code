@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habits</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/habits/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/todolist/styles/mix.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { SetEmojiPicker } from "{{ url_for('static', filename='zaeem/general_zaeem/script.js') }}";
+        SetEmojiPicker();
+    </script>           
+    <script src="{{ url_for('static', filename='zaeem/habits/scripts/script.js') }}" type="module" defer></script>
+    <script src="{{ url_for('static', filename='zaeem/habits/data/folder.js') }}" type="module" defer></script>
+    <script src="{{ url_for('static', filename='zaeem/habits/data/habit.js') }}" type="module" defer></script>
+    <script src="{{ url_for('static', filename='zaeem/habits/scripts/stats.js') }}" type="module" defer></script>
+    <script src="{{ url_for('static', filename='zaeem/habits/scripts/menu.js') }}" type="module" defer></script>
+   
+    
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="container">
+        <div id="feature-menu" class="strip bg-gray-300">
+            <a href="{{ url_for('home') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a> 
+            <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>   
+            <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+        </div>
+        <div id="habits-menu" class="strip">
+            <div class="habits-times">
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/all-icon.png') }}" alt="all" class="habits-time-icon">
+                    <div class="habits-time" id="all">All</div>
+                </div>
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/morning.png') }}" alt="Morning" class="habits-time-icon">
+                    <div class="habits-time" id="morning">Morning</div>
+                </div>
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/sun.png') }}" alt="afternoon" class="habits-time-icon">
+                    <div class="habits-time" id="afternoon">Afternoon</div>
+                </div>
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/moon.png') }}" alt="evening" class="habits-time-icon">
+                    <div class="habits-time" id="evening">Evening</div>
+                </div>
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/night.png') }}" alt="evening" class="habits-time-icon">
+                    <div class="habits-time" id="night">Night</div>
+                </div>
+                <div class="habits-time-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits_menu_icons/hours.png') }}" alt="anytime" class="habits-time-icon">
+                    <div class="habits-time" id="anytime">Anytime</div>
+                </div>
+
+            </div> 
+            <div class="vertical-line-container">
+                <div class="vertical-line"></div>
+            </div>
+            <div class="habits-folders">
+                <!-- TOP-LEVEL FOLDER -->
+                <details open class="folder-container">
+                    <summary class="summary-row">
+                        <span class="arrow"></span>
+                        <div class="folder-addition-container">
+                            <span>Folders</span>
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/plus_icon.png') }}" class="add-folder-icon">
+                        </div>
+                    </summary>
+                    <div class="habits-folder-list">
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/dollar.png') }}" class="folder-icon">
+                            <div class="folder">Business</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/family.png') }}" class="folder-icon">
+                            <div class="folder">Family</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/kaaba.png') }}" class="folder-icon">
+                            <div class="folder">Islam</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/personal_icon.png') }}" class="folder-icon">
+                            <div class="folder">Personal</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-folder-icons/school.png') }}" class="folder-icon">
+                            <div class="folder">School</div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+    
+        </div>
+        <div id="habits-container" class="strip">
+            <header class="habits-header-container">
+                <div class="habits-header-container-left">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/collapse.png') }}" alt="collapse" class="collapse-sidebar-icon">
+                    <h2 class="habits-time-title">All</h2>
+                </div>
+                <div class="habits-actions-container">
+                    <div class="habits-action habits-date-filter-container">
+                        <div class="habits-date-text">Today</div>
+                        <input type="date" class="habits-date-picker ">
+                    </div>
+                    <div class="add-habits-container habits-action">
+                        <div class="habits-add-icon-container">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-plus-24.png') }}" class="add-habit-icon" alt="add habit icon">
+                        </div>
+                        <div class="add-habit-text">Add Habit</div>
+                        <div class="habits-add-arrow-icon-container">
+                            <div class="habits-arrow"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="habits-list-container">
+                <div class="habits-list">
+                    <section class="habits-group" data-time="morning">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Morning</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+
+                        </div>
+                    </section>
+
+                    <section class="habits-group" data-time="afternoon">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Afternoon</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+                            
+                        </div>
+                    </section>
+
+                    <section class="habits-group" data-time="evening">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Evening</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+                            
+                        </div>
+                    </section>
+
+                    <section class="habits-group" data-time="night">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Night</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+                            
+                        </div>
+                    </section>
+
+                    <section class="habits-group" data-time="anytime">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Anytime</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+                            
+                        </div>
+                    </section>
+
+                    <section class="habits-group" data-time="completed">
+                        <div class="habits-group-header open">
+                            <div class="arrow"></div>
+                            <div class="group-header">Completed</div>
+                            <div class="number-of-habits">0</div>
+                        </div>
+                        <div class="habits">
+                            
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <div id="habits-stats-container" class="strip" >
+            <div class="habits-stats-header">
+                <div class="habits-stats-header-left">
+                    <div class="habits-stats-title"></div>
+                </div>
+                <div class="habits-stats-header-right">
+                    <div class="habits-stats-folder hidden"></div>
+                    <div class="habits-stats-edit-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-edit-50.png') }}" class="habit-edit-icon" alt="edit">
+                    </div>
+                </div>
+            </div>
+            <div class="habits-stats">
+                <div class="habit-current-streaks-stats-container stats-container">
+                    <div class="streak-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-fire-48.png') }}" class="streak-icon" alt="streak">
+                    </div>
+                    <div class="streak-stats-container">
+                        <div class="current-streak-title">Current Streak</div>
+                        <div class="current-streak">0 days</div>
+                    </div>
+                </div>
+                
+                <div class="habit-completed-times-stats-container">
+                    <div class="completed-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-check-mark-48.png') }}" class="streak-icon" alt="streak">
+                    </div>
+                    <div class="completed-stats-container">
+                        <div class="current-completed-title">Completed Times</div>
+                        <div class="current-completed">0 times</div>
+                    </div>
+                </div>
+                <div class="habit-failed-times-stats-container">
+                    <div class="failed-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-cancel-48.png') }}" class="streak-icon" alt="streak">
+                    </div>
+                    <div class="failed-stats-container">
+                        <div class="current-failed-title">Failed Times</div>
+                        <div class="current-failed">0 times</div>
+                    </div>
+                </div>
+                
+                
+                <div class="habit-skipped-times-stats-container">
+                    <div class="skipped-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-skip-48.png') }}" class="streak-icon" alt="streak">
+                    </div>
+                    <div class="skipped-stats-container">
+                        <div class="current-skipped-title">Skipped Times</div>
+                        <div class="current-skipped">0 times</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-overlay" class="hidden">
+        <div class="modal habit-add-modal hidden">
+            <div class="modal-header">
+                <h2 class="habit-add-modal-title">ADD A HABIT</h2>
+                <div class="close-modal-icon-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-close-16.png') }}" class="close-modal-icon" alt="close">
+                </div>
+            </div>
+            <div class="new-habit-name-icon-container">
+                <div class="new-habit-name-container">
+                    <label for="new-habit-name">Habit Name</label>
+                    <input type="text" id="new-habit-name" class="add-habit-input">
+                </div>
+                <div class="new-habit-icon-container add-habit-input">
+                    <div class="new-habit-icon folder-icon">❓</div>
+                </div>
+            </div>
+            <div class="habit-occurrence-container">
+                <div class="habit-goal-container">
+                    <label for="habit-goal times per">Goal</label>
+                    <div class="habit-occurrence-info-input-container">
+                        <input type="number" id="habit-goal" class="occurrence add-habit-input" value="1">
+                        <div class="times-container occurrence add-habit-input">
+                            <div class="times">Times</div>
+                            <div class="input-arrow-container">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-up-16.png') }}" class="input-arrow-up">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-down-16.png') }}" class="input-arrow-down">
+                            </div>
+                            <div class="times-menu-container add-habit-menu-container hidden">
+                                <div class="times-menu-item">Times</div>
+                                <div class="times-menu-item">Mins</div>
+                            </div>
+                        </div>
+                        <div class="per-container occurrence add-habit-input">
+                            <div class="per">Per Day</div>
+                            <div class="input-arrow-container">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-up-16.png') }}" class="input-arrow-up">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-down-16.png') }}" class="input-arrow-down">
+                            </div>
+                            <div class="per-menu-container add-habit-menu-container hidden">
+                                <div class="per-menu-item">Per Day</div>
+                                <div class="per-menu-item">Per Week</div>
+                                <div class="per-menu-item">Per Month</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="habit-repeat-container">
+                    <label for="habit-repeat">Repeat</label>
+                    <div class="habit-repeat occurrence add-habit-input">
+                        <div class="habit-repeat-text">Daily</div>
+                        <div class="input-arrow-container">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-up-16.png') }}" class="input-arrow-up">
+                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-down-16.png') }}" class="input-arrow-down">
+                        </div>
+                        <div class="habit-repeat-menu-container add-habit-menu-container hidden">
+                            <div class="habit-repeat-menu-item-container">
+                                <div class="habit-repeat-menu-item habit-repeat-menu-item-text-js">Daily</div>
+                                <div class="habit-repeat-daily-item-menu habit-repeat-item-menu-container hidden">
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Monday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Tuesday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Wednesday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Thursday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Friday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Saturday</div>
+                                    </div>
+                                    <div class="habit-repeat-daily-item-container">
+                                        <div class="habit-repeat-daily-item-check-container">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-daily-item-check">
+                                        </div>
+                                        <div class="habit-repeat-daily-item-text-container">Sunday</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="habit-repeat-menu-item-container">
+                                <div class="habit-repeat-menu-item habit-repeat-menu-item-text-js">Monthly</div>
+                                <!--30 day calendar-->
+                                <div class="habit-repeat-monthly-item-menu habit-repeat-item-menu-container hidden">
+                                    <div class="habit-repeat-monthly-item-calendar-row">
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">1</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">2</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">3</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">4</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">5</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">6</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">7</div>
+                                    </div>
+                                    <div class="habit-repeat-monthly-item-calendar-row">
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">8</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">9</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">10</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">11</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">12</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">13</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">14</div>
+                                    </div>
+                                    <div class="habit-repeat-monthly-item-calendar-row">
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">15</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">16</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">17</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">18</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">19</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">20</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">21</div>
+                                    </div>
+                                    <div class="habit-repeat-monthly-item-calendar-row">
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">22</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">23</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">24</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">25</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">26</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">27</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">28</div>
+                                    </div>
+                                    <div class="habit-repeat-monthly-item-calendar-row">
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">29</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">30</div>
+                                        <div class="habit-repeat-monthly-item-calendar-row-item">31</div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="habit-repeat-menu-item-container">
+                                <div class="habit-repeat-menu-item habit-repeat-menu-item-text-js">Interval</div>
+                                <!--Interval Menu-->
+                                <div class="habit-repeat-interval-item-menu habit-repeat-item-menu-container hidden">
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 2</div>
+                                    </div>
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 3</div>
+                                    </div>
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 4</div>
+                                    </div>
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 5</div>
+                                    </div>
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 6</div>
+                                    </div>
+                                    <div class="habit-repeat-interval-item-container">
+                                        <div class="habit-repeat-interval-item-check-container hidden">
+                                            <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-repeat-interval-item-check">
+                                        </div>
+                                        <div class="habit-repeat-interval-item-text-container">Repeat Every 7</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="habit-time-date-container">
+                <div class="habit-menu-placement-container">
+                    <div class="habit-time-container">
+                        <label for="habit-time">Time of Day</label>
+                        <div class="habit-time-input-box add-habit-input">
+                            <div class="habit-time-text">Anytime</div>
+                            <div class="input-arrow-container">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-up-16.png') }}" class="input-arrow-up">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-down-16.png') }}" class="input-arrow-down">
+                            </div>
+                            <div class="habit-time-menu-container add-habit-menu-container hidden">
+                                <div class="habit-time-item-container">
+                                    <div class="habit-time-item-check-container habit-time-item-check-container-anytime">
+                                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-time-item-check">
+                                    </div>
+                                    <div class="habit-time-item-text-container">Anytime</div>
+                                </div>
+                                <div class="habit-time-item-container">
+                                    <div class="habit-time-item-check-container hidden">
+                                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-time-item-check">
+                                    </div>
+                                    <div class="habit-time-item-text-container">Morning</div>
+                                </div>
+                                <div class="habit-time-item-container">
+                                    <div class="habit-time-item-check-container hidden">
+                                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-time-item-check">
+                                    </div>
+                                    <div class="habit-time-item-text-container">Afternoon</div>
+                                </div>
+                                <div class="habit-time-item-container">
+                                    <div class="habit-time-item-check-container hidden">
+                                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-time-item-check">
+                                    </div>
+                                    <div class="habit-time-item-text-container">Evening</div>
+                                </div>
+                                <div class="habit-time-item-container">
+                                    <div class="habit-time-item-check-container hidden">
+                                        <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-checkmark-16.png') }}" class="habit-time-item-check">
+                                    </div>
+                                    <div class="habit-time-item-text-container">Night</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="habit-folder-container">
+                        <label for="habit-folder">Folder</label>
+                        <div class="habit-folder-input-box add-habit-input">
+                            <div class="habit-folder-text" data-folder-id="1">Habit Queue</div>
+                            <div class="input-arrow-container">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-up-16.png') }}" class="input-arrow-up">
+                                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-sort-down-16.png') }}" class="input-arrow-down">
+                            </div>
+                            <div class="habit-folder-menu-container add-habit-menu-container hidden">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="habit-date-container">
+                    <label for="habit-date">Start Date</label>
+                    <div class="habit-date-input-box add-habit-input">
+                        <div class="habit-date-text">Today</div>
+                        <input type="date" id="habit-date" min="2025-08-02" max="2025-09-02">
+                    </div>
+                </div>
+            </div>
+            <div class="new-habit-description-container">
+                <label for="new-habit-description">Description</label>
+                <textarea id="new-habit-description" placeholder="Describe your habit" class="add-habit-input"></textarea>
+            </div>
+            <div class="habit-addition-button-container">
+                <button class="add-folder-button habit-add-button" id="habit-add-button">Add Habit</button>
+                <button class="habit-cancel-button hidden">Cancel</button>
+            </div>
+        </div>
+        <div class="folder-add-modal hidden">
+            <div class="folder-add-modal-header">
+                <h4>ADD A FOLDER</h4>
+                <div class="close-modal-icon-container">
+                    <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-close-16.png') }}" class="close-modal-icon" alt="close">
+                </div>
+            </div>
+            <div class="folder-name-icon-input-container">
+                <div class="folder-icon-container">
+                    <div class="folder-icon" id="folderIcon">📁</div>
+                </div>
+
+                <input type="text" placeholder="Folder Name" class="folder-name-input">
+            </div>
+            <div class="folder-color-picker-container">
+                <div class="folder-color-picker-label">Folder Color: </div>
+                <img src="{{ url_for('static', filename='zaeem/habits/images/habits-container-icons/icons8-color-mode-16.png') }}" class="color-picker-icon" id="colorPickerIcon">
+                <input type="color" id="folderColorPicker" class="hidden-color-picker">
+            </div>
+            <button id="addFolderButton" class="add-folder-button">Add Folder</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+.Main-content{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-left: 20px;
+    background-color: #103be6;
+    padding-top: 200px;
+    padding-bottom: 40px; /* Add bottom padding for space */
+}
+
+.showbox{
+    display: flex;
+    width: 95%;
+    height: 60%;
+    background-color: aqua;
+    position: relative;
+    padding: 10px;
+    top: -100px;
+}
+.create_box{
+    display: flex; /* Makes the boxes behave as inline-block elements */
+    width: 100%;
+    height: 95%;
+    background-color: lightgreen;
+    flex-direction: column;
+    margin: 10px;
+}
+.recent_box{
+    display: flex; /* Makes the boxes behave as inline-block elements */
+    width: 100%;
+    height: 95%;
+    background-color: rgb(231, 67, 17);
+    flex-direction: column;
+    margin: 10px;
+}
+.reminder_box{
+    display: flex; /* Makes the boxes behave as inline-block elements */
+    width: 100%;
+    height: 95%;
+    background-color: red;
+    margin: 10px;
+}
+
+
+/* Add this to ensure space at the bottom of the page */
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.Main-content {
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: --bs-primary-bg-subtle; /* or your preferred color */
+    overflow-x: hidden;
+}
+body {
+    width: 100%;
+    height: 100%;
+}
+.container {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+}
+.strip {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.flashcard-container {
+    width: 220px;
+    min-width: 180px;
+    max-width: 260px;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+    background: #222d3b;
+    box-shadow: 1px 0 6px rgba(0,0,0,0.07);
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    position: relative;
+    flex-direction: column;
+    color: white;
+    z-index: 1;
+}
+.feature-menu {
+    width: 3vw;
+    min-width: 40px;
+    height: 100vh;
+    background-color: aqua;
+    display: block;
+}
+.Main-content {
+    flex: 1;
+    height: 100vh;
+}
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 10;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    height: 64px;
+}
+.container {
+    padding-top: 64px !important; /* Push content below header */
+}
+.bi-plus-square{
+    width: 100%;
+    height: 50%;
+    margin-right: 5px;
+    display: flexbox;
+    position: relative;
+}
+.bi-plus-square::-ms-tooltip {
+    visibility: visible;
+    position: relative;
+    content: "create";
+}
+
+.create_button {
+    width: 100%;
+    height: 50%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

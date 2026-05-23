@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='grades/style/dark_mode.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #feature-menu {
+            min-width: 45px;
+            background-color: aqua;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+        .content-wrapper {
+            margin-left: 45px;
+            width: calc(100% - 45px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+    <div id="feature-menu" class="strip bg-gray-300">
+        <a href="{{ url_for('serve_page', page='homepage/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a> 
+        <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a>   
+        <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a>
+        <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a>
+        <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a>
+        <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+            </div>
+        </a>
+        <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+            </div>
+        </a>
+        <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+            <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+            </div>
+        </a>
+    </div>
+    <div class="content-wrapper min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-5xl p-6 sm:p-8 bg-white rounded-2xl shadow-2xl dark:bg-gray-800 transform transition-all duration-500 hover:scale-105">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 dark:text-white mb-8 tracking-wide">My Academic Performance</h1>
+            <div class="divide-y divide-gray-200 dark:divide-gray-700 text-lg">
+                <div class="grid grid-cols-2 gap-4 p-4 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div>Subject</div>
+                    <div class="text-right">Grade</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="text-gray-800 dark:text-gray-200">Math</div>
+                    <div class="font-bold text-right text-indigo-600 dark:text-indigo-400">90</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="text-gray-800 dark:text-gray-200">English</div>
+                    <div class="font-bold text-right text-indigo-600 dark:text-indigo-400">85</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="text-gray-800 dark:text-gray-200">Science</div>
+                    <div class="font-bold text-right text-indigo-600 dark:text-indigo-400">80</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="text-gray-800 dark:text-gray-200">History</div>
+                    <div class="font-bold text-right text-indigo-600 dark:text-indigo-400">85</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="text-gray-800 dark:text-gray-200">Geography</div>
+                    <div class="font-bold text-right text-indigo-600 dark:text-indigo-400">80</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='grades/javascript/theme.js') }}"></script>
+</body>
+</html>

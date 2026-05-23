@@ -219,7 +219,7 @@
                 </div>
                 <!-- Comment Display -->
                 {% if post.comments.count > 0 %}
-                <div class="px-4 py-2 space-y-3 max-h-[300px] overflow-y-auto mb-2">
+                <div class="px-4 py-2 space-y-3 max-h-[300px] overflow-y-auto mb-2 hidden comment-display-section">
                     {% for comment in post.comments.all reversed %}
                     <div class="flex gap-2 text-[15px]">
                         <img src="https://ui-avatars.com/api/?name={{ comment.user.username }}&background=2563eb&color=fff" class="w-8 h-8 rounded-full flex-shrink-0 mt-0.5">
@@ -315,9 +315,15 @@
                 btn.addEventListener('click', function() {
                     const post = this.closest('.Post');
                     const inputSection = post.querySelector('.comment-section');
+                    const displaySection = post.querySelector('.comment-display-section');
                     if(inputSection) {
-                        inputSection.classList.remove('hidden');
-                        inputSection.querySelector('.comment-input').focus();
+                        inputSection.classList.toggle('hidden');
+                        if (!inputSection.classList.contains('hidden')) {
+                            inputSection.querySelector('.comment-input').focus();
+                        }
+                    }
+                    if(displaySection) {
+                        displaySection.classList.toggle('hidden');
                     }
                 });
             });

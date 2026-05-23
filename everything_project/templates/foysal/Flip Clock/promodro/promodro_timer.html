@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Promodro • Flexible Focus Timer</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='foysal/Flip Clock/promodro/timer-styles.css') }}" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+        <script src="https://cdn.tailwindcss.com"></script>
+
+    </head>
+
+    <body>
+        <div id="feature-menu" class="strip bg-gray-300">
+            <a href="{{ url_for('home') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards"
+                        class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+        </div>
+        <div class="timer-container">
+            <header class="timer-header">
+                <h1 class="timer-title">Promodro Timer</h1>
+                <p class="timer-subtitle" id="sessionSubtitle">Select a session length to begin</p>
+            </header>
+
+            <!-- Session duration selection -->
+            <div class="session-select">
+                <button class="session-btn" data-minutes="25">25&nbsp;min</button>
+                <button class="session-btn" data-minutes="30">30&nbsp;min</button>
+                <button class="session-btn" data-minutes="50">50&nbsp;min</button>
+                <input type="number" id="customInput" placeholder="Custom min" min="1" />
+                <input type="number" id="customBreak" placeholder="Break" min="1" />
+                <button id="customStart">Start</button>
+            </div>
+
+            <main>
+                <div class="clock-container">
+                    <div class="flip-clock">
+                        <!-- Minutes -->
+                        <div class="flip-unit-container">
+                            <div class="flip-card" data-minutes-tens></div>
+                            <div class="flip-card" data-minutes-ones></div>
+                        </div>
+                        <div class="separator">:</div>
+                        <!-- Seconds -->
+                        <div class="flip-unit-container">
+                            <div class="flip-card" data-seconds-tens></div>
+                            <div class="flip-card" data-seconds-ones></div>
+                        </div>
+                    </div>
+                    <div class="timer-display">
+                        <div class="progress-container">
+                            <svg class="progress-circle" viewBox="0 0 100 100">
+                                <circle class="progress-bg" cx="50" cy="50" r="45" />
+                                <circle class="progress-fill" cx="50" cy="50" r="45" stroke-dasharray="283"
+                                    stroke-dashoffset="0" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="timer-label" id="timerLabel">Waiting…</div>
+                    <div class="timer-state" id="timerState"></div>
+                </div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn btn-primary" disabled>
+                <i class="fas fa-play"></i> Start
+            </button>
+            <button id="pauseBtn" class="btn btn-outline" disabled>
+                <i class="fas fa-pause"></i> Pause
+            </button>
+            <button id="resetBtn" class="btn btn-outline" disabled>
+                <i class="fas fa-redo"></i> Reset
+            </button>
+        </div>
+        </main>
+
+        <footer class="navigation" style="margin-top:2rem;text-align:center;">
+            <button class="btn btn-outline" onclick="window.location.href='{{ url_for('serve_page', page='foysal/Flip Clock/promodro/Homepage/promodro_Homepage.html') }}'">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+        </footer>
+        </div>
+
+        <script>
+            // Flip clock helper to create all faces for a card
+            function createFlipCard(element) {
+                const top = document.createElement('div');
+                top.classList.add('top');
+                const bottom = document.createElement('div');
+                bottom.classList.add('bottom');
+
+                const topFlip = document.createElement('div');
+                topFlip.classList.add('top-flip');
+                const bottomFlip = document.createElement('div');
+                bottomFlip.classList.add('bottom-flip');
+
+                // Append faces to the card (no overlay; static halves are always visible)
+                element.append(top, bottom, topFlip, bottomFlip);
+
+                // Overlay to show digit when idle
+                const overlay = document.createElement('div');
+                overlay.classList.add('digit-overlay');
+                element.appendChild(overlay);
+
+                // Track the currently displayed digit for change detection
+                return { el: element, top, bottom, topFlip, bottomFlip, overlay, current: null };
+            }
+
+            const cards = {};
+            // Track previous digits to decide when to flip
+            let prev = { mT: null, mO: null, sT: null, sO: null };
+            let timer, totalSeconds, currentTime, breakSeconds = 0,
+                isRunning = false, isPaused = false, isBreak = false;
+
+            const minutesTensEl = document.querySelector('[data-minutes-tens]');
+            const minutesOnesEl = document.querySelector('[data-minutes-ones]');
+            const secondsTensEl = document.querySelector('[data-seconds-tens]');
+            const secondsOnesEl = document.querySelector('[data-seconds-ones]');
+
+            cards.minutesTens = createFlipCard(minutesTensEl);
+            cards.minutesOnes = createFlipCard(minutesOnesEl);
+            cards.secondsTens = createFlipCard(secondsTensEl);
+            cards.secondsOnes = createFlipCard(secondsOnesEl);
+
+            const timerLabel = document.getElementById('timerLabel');
+            const timerState = document.getElementById('timerState');
+            const progressFill = document.querySelector('.progress-fill');
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const sessionSubtitle = document.getElementById('sessionSubtitle');
+
+            // Session selection
+            // Session selection with predefined break durations
+            document.querySelectorAll('.session-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const mins = parseInt(btn.dataset.minutes);
+                    const br = mins >= 50 ? 10 : 5;
+                    document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    initTimer(mins, br);
+                    startTimer(); // Automatically start the timer
+                });
+            });
+            document.getElementById('customStart').addEventListener('click', () => {
+                const mins = parseInt(document.getElementById('customInput').value);
+                let br = parseInt(document.getElementById('customBreak').value);
+
+                // Default break to 5 minutes if input is empty or invalid
+                if (isNaN(br) || br <= 0) {
+                    br = 5;
+                }
+
+                if (!isNaN(mins) && mins > 0) {
+                    document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+                    initTimer(mins, br);
+                    startTimer(); // Automatically start the timer
+                }
+            });
+
+            function initTimer(minutes, breakMin = 5) {
+                prev = { mT: null, mO: null, sT: null, sO: null };
+                clearInterval(timer);
+                totalSeconds = minutes * 60;
+                breakSeconds = breakMin * 60;
+                currentTime = totalSeconds;
+                isRunning = false; isPaused = false;
+                updateDisplay();
+                updateProgress();
+                timerLabel.textContent = 'Ready';
+                sessionSubtitle.textContent = `${minutes} min focus / ${breakMin} min break`;
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                resetBtn.disabled = true;
+            }
+
+            function startTimer() {
+                if (isRunning) return;
+                isRunning = true;
+                timerLabel.textContent = isBreak ? 'Break!' : 'Focus!';
+                pauseBtn.disabled = false;
+                resetBtn.disabled = false;
+                startBtn.disabled = true;
+                timer = setInterval(() => {
+                    if (currentTime <= 0) {
+                        clearInterval(timer);
+                        if (!isBreak) {
+                            // Switch to break
+                            isBreak = true;
+                            totalSeconds = breakSeconds;
+                            currentTime = breakSeconds;
+                            updateDisplay();
+                            updateProgress();
+                            timerLabel.textContent = 'Break!';
+                            startTimer(); // auto-start break
+                            return;
+                        } else {
+                            // Session and break complete
+                            timerLabel.textContent = 'Done!';
+                            timerState.textContent = '';
+                            isRunning = false;
+                            startBtn.disabled = false;
+                            pauseBtn.disabled = true;
+                            return;
+                        }
+                    }
+                    currentTime--;
+                    updateDisplay();
+                    updateProgress();
+                }, 1000);
+            }
+
+            function pauseTimer() {
+                if (!isRunning) return;
+                clearInterval(timer);
+                isRunning = false;
+                isPaused = true;
+                timerLabel.textContent = 'Paused';
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+            }
+
+            // Flip animation - single clean implementation
+            function flip(card, newNum, lastNum) {
+                if (newNum === lastNum) return;
+
+                // Prepare faces for animation
+                card.top.textContent = lastNum;
+                card.bottom.textContent = lastNum;
+                card.topFlip.textContent = lastNum;
+                card.bottomFlip.textContent = newNum;
+
+                const parent = card.el;
+
+                // Hide overlay during animation
+                if (card.overlay) {
+                    card.overlay.style.visibility = 'hidden';
+                }
+
+                // Trigger animation via class
+                parent.classList.remove('play');
+                void parent.offsetWidth; // Trigger reflow to restart animation if needed
+                parent.classList.add('play');
+
+                // After top flip (0.3s)
+                setTimeout(() => {
+                    card.top.textContent = newNum;
+                }, 300);
+
+                // After bottom flip (0.6s total)
+                setTimeout(() => {
+                    card.bottom.textContent = newNum;
+                    if (card.overlay) {
+                        card.overlay.textContent = newNum;
+                        card.overlay.style.visibility = '';
+                    }
+                    parent.classList.remove('play');
+                }, 600);
+            }
+
+            function updateDisplay() {
+                const mins = Math.floor(currentTime / 60);
+                const secs = currentTime % 60;
+                const minsStr = mins.toString().padStart(2, '0');
+                const secsStr = secs.toString().padStart(2, '0');
+
+                if (prev.mT === null) {
+                    // Initial render - set values directly without animation
+                    cards.minutesTens.top.textContent = minsStr[0];
+                    cards.minutesTens.bottom.textContent = minsStr[0];
+                    if (cards.minutesTens.overlay) cards.minutesTens.overlay.textContent = minsStr[0];
+
+                    cards.minutesOnes.top.textContent = minsStr[1];
+                    cards.minutesOnes.bottom.textContent = minsStr[1];
+                    if (cards.minutesOnes.overlay) cards.minutesOnes.overlay.textContent = minsStr[1];
+
+                    cards.secondsTens.top.textContent = secsStr[0];
+                    cards.secondsTens.bottom.textContent = secsStr[0];
+                    if (cards.secondsTens.overlay) cards.secondsTens.overlay.textContent = secsStr[0];
+
+                    cards.secondsOnes.top.textContent = secsStr[1];
+                    cards.secondsOnes.bottom.textContent = secsStr[1];
+                    if (cards.secondsOnes.overlay) cards.secondsOnes.overlay.textContent = secsStr[1];
+                } else {
+                    // Animate changes
+                    flip(cards.minutesTens, minsStr[0], prev.mT);
+                    flip(cards.minutesOnes, minsStr[1], prev.mO);
+                    flip(cards.secondsTens, secsStr[0], prev.sT);
+                    flip(cards.secondsOnes, secsStr[1], prev.sO);
+                }
+
+                prev = { mT: minsStr[0], mO: minsStr[1], sT: secsStr[0], sO: secsStr[1] };
+            }
+
+            function updateProgress() {
+                const progress = 1 - currentTime / totalSeconds;
+                const circumference = 2 * Math.PI * 45; // r = 45
+                progressFill.style.strokeDashoffset = progress * circumference;
+                // dynamic color from green to red based on progress
+                const hue = (1 - progress) * 120; // 120 -> 0
+                progressFill.style.stroke = `hsl(${hue}, 100%, 50%)`;
+            }
+
+            // Initialize based on "m" query parameter, default 25
+            const qp = parseInt(new URLSearchParams(window.location.search).get('m'));
+            initTimer(!isNaN(qp) && qp > 0 ? qp : 25);
+
+            // Button event listeners
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resetBtn.addEventListener('click', () => {
+                clearInterval(timer);
+                isRunning = false;
+                isPaused = false;
+                isBreak = false;
+                currentTime = totalSeconds;
+                updateDisplay();
+                updateProgress();
+                timerLabel.textContent = 'Ready';
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                resetBtn.disabled = true;
+            });
+
+            // Ripple effect for buttons
+            function createRipple(event) {
+                const button = event.currentTarget;
+                const circle = document.createElement('span');
+                const diameter = Math.max(button.clientWidth, button.clientHeight);
+                const radius = diameter / 2;
+                circle.style.width = circle.style.height = `${diameter}px`;
+                circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+                circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+                circle.classList.add('ripple');
+                const ripple = button.getElementsByClassName('ripple')[0];
+                if (ripple) ripple.remove();
+                button.appendChild(circle);
+            }
+
+            // attach ripple handler
+            setTimeout(() => {
+                document.querySelectorAll('button').forEach(btn => btn.addEventListener('click', createRipple));
+            }, 0);
+
+        </script>
+    </body>
+
+</html>

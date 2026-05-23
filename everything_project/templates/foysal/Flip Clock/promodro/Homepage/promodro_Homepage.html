@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Promodro Timer - A productivity timer for focused work sessions">
+    <title>Promodro Timer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='foysal/Flip Clock/promodro/Homepage/promodro_Homepage.css') }}" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" type="text/css">
+    <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Feature Menu -->
+        <div id="feature-menu">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="Home">
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="To-Do List">
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="Notes">
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="Habits">
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="Flashcards">
+            </a>
+            <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="Calendar">
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="Clock">
+            </a>
+            <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="Grades">
+            </a>
+        </div>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Focus Sessions</h1>
+                <div class="user-menu">
+                    <span class="user-name">Welcome, User</span>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="timer-container">
+                <div class="timer-display">
+                    <div class="time">25:00</div>
+                    <div class="timer-label">Focus Time</div>
+                </div>
+
+                <div class="session-buttons">
+                    <div class="session-card" data-time="25">
+                        <div class="session-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3>Focus Session</h3>
+                        <p>25 min work / 5 min break</p>
+                        <a href="{{ url_for('static', filename='foysal/Flip Clock/promodro/promodro_timer.html?m=25') }}" class="start-btn">Start</a>
+                    </div>
+
+                    <div class="session-card" data-time="50">
+                        <div class="session-icon">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <h3>Deep Work</h3>
+                        <p>50 min work / 10 min break</p>
+                        <a href="{{ url_for('static', filename='foysal/Flip Clock/promodro/promodro_timer.html?m=50') }}" class="start-btn">Start</a>
+                    </div>
+
+                    <div class="session-card" data-time="30">
+                        <div class="session-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3>Study Session</h3>
+                        <p>30 min focus / 5 min break</p>
+                        <a href="{{ url_for('static', filename='foysal/Flip Clock/promodro/promodro_timer.html?m=30') }}" class="start-btn">Start</a>
+                    </div>
+
+                    <div class="session-card custom-session" data-time="custom">
+                        <div class="session-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <h3>Custom Session</h3>
+                        <p>Set your own intervals</p>
+                        <a href="{{ url_for('serve_page', page='foysal/Flip Clock/promodro/promodro_timer.html') }}" class="start-btn">Customize</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="bottom-nav">
+            <div class="nav-buttons">
+                <a href="{{ url_for('serve_page', page='foysal/Flip Clock/promodro/clock/clock.html') }}" class="nav-button clock-button">
+                    <span class="button-icon">🕒</span>
+                    <span class="button-text">Clock</span>
+                </a>
+                <a href="#" class="nav-button promodro-button active">
+                    <span class="button-icon">📊</span>
+                    <span class="button-text">Promodro</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add active class to current nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add hover effect to session cards
+            document.querySelectorAll('.session-card:not(.custom-session)').forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    const time = this.getAttribute('data-time');
+                    const timeDisplay = document.querySelector('.time');
+                    if (timeDisplay) {
+                        timeDisplay.textContent = `${time}:00`;
+                    }
+                });
+            });
+
+            // Reset timer display on mouse leave
+            const timerContainer = document.querySelector('.timer-container');
+            if (timerContainer) {
+                timerContainer.addEventListener('mouseleave', () => {
+                    const timeDisplay = document.querySelector('.time');
+                    const timerLabel = document.querySelector('.timer-label');
+                    if (timeDisplay) timeDisplay.textContent = '25:00';
+                    if (timerLabel) timerLabel.textContent = 'Focus Time';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

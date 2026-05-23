@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/todolist/styles/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/todolist/styles/mix.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+       import { SetEmojiPicker } from "{{ url_for('static', filename='zaeem/general_zaeem/script.js') }}";
+       SetEmojiPicker();
+    </script>
+    <script type="module" src="{{ url_for('static', filename='zaeem/todolist/data/folder.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='zaeem/todolist/data/tasks.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='zaeem/todolist/scripts/script.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='zaeem/todolist/scripts/stats.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='zaeem/todolist/scripts/menu.js') }}" async></script>
+    
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="container">
+        <div id="feature-menu" class="strip bg-gray-300">
+            <a href="{{ url_for('home') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a> 
+            <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>   
+            <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+            <a href="{{ url_for('serve_page', page='grades/index.html') }}">
+                <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
+                    <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
+                </div>
+            </a>
+        </div>
+        <div id="todolist-menu" class="strip">
+            <div class="todo-dates">
+                <div class="todo-date-container" data-date="all">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/all_icon.png') }}" alt="all" class="todo-date-icon">
+                    <div class="todo-date" id="all">All</div>
+                </div>
+                <div class="todo-date-container" data-date="today">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/today_icon.png') }}" alt="today" class="todo-date-icon">
+                    <div class="todo-date" id="today">Today</div>
+                </div>
+                <div class="todo-date-container" data-date="tomorrow">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/tomorrow_icon.png') }}" alt="tomorrow" class="todo-date-icon">
+                    <div class="todo-date" id="tomorrow">Tomorrow</div>
+                </div>
+                <div class="todo-date-container" data-date="overdue">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/overdue.png') }}" alt="Overdue" class="todo-date-icon">
+                    <div class="todo-date" id="overdue">Overdue</div>
+                </div>
+                <div class="todo-date-container" data-date="week">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/week_icon.png') }}" alt="week" class="todo-date-icon">
+                    <div class="todo-date" id="week">This Week</div>
+                </div>
+            </div> 
+            <div class="vertical-line-container">
+                <div class="vertical-line"></div>
+            </div>
+            <div class="todo-folders">
+                <!-- TOP-LEVEL FOLDER -->
+                <details open class="folder-container">
+                    <summary class="summary-row">
+                        <span class="arrow"></span>
+                        <div class="folder-addition-container">
+                            <span>Folders</span>
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/icons8-plus-math-16.png') }}" class="add-folder-icon">
+                        </div>
+                    </summary>
+                    <div class="folder-list">
+                        
+                    </div>
+                </details>
+            </div>
+            <div class="vertical-line-container">
+                <div class="vertical-line"></div>
+            </div>
+            <div class="todo-features-container">
+                <div class="time-tracker-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/features-icons/time_tracker.png') }}" alt="time tracker" class="todo-feature-icon">
+                    <div class="todolist-feature" id="time-tracker">Event Tracker</div>
+                </div>
+                <a href="{{ url_for('serve_page', page='zaeem/todolist/matrix.html') }}">
+                    <div class="matrix-container">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/features-icons/matrix.png') }}" class="todo-feature-icon">
+                        <div class="todolist-feature" id="eisenhower-matrix">Eisenhower Matrix</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div id="todo-container" class="strip">
+            <div class="todo-container-header">
+                <div class="header-container">
+                    <div class="todo-header">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/collapse.png') }}" alt="collapse" class="collapse-sidebar-icon" id="sidebar-icon">
+                        <h2 class="todo-container-date page-title">All</h2>
+                    </div>
+                    <div class="todo-header-icons">
+                        <div class="todo-sort-header-icon-container">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/sort.png') }}" class="todo-header-icon todo-header-sort-icon-js" alt="sort">
+                            <div class="sort-header-icon-menu-container hidden-element">
+                                <div class="group-by-container">
+                                    <div class="group-by-container-left">
+                                        <div class="group-by-icon-container"></div>
+                                        <div class="group-by-text">Group by</div>
+                                    </div>
+                                    <div class="group-by-container-right">
+                                        <div class="grouped-by-text">Date</div>
+                                        <div class="arrow"></div>
+                                    </div>
+                                </div>
+                                <div class="sort-by-container">
+                                    <div class="sort-by-container-left">
+                                        <div class="sort-by-icon-container"></div>
+                                        <div class="sort-by-text">Sort by</div>
+                                    </div>
+                                    <div class="sort-by-container-right">
+                                        <div class="sorted-by-text">Date</div>
+                                        <div class="arrow"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="todo-more-header-icon-container">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/more.png') }}" class="todo-header-icon todo-header-more-icon-js" alt="more">
+                            <div class="more-header-icon-menu-container hidden-element">
+                                <div class="menu-title">View</div>
+                                <div class="vertical-line-menu"></div>
+                                <div class="task-view-options-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/list-view.png') }}" alt="list view" class="task-list-view-option-icon">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/bar-graph.png') }}" alt="grid view" class="task-bar-view-option-icon">
+                                </div>
+                                <div class="vertical-line-menu"></div>
+                                
+                                <div class="todo-default-setting-container">
+                                    <div class="show-completed-tasks-container">
+                                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/task-complete.png') }}" alt="show completed tasks" class="show-completed-tasks-icon">
+                                        <div class="show-completed-tasks-text">Show Completed</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        
+                </div>
+                <div class="todo-input-container">
+                    <div class="input-plus-add-icon-container">
+                        <input type="text" id="todo-input" placeholder="+ Add a new task..." autocomplete="off">
+                    </div>
+                    <div class="todo-input-modifier-icons-div">
+                        <div class="todo-input-modifier-icons-container">
+                            <div class="todo-date-icon-container">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/calendar.png') }}" alt="date" id="todo-date-icon" class="todo-input-modifier-icons hidden">
+                                <div class="todo-date-input-container">
+                                    <input type="date" id="todo-date-input" class="todo-date-input">
+                                </div>
+                                <div class="todo-date-chosen hidden"></div>
+                            </div>
+                            <div class="todo-priority-icon-container">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/grey_flag.png') }}" alt="priority-grey" class="todo-input-modifier-icons todo-input-priority-icon-js hidden">
+                                <div class="todo-priority-menu hidden-element">
+                                    <div class="todo-high-priority-container todo-priority-container">
+                                        <div class="priority-icon-container">
+                                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/red_flag.png') }}" alt="red flag" class="priority-icon">
+                                        </div>
+                                        <div class="priority-text">High</div>
+                                    </div>
+                                    <div class="todo-medium-priority-container todo-priority-container">
+                                        <div class="priority-icon-container">
+                                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/yellow_flag.png') }}" alt="yellow flag flag" class="priority-icon">
+                                        </div>
+                                        <div class="priority-text">Medium</div>
+                                    </div>
+                                    <div class="todo-low-priority-container todo-priority-container">
+                                        <div class="priority-icon-container">
+                                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/blue_flag.png') }}" alt="blue flag" class="priority-icon">
+                                        </div>
+                                        <div class="priority-text">Low</div>
+                                    </div>
+                                    <div class="todo-none-priority-container todo-priority-container">
+                                        <div class="priority-icon-container">
+                                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/grey_flag.png') }}" alt="grey flag" class="priority-icon">
+                                        </div>
+                                        <div class="priority-text">None</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-folder-icon-container">
+                                <div class="todo-input-folder-icon-container hidden">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/move_folder.png') }}" alt="folder" class="todo-input-modifier-icons todo-input-folder-icon-js">
+                                </div>
+                                <div class="todo-folder-menu hidden-element">
+                                    <div class="search-folder-container">
+                                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-search-16.png') }}" alt="search icon" class="search-folder-icon">
+                                        <input type="text" placeholder="Search folders..." class="search-folder-input">
+                                    </div>
+                                    <div class="folder-menu-list-container">
+                                        <div class="folder-menu-dynamic"></div> <!-- ✅ Just folders go here -->
+                                    </div> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="todo-input-icon-container">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/add.png') }}" class="todo-input-icon add-task-button hidden" alt="add">
+                        </div> 
+                    </div> 
+                </div>
+            </div>
+            <div class="todo-list-container">
+                <div class="todo-list">
+                    <div class="task-group" data-date="overdue">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Overdue</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="overdue-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="today">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Today</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="today-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="tomorrow">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Tomorrow</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="tomorrow-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="week">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Next Week</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="next-week-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="later">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Later</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="later-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="none">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">No Date</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="no-date-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="completed">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Completed</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="completed-tasks">
+                            
+                        </div>
+                    </div>
+
+                    <div class="task-group" data-date="wont-do">
+                        <div class="task-group-header">
+                            <div class="arrow"></div>
+                            <div class="group-header">Won't Do</div>
+                            <div class="number-of-tasks">0</div>
+                        </div>
+                        <div class="tasks" id="wont-do-tasks">  
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="responsive-footer">
+                    This website is highly inspired by the 
+                    <a href="https://ticktick.com/" target="_blank">TickTick</a>
+                    to-do list.
+                </footer>
+            </div>
+        </div>
+        <div id="todo-stats">
+            <div class="important-task-info-container">
+                <div class="important-task-info-container-left">
+                    <input type="checkbox" class="task-checkbox-stats priority-none-checkbox">
+                    <div class="task-due-date-container-stats">
+                        <div class="due-date-icon-container">
+                            <input type="date" class="todo-date-input-stats">
+                        </div>
+                        <div class="task-due-date-stats"></div>
+                    </div>
+                </div>
+                <div class="important-task-info-container-right">
+                    <div class="task-priority-container-stats">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/grey_flag.png') }}" alt="priority" class="task-priority-icon">
+                        <div class="todo-priority-menu-stats hidden-element">
+                            <div class="todo-high-priority-container todo-priority-container">
+                                <div class="priority-icon-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/red_flag.png') }}" alt="red flag" class="priority-icon">
+                                </div>
+                                <div class="priority-text">High</div>
+                            </div>
+                            <div class="todo-medium-priority-container todo-priority-container">
+                                <div class="priority-icon-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/yellow_flag.png') }}" alt="yellow flag flag" class="priority-icon">
+                                </div>
+                                <div class="priority-text">Medium</div>
+                            </div>
+                            <div class="todo-low-priority-container todo-priority-container">
+                                <div class="priority-icon-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/blue_flag.png') }}" alt="blue flag" class="priority-icon">
+                                </div>
+                                <div class="priority-text">Low</div>
+                            </div>
+                            <div class="todo-none-priority-container todo-priority-container">
+                                <div class="priority-icon-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/priorities-icon/grey_flag.png') }}" alt="grey flag" class="priority-icon">
+                                </div>
+                                <div class="priority-text">None</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-description-icon-container add-sub-task-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/list.png') }}" alt="sub-task" class="task-listing-icon add-sub-task-icon">
+                    </div>
+                </div>
+                
+                
+            </div>
+            <div class="task-title">
+                <div class="placeholder">Choose a task to edit</div>
+            </div>
+            <div class="task-description-container">
+                <div class="description placeholder" id="editable-description-stats" >
+                    Write description for the task...
+                </div>
+            </div>
+            <div class="sub-task-list">
+               <!--SubTasks dynamically go here-->
+            </div>
+            <div class="task-edit-container">
+                <div class="task-edit-container-left">
+                    <div class="task-folder-container-stats"></div>
+                    <div class="todo-folder-menu hidden-element" id="stats-todo-folder-menu">
+                        <div class="search-folder-container">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-search-16.png') }}" alt="search icon" class="search-folder-icon">
+                            <input type="text" placeholder="Search folders..." class="search-folder-input">
+                        </div>
+                        <div class="folder-menu-list-container">
+                            <div class="folder-menu-dynamic"></div> 
+                        </div> 
+                    </div>
+
+                </div>
+                <div class="task-edit-container-right">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/more.png') }}" class="task-more-icon" alt="more" id="stats-task-more-icon">
+                    <div class="task-more-icon-menu-container hidden-element" id="stats-task-more-icon-menu">
+                        <section class="task-more-section" id="stats-task-more-section">
+                            <div class="task-more-icon-section-container add-subtask-container-stats">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/Subtask.png') }}" alt="subtask" class="task-more-section-icon">
+                                <div class="task-more-action-name">Add Subtask</div>
+                            </div>
+                            <div class="task-more-icon-section-container" id="stats-task-more-icon-section-container">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/move_folder.png') }}" alt="move" class="task-more-section-icon">
+                                <div class="task-more-action-name">Move To</div>
+                                <div class="task-more-folder-icon-container">
+                                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-forward-16.png') }}" class="task-more-folder-icon">
+                                </div>
+                            </div>
+                        </section>
+                        <section class="task-more-section">
+                            <div class="task-more-icon-section-container">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-remove-50.png') }}" alt="edit" class="task-more-section-icon">
+                                <div class="task-more-action-name">Won't Do</div>
+                            </div>
+                            <div class="task-more-icon-section-container task-delete-icon-container">
+                                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-trash-can-50.png') }}" alt="delete" class="task-more-section-icon">
+                                <div class="task-more-action-name">Delete</div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-overlay" class="hidden-element">
+        <div class="modal-box">
+            <header class="modal-box-header">
+                <h4>ADD A FOLDER</h4>
+                <div class="close-modal-icon-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-close-16.png') }}" class="close-modal-icon">
+                </div>
+            </header>
+            <div class="folder-name-icon-input-container">
+                <div class="folder-icon-container">
+                    <div class="folder-icon" id="folderIcon">📁</div>
+                </div>
+
+                <input type="text" placeholder="Folder Name" class="folder-name-input">
+            </div>
+            <div class="folder-color-picker-container">
+                <div class="folder-color-picker-label">Folder Color: </div>
+                <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/icons8-color-mode-16.png') }}" class="color-picker-icon" id="colorPickerIcon">
+                <input type="color" id="folderColorPicker" class="hidden-color-picker">
+            </div>
+            <button class="add-folder-button">Add Folder</button>
+        </div>
+    </div>
+    <div id="global-subtask-menu" class="sub-task-more-menu hidden-element"></div>
+</body>
+</html>

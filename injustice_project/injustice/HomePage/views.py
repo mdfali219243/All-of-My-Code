@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .models import VideoPost, Comment
+from .models import VideoPost, Comment, DebateRoom, DebateMessage
 
 @login_required(login_url='login')
 def profile(request, username):
@@ -35,10 +35,12 @@ def home(request):
 
     # Fetch all video posts dynamically
     posts = VideoPost.objects.all().order_by('-created_at')
+    debates = DebateRoom.objects.filter(is_active=True).order_by('-created_at')
     
     return render(request, 'home.html', {
         'user': request.user,
-        'posts': posts
+        'posts': posts,
+        'debates': debates
     })
 
 @login_required(login_url='login')
@@ -109,3 +111,44 @@ def register(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+@login_required(login_url='login')
+def create_debate(request):
+    if request.method == 'POST':
+        topic = request.POST.get('topic', '').strip()
+        if topic:
+            room = DebateRoom.objects.create(topic=topic, creator=request.user)
+            return redirect('debate_room', room_id=room.id)
+    return redirect('home')
+
+@login_required(login_url='login')
+def debate_room(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+    return render(request, 'debate_room.html', {'room': room, 'user': request.user})
+
+@login_required(login_url='login')
+@require_POST
+def send_debate_message(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+    text = request.POST.get('message', '').strip()
+    if text:
+        msg = DebateMessage.objects.create(room=room, user=request.user, text=text)
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error'})
+
+@login_required(login_url='login')
+def get_debate_messages(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+    last_id = request.GET.get('last_id', 0)
+    messages = room.messages.filter(id__gt=last_id).order_by('created_at')
+    
+    data = []
+    for msg in messages:
+        data.append({
+            'id': msg.id,
+            'user': msg.user.first_name or msg.user.username,
+            'text': msg.text,
+            'created_at': msg.created_at.strftime('%H:%M'),
+            'is_me': msg.user == request.user
+        })
+    return JsonResponse({'messages': data})

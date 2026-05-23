@@ -1,0 +1,81 @@
+.eisenhower-matrix-container {
+    width: 80%;
+    background-color: rgba(234, 234, 234, 0.5);
+}
+
+.matrix-header-container,
+.left-side-matrix-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.matrix-header-container {
+    padding: 10px;
+}
+
+.left-side-matrix-header {
+    gap: 10px;
+}
+
+.matrix-content {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    gap: 10px;
+    height: 100%;
+}
+
+.matrix-content-left, .matrix-content-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 50%; 
+    height: 100%;
+}
+
+.priority-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    height: 50%;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden
+}
+
+.priority-header, 
+.priority-header-left, 
+.priority-header-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.priority-header {
+    padding: 10px;
+    height: 20px;
+}
+
+.more-icon-container,
+.priority-task-add-icon-container {
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+#priority-high-add-icon, 
+#priority-high-more-icon,
+.priority-low-add-icon,
+.priority-low-more-icon,
+.priority-medium-add-icon,
+.priority-medium-more-icon {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+}

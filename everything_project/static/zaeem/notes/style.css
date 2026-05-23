@@ -1,0 +1,35 @@
+*, body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+#feature-menu {
+    min-width: 45px;
+}
+
+.line-hover-zone::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3rem;
+    width: 3rem;
+    pointer-events: auto; /* allows icons to be clickable */
+}
+
+.box-shadow-normal {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+
+.list-line {
+  display: flex;
+  align-items: flex-start;
+}
+.list-marker {
+  min-width: 1.5rem;
+  color: #444;
+}
+
+  

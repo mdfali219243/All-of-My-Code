@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Eisenhower Matrix</title> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/todolist/styles/matrix.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='zaeem/todolist/styles/mix.css') }}">
+        <script src="{{ url_for('static', filename='zaeem/todolist/script.js') }}" defer></script>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <main id="container">
+            <div id="feature-menu" class="strip"></div>
+            <div id="todolist-menu" class="strip">
+                <div class="todo-dates">
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/all_icon.png') }}" alt="all" class="todo-date-icon">
+                    <div class="todo-date" id="all">All</div>
+                </div>
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/today_icon.png') }}" alt="today" class="todo-date-icon">
+                    <div class="todo-date" id="today">Today</div>
+                </div>
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/tomorrow_icon.png') }}" alt="tomorrow" class="todo-date-icon">
+                    <div class="todo-date" id="tomorrow">Tomorrow</div>
+                </div>
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/overdue.png') }}" alt="Overdue" class="todo-date-icon">
+                    <div class="todo-date" id="overdue">Overdue</div>
+                </div>
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/week_icon.png') }}" alt="week" class="todo-date-icon">
+                    <div class="todo-date" id="week">This Week</div>
+                </div>
+                <div class="todo-date-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-dates-icons/planner.png') }}" alt="month" class="todo-date-icon">
+                    <div class="todo-date" id="month">Task Queue</div>
+                </div>
+
+            </div> 
+            <div class="vertical-line-container">
+                <div class="vertical-line"></div>
+            </div>
+            <div class="todo-folders">
+                <!-- TOP-LEVEL FOLDER -->
+                <details open class="folder-container">
+                    <summary class="summary-row">
+                        <span class="arrow"></span>
+                        <div class="folder-addition-container">
+                            <span>Folders</span>
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/plus_icon.png') }}" class="add-folder-icon">
+                        </div>
+                    </summary>
+                    <div class="folder-list">
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/dollar.png') }}" class="folder-icon">
+                            <div class="folder">Business</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/family.png') }}" class="folder-icon">
+                            <div class="folder">Family</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/kaaba.png') }}" class="folder-icon">
+                            <div class="folder">Islam</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/personal_icon.png') }}" class="folder-icon">
+                            <div class="folder">Personal</div>
+                        </div>
+                        <div class="folder-div">
+                            <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-folders-icons/school.png') }}" class="folder-icon">
+                            <div class="folder">School</div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+            <div class="vertical-line-container">
+                <div class="vertical-line"></div>
+            </div>
+            <div class="todo-features-container">
+                <div class="time-tracker-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/features-icons/time_tracker.png') }}" alt="time tracker" class="todo-feature-icon">
+                    <div class="todolist-feature" id="time-tracker">Event Tracker</div>
+                </div>
+                <div class="matrix-container">
+                    <img src="{{ url_for('static', filename='zaeem/todolist/images/features-icons/matrix.png') }}" class="todo-feature-icon">
+                    <div class="todolist-feature" id="eisenhower-matrix">Eisenhower Matrix</div>
+                </div>
+            </div>
+            </div>
+            <div class="eisenhower-matrix-container strip">
+                <div class="matrix-header-container">
+                    <div class="left-side-matrix-header">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/collapse.png') }}" alt="collapse" class="collapse-sidebar-icon">
+                        <h2 class="matrix-header">Eisenhower Matrix</h2>
+                    </div>
+                    <div class="more-icon-container">
+                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/more.png') }}" alt="more" class="todo-header-icon">
+                    </div>
+                </div>
+                <div class="matrix-content">
+                    <div class="matrix-content-left">
+                        <div class="priority-high-container priority-container">
+                            <div class="priority-high-header priority-header">
+                                <div class="priority-header-left">
+                                    <div class="priority-icon-container">
+
+                                    </div>
+                                    <div class="priority-high-title priority-title">High</div>
+                                </div>
+                                <div class="priority-header-right">
+                                    <div class="priority-task-add-icon-container">
+                                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/plus_black.png') }}" alt="add" id="priority-high-add-icon" class="priority-task-add-icon  todo-header-icon">
+                                    </div>
+                                    <div class="more-icon-container">
+                                        <img src="{{ url_for('static', filename='zaeem/todolist/images/todo-container/more.png') }}" alt="more" id="priority-high-more-icon" class="todo-header-icon priority-task-more-icon" >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="priority-high-content priority-content"></div>
+                        </div>
+                        <div class="priority-low-container priority-container"></div>
+                    </div>
+                    <div class="matrix-content-right">
+                        <div class="priority-medium-container priority-container"></div>
+                        <div class="priority-lowest-container priority-container"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

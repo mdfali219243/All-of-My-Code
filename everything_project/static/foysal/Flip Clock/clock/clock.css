@@ -1,0 +1,397 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+#feature-menu {
+    flex: 0 0 auto;
+    width: 3%;
+    min-width: 50px;
+    max-width: 3%;
+    background-color: aqua;
+    display: block;
+    overflow: hidden;
+}
+
+#feature-menu * {
+    max-width: 100%;
+}
+
+/* Always keep static halves hidden to avoid double-render at rest */
+.flip-card .top,
+.flip-card .bottom {
+    visibility: hidden;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
+.container {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+}
+
+.clock-container {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+    overflow: hidden;
+}
+
+.flip-clock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3em;
+    font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-weight: 900;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+    max-width: 100%;
+    flex-shrink: 1;
+}
+
+.flip-unit-container {
+    display: flex;
+    gap: .2em;
+}
+
+.separator {
+    font-size: 7vw;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0 0.2em;
+    font-weight: 900;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.flip-card {
+    position: relative;
+    width: 7vw;
+    height: 10vw;
+    font-size: 7vw;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    overflow: hidden;
+    contain: paint;
+    background: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Full-digit overlay used when idle to avoid any half duplication */
+.digit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #eee;
+    background: transparent;
+    z-index: 6; /* above faces and seam */
+    pointer-events: none;
+    backface-visibility: hidden;
+}
+
+.flip-card.play .digit-overlay {
+    visibility: hidden; /* hide overlay during flip */
+}
+
+/* Subtle seam to hide any tiny overlap between halves during flips */
+.flip-card::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.top, .bottom, .top-flip, .bottom-flip {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2c3e50, #1a1a1a);
+    color: #fff;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    line-height: 1;
+    will-change: transform;
+    box-sizing: border-box;
+    transform: translateZ(0.01px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.top, .top-flip {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333;
+    color: #eee;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    line-height: 1;
+    will-change: transform;
+    box-sizing: border-box; /* make padding fit within 50% height */
+    transform: translateZ(0.01px); /* nudge to avoid z-fighting */
+    top: 0;
+    border-radius: 10px 10px 0 0;
+    align-items: flex-end;
+    padding-bottom: 2px;
+    border-bottom: 0; /* remove hard seam border */
+    z-index: 3;
+}
+
+.bottom, .bottom-flip {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333;
+    color: #eee;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    line-height: 1;
+    will-change: transform;
+    box-sizing: border-box; /* make padding fit within 50% height */
+    transform: translateZ(0.01px); /* nudge to avoid z-fighting */
+    bottom: 0;
+    border-radius: 0 0 10px 10px;
+    align-items: flex-start;
+    padding-top: 2px;
+    border-top: 0; /* remove hard seam border */
+    z-index: 1;
+}
+
+.top-flip {
+    transform-origin: bottom;
+    transform: rotateX(0deg);
+    z-index: 4;
+    display: none; /* hidden when idle */
+}
+
+.flip-card.play .top-flip {
+    display: flex; /* show only while animating */
+    animation: flip-top .5s ease-in forwards;
+}
+
+.bottom-flip {
+    transform-origin: top;
+    transform: rotateX(90deg);
+    z-index: 2;
+    display: none; /* hidden when idle */
+}
+
+.flip-card.play .bottom-flip {
+    display: flex; /* show only while animating */
+    animation: flip-bottom .5s ease-out .5s forwards;
+}
+
+/* During animation, hide static bottom to avoid overlap illusion */
+.flip-card.play .bottom {
+    visibility: hidden;
+}
+/* Also hide static top while flipping to avoid overlap with top-flip */
+.flip-card.play .top {
+    visibility: hidden;
+}
+
+@keyframes flip-top {
+    0% { 
+        transform: rotateX(0deg);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    100% { 
+        transform: rotateX(-90deg);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+}
+
+@keyframes flip-bottom {
+    0% { 
+        transform: rotateX(90deg);
+        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
+    }
+    100% { 
+        transform: rotateX(0deg);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+}
+
+button, .promodro-button button {
+    padding: 18px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(0);
+    min-width: 200px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.clock-button {
+    background: linear-gradient(45deg, #2196F3, #00B0FF);
+    color: white;
+    border: 2px solid rgba(33, 150, 243, 0.3);
+}
+
+.clock-button:hover {
+    background: linear-gradient(45deg, #1E88E5, #0091EA);
+    border-color: rgba(33, 150, 243, 0.5);
+}
+
+.promodro-button button {
+    background: linear-gradient(45deg, #FF4081, #F50057);
+    color: white;
+    border: 2px solid rgba(255, 64, 129, 0.3);
+}
+
+.promodro-button button:hover {
+    background: linear-gradient(45deg, #F50057, #C51162);
+    border-color: rgba(255, 64, 129, 0.5);
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.25);
+}
+
+button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-100%) skewX(-15deg);
+    transition: transform 0.6s ease;
+}
+
+button:hover::before {
+    transform: translateX(100%) skewX(-15deg);
+}
+
+/* Add a subtle pulse animation to the active button */
+button.active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translateY(-3px) scale(1);
+        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7), 0 10px 25px rgba(33, 150, 243, 0.2);
+    }
+    50% {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 0 0 10px rgba(33, 150, 243, 0), 0 15px 30px rgba(33, 150, 243, 0.3);
+    }
+    100% {
+        transform: translateY(-3px) scale(1);
+        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7), 0 10px 25px rgba(33, 150, 243, 0.2);
+    }
+}
+
+.button-container {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7));
+    position: fixed;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 30px 0;
+    z-index: 1000;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+}
+
+.button-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.button-hint {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin-top: 10px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.button-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+button:hover .button-icon {
+    transform: scale(1.2);
+}
+
+.button-text {
+    position: relative;
+    z-index: 2;
+}

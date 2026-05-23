@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/dark_mode.css') }}">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto mt-10">
+        <div class="mb-4">
+            <button aria-label="Back to Calendar" onclick="window.location.href='{{ url_for('serve_page', page='calendar/index.html') }}'" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span class="sr-only">Back to Calendar</span>
+            </button>
+        </div>
+        <h1 class="text-3xl font-bold">Events Page</h1>
+        <p class="mt-4">This is the events page.</p>
+        <div id="eventsList" class="mt-6 space-y-3"></div>
+    </div>
+    <script src="{{ url_for('static', filename='calendar/javascript/theme.js') }}"></script>
+    <script>
+      (function () {
+        function formatTime12(timeString) {
+          if (!timeString) return '';
+          const [hourStr, minuteStr] = timeString.split(':');
+          const hour = Number(hourStr), minute = Number(minuteStr || 0);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const hour12 = hour % 12 || 12;
+          return `${hour12}:${String(minute).padStart(2, '0')} ${ampm}`;
+        }
+
+        function formatDateDisplay(dateStr) {
+          if (!dateStr) return '';
+          const d = new Date(`${dateStr}T00:00:00`);
+          return isNaN(d) ? new Date(dateStr).toLocaleDateString() : d.toLocaleDateString();
+        }
+
+        function timeToMinutes(t) {
+          if (!t) return -1; // all-day or no time -> sort before timed
+          const [h, m] = t.split(':').map(Number);
+          return (h || 0) * 60 + (m || 0);
+        }
+
+        let events = [];
+        try {
+          const raw = localStorage.getItem('calendarEvents');
+          events = raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          events = [];
+        }
+
+        // Sort by date ASC, then all-day first, then start time ASC
+        events.sort((a, b) => {
+          const aDate = a?.date || '';
+          const bDate = b?.date || '';
+          if (aDate !== bDate) return aDate < bDate ? -1 : 1; // ISO YYYY-MM-DD safe compare
+          const aAll = !!a?.allDay, bAll = !!b?.allDay;
+          if (aAll !== bAll) return aAll ? -1 : 1;
+          return timeToMinutes(a?.startTime) - timeToMinutes(b?.startTime);
+        });
+
+        const list = document.getElementById('eventsList');
+        if (!list) return;
+
+        if (!events.length) {
+          list.innerHTML = '<div class="text-gray-500 dark:text-gray-300">No events yet.</div>';
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+
+        let currentDateKey = null;
+        events.forEach(evt => {
+          const dateKey = evt?.date || '';
+
+          // New date heading
+          if (dateKey !== currentDateKey) {
+            currentDateKey = dateKey;
+            const heading = document.createElement('h2');
+            heading.className = 'text-xl font-semibold mt-6 mb-2 border-b pb-1';
+            heading.textContent = formatDateDisplay(dateKey) || '(No date)';
+            frag.appendChild(heading);
+          }
+
+          // Event entry as expandable details
+          const details = document.createElement('details');
+          details.className = 'border rounded-md p-3';
+
+          const summary = document.createElement('summary');
+          summary.className = 'flex items-start gap-3 cursor-pointer select-none';
+
+          const color = evt?.color || '#3b82f6';
+          const dot = document.createElement('span');
+          dot.className = 'inline-block w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0';
+          dot.style.backgroundColor = color;
+
+          const summaryText = document.createElement('div');
+          const title = document.createElement('div');
+          title.className = 'font-semibold';
+          title.textContent = evt?.title || '(Untitled)';
+
+          const meta = document.createElement('div');
+          meta.className = 'text-sm text-gray-600 dark:text-gray-300';
+          const timePart = evt?.allDay
+            ? 'All Day'
+            : (evt?.startTime && evt?.endTime)
+              ? `${formatTime12(evt.startTime)} – ${formatTime12(evt.endTime)}`
+              : (evt?.startTime ? `${formatTime12(evt.startTime)}` : '');
+          meta.textContent = timePart;
+
+          summaryText.appendChild(title);
+          if (timePart) summaryText.appendChild(meta);
+
+          summary.appendChild(dot);
+          summary.appendChild(summaryText);
+
+          const body = document.createElement('div');
+          body.className = 'mt-2 text-sm';
+          const dateRange = (evt?.endDate && evt.endDate !== evt.date)
+            ? `${formatDateDisplay(evt.date)} – ${formatDateDisplay(evt.endDate)}`
+            : `${formatDateDisplay(evt.date)}`;
+          const dateLine = document.createElement('div');
+          dateLine.className = 'text-gray-600 dark:text-gray-300';
+          dateLine.textContent = timePart ? `${dateRange} • ${timePart}` : `${dateRange}`;
+          body.appendChild(dateLine);
+
+          const descText = document.createElement('div');
+          descText.className = 'text-gray-500 dark:text-gray-400 mt-1';
+          descText.textContent = (evt?.description && String(evt.description).trim().length)
+            ? evt.description
+            : 'No description';
+          body.appendChild(descText);
+
+          details.appendChild(summary);
+          details.appendChild(body);
+          frag.appendChild(details);
+        });
+
+        list.appendChild(frag);
+      })();
+    </script>
+</body>
+</html>

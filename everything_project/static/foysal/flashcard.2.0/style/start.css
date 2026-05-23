@@ -1,0 +1,74 @@
+#create_box, .create_box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.create_button {
+    background: #007bff;
+    border: none;
+    border-radius: 50%;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    transition: background 0.2s;
+}
+.create_button:hover {
+    background: #0056b3;
+}
+.bi-plus-square {
+    width: 32px;
+    height: 32px;
+}
+#flashcard-list .flashcard {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 18px 20px 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 1px solid #e3e6ed;
+}
+#flashcard-list .flashcard:hover {
+    background: #e9ecef;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
+.flashcard .question {
+    font-weight: 600;
+    color: #222d3b;
+    font-size: 1.1rem;
+}
+.flashcard .answer {
+    color: #495057;
+    margin-top: 8px;
+    display: none;
+    font-size: 1rem;
+}
+.flashcard.show-answer .answer {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.flashcard .delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.flashcard .delete-btn:hover {
+    color: #a71d2a;
+}
