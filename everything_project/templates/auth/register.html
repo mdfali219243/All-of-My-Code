@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Everything Project</title>
+    <!-- Use Outfit font for premium tech feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mesh-bg {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(242,56%,35%,0.15) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(258,45%,28%,0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(225,80%,15%,0.3) 0, transparent 50%);
+        }
+    </style>
+</head>
+<body class="mesh-bg text-gray-100 flex items-center justify-center min-h-screen p-4 overflow-hidden relative font-sans">
+    
+    <!-- Decorative floating glowing blobs -->
+    <div class="absolute w-96 h-96 rounded-full bg-blue-500/10 blur-[100px] top-10 left-10 pointer-events-none animate-pulse"></div>
+    <div class="absolute w-96 h-96 rounded-full bg-purple-500/10 blur-[100px] bottom-10 right-10 pointer-events-none animate-pulse"></div>
+
+    <div class="glass w-full max-w-md p-8 rounded-3xl shadow-2xl relative z-10 transform hover:scale-[1.01] transition-all duration-300">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 shadow-lg shadow-indigo-500/30 mb-4 transform hover:-rotate-6 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Create Account</h1>
+            <p class="text-sm text-slate-400 mt-2 font-light">Join the portal & configure your workspace</p>
+        </div>
+
+        {% if error %}
+        <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-3 animate-shake">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form action="{{ url_for('register') }}" method="POST" class="space-y-6">
+            {{ csrf_input }}
+            
+            <div class="relative group">
+                <input type="text" id="username" name="username" placeholder=" " required
+                       class="peer w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all duration-200">
+                <label for="username" 
+                       class="absolute left-5 top-4 text-slate-400 text-sm transition-all duration-200 pointer-events-none
+                              peer-placeholder-shown:text-base peer-placeholder-shown:top-4 
+                              peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-purple-400
+                              not-placeholder-shown:top-1.5 not-placeholder-shown:text-xs not-placeholder-shown:text-purple-400">
+                    Username
+                </label>
+            </div>
+
+            <div class="relative group">
+                <input type="password" id="password" name="password" placeholder=" " required
+                       class="peer w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all duration-200">
+                <label for="password" 
+                       class="absolute left-5 top-4 text-slate-400 text-sm transition-all duration-200 pointer-events-none
+                              peer-placeholder-shown:text-base peer-placeholder-shown:top-4 
+                              peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-purple-400
+                              not-placeholder-shown:top-1.5 not-placeholder-shown:text-xs not-placeholder-shown:text-purple-400">
+                    Password
+                </label>
+            </div>
+
+            <div class="relative group">
+                <input type="password" id="confirm_password" name="confirm_password" placeholder=" " required
+                       class="peer w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-transparent focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all duration-200">
+                <label for="confirm_password" 
+                       class="absolute left-5 top-4 text-slate-400 text-sm transition-all duration-200 pointer-events-none
+                              peer-placeholder-shown:text-base peer-placeholder-shown:top-4 
+                              peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-purple-400
+                              not-placeholder-shown:top-1.5 not-placeholder-shown:text-xs not-placeholder-shown:text-purple-400">
+                    Confirm Password
+                </label>
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transform hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200">
+                Register
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-white/5 pt-6 text-sm text-slate-400">
+            Already have an account? 
+            <a href="{{ url_for('login') }}" class="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-150 ml-1">Sign In</a>
+        </div>
+    </div>
+</body>
+</html>

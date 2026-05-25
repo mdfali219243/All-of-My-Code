@@ -67,7 +67,13 @@
     </div>
 
     <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
+            <div class="absolute top-0 right-0 flex items-center gap-4 mt-2">
+                <span class="text-gray-600 dark:text-gray-300">Welcome, <strong>{{ user.username }}</strong>!</span>
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 text-sm font-semibold shadow-md">
+                    Logout
+                </a>
+            </div>
             <h1 class="text-4xl font-bold">My Projects</h1>
             <p class="text-lg text-gray-600 dark:text-gray-400">A collection of my web applications.</p>
         </header>
