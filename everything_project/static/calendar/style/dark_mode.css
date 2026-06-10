@@ -1,13 +1,17 @@
-
-html.dark, body.dark {
+html.dark,
+body.dark {
   background-color: #000 !important;
   color: #fff !important;
 }
 
-html.dark body, html.dark body *, html.dark a {
+html.dark body,
+html.dark body *,
+html.dark a {
   color: #fff !important;
 }
-html.dark *, html.dark hr {
+
+html.dark *,
+html.dark hr {
   border-color: #fff !important;
 }
 
@@ -45,6 +49,7 @@ html.dark .btn {
 html.dark hr {
   background-color: #fff !important;
 }
+
 html.dark a:hover {
   color: #e5e5e5 !important;
 }
@@ -77,7 +82,7 @@ html.dark .day-cell:hover {
 }
 
 html.dark .week-grid-header,
-html.dark .week-grid-header > div,
+html.dark .week-grid-header>div,
 html.dark .week-all-day-row,
 html.dark .all-day-events-container,
 html.dark .time-label-cell,
@@ -100,6 +105,7 @@ html.dark .day-view .day-view-header {
 html.dark #main_view {
   background-color: #000 !important;
 }
+
 html.dark .year-view,
 html.dark #yearGrid {
   background-color: #000 !important;
@@ -111,7 +117,7 @@ html.dark .year-month {
   border-color: #fff !important;
 }
 
-html.dark .year-month > div:first-child {
+html.dark .year-month>div:first-child {
   background-color: #000 !important;
   color: #fff !important;
   border-color: #fff !important;
@@ -122,23 +128,36 @@ html.dark .year-month .text-center {
   color: #fff !important;
 }
 
-html.dark .year-month > div:last-child {
+html.dark .year-month>div:last-child {
   background-color: #000 !important;
 }
 
-html.dark .year-month > div:last-child > div {
+html.dark .year-month>div:last-child>div {
   background-color: #000 !important;
   color: #fff !important;
 }
 
-html.dark .day-all-day-row { background-color: #000 !important; border-color: #fff !important; }
-html.dark .day-all-day-row .time-label { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
-html.dark .day-all-day-row .all-day-events-container { background-color: #000 !important; border-color: #fff !important; }
+html.dark .day-all-day-row {
+  background-color: #000 !important;
+  border-color: #fff !important;
+}
+
+html.dark .day-all-day-row .time-label {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html.dark .day-all-day-row .all-day-events-container {
+  background-color: #000 !important;
+  border-color: #fff !important;
+}
 
 /* Dark mode default tint for all-day events without custom color */
 html.dark .all-day-event.event-default,
 html.dark .event-cell.event-default {
-  background-color: rgba(66, 133, 244, 0.35) !important; /* subtle Google blue */
+  background-color: rgba(66, 133, 244, 0.35) !important;
+  /* subtle Google blue */
   color: #e8eaed !important;
   border-left: 3px solid #4285F4 !important;
 }
@@ -152,10 +171,17 @@ html.dark .month-event.event-default {
 
 /* Make Bootstrap close (×) button white in dark mode */
 html.dark .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%) !important; /* turn black SVG to white */
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+  /* turn black SVG to white */
   opacity: 1 !important;
   background-color: transparent !important;
 }
+
+html.dark .btn-close:hover,
+html.dark .btn-close:focus {
+  opacity: 0.85 !important;
+}
+
 html.dark .btn-close:hover,
 html.dark .btn-close:focus {
   opacity: 0.85 !important;

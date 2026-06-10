@@ -58,7 +58,9 @@
         <!-- Reels Loop -->
         {% for post in posts %}
         {% if post.video_file %}
-        <div class="reel-item relative w-full h-full snap-start snap-always bg-slate-900 flex items-center justify-center group overflow-hidden">
+        <div class="reel-item relative w-full h-full snap-start snap-always bg-slate-900 flex items-center justify-center group overflow-hidden"
+             data-post-id="{{ post.id }}"
+             data-username="{{ post.user.username }}">
             <video class="absolute inset-0 w-full h-full object-cover scale-105" 
                    src="{{ post.video_file.url }}" 
                    loop muted playsinline preload="auto">
@@ -91,48 +93,61 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-5 pb-2 pointer-events-auto absolute right-4 bottom-6 z-40">
-                    <a href="{% url 'profile' post.user.username %}" class="relative w-12 h-12 rounded-full bg-white flex flex-col justify-center items-center p-0.5 cursor-pointer shadow-lg hover:scale-105 transition block">
-                        <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=2563eb&color=fff" class="w-full h-full rounded-full object-cover">
-                        <div class="absolute -bottom-2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center border-2 border-black/80">
+                    <div class="relative w-12 h-12">
+                        <a href="{% url 'profile' post.user.username %}" class="w-12 h-12 rounded-full bg-white flex flex-col justify-center items-center p-0.5 cursor-pointer shadow-lg hover:scale-105 transition block">
+                            <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=2563eb&color=fff" class="w-full h-full rounded-full object-cover" alt="{{ post.user.username }}">
+                        </a>
+                        {% if post.user != user %}
+                        <button type="button"
+                                class="follow-btn absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center border-2 border-black/80 transition-transform active:scale-90 {% if post.user.id in followed_ids %}bg-slate-600{% else %}bg-pink-500{% endif %}"
+                                data-username="{{ post.user.username }}"
+                                aria-label="{% if post.user.id in followed_ids %}Unfollow{% else %}Follow{% endif %} {{ post.user.username }}">
+                            {% if post.user.id in followed_ids %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            {% else %}
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white font-bold" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
-                        </div>
-                    </a>
+                            {% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
 
-                    <button class="flex flex-col items-center gap-1 group action-btn mt-2">
+                    <button type="button" class="flex flex-col items-center gap-1 group action-btn like-btn mt-2" data-post-id="{{ post.id }}" aria-label="Like">
                         <div class="w-10 h-10 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-active:scale-90 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-white group-hover:text-pink-500 transition-colors" fill="currentColor" viewBox="0 0 24 24" stroke="black" stroke-width="0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 like-icon transition-colors {% if request.user in post.likes.all %}text-pink-500{% else %}text-white group-hover:text-pink-500{% endif %}" fill="currentColor" viewBox="0 0 24 24" stroke="black" stroke-width="0.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                             </svg>
                         </div>
-                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide">{{ post.likes.count }}</span>
+                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide like-count">{{ post.likes.count }}</span>
                     </button>
 
-                    <button class="flex flex-col items-center gap-1 group action-btn">
+                    <button type="button" class="flex flex-col items-center gap-1 group action-btn comment-btn" data-post-id="{{ post.id }}" aria-label="Comment">
                         <div class="w-10 h-10 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-active:scale-90 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-white opacity-95 group-hover:text-gray-300 transition" fill="currentColor" viewBox="0 0 24 24" stroke="black" stroke-width="0.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
                             </svg>
                         </div>
-                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide">{{ post.comments.count }}</span>
+                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide comment-count">{{ post.comments.count }}</span>
                     </button>
 
-                    <button class="flex flex-col items-center gap-1 group action-btn">
+                    <button type="button" class="flex flex-col items-center gap-1 group action-btn share-btn" data-post-id="{{ post.id }}" aria-label="Share">
                         <div class="w-10 h-10 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-active:scale-90 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-white opacity-95 group-hover:text-blue-400 transition" fill="currentColor" viewBox="0 0 24 24" stroke="black" stroke-width="0.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
                             </svg>
                         </div>
-                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide">Share</span>
+                        <span class="text-xs font-semibold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white/90 tracking-wide share-label">Share</span>
                     </button>
 
-                    <div class="w-12 h-12 rounded-full bg-[#1e1e1e] flex items-center justify-center p-2 music-disc border border-slate-600 mt-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                    <button type="button" class="w-12 h-12 rounded-full bg-[#1e1e1e] flex items-center justify-center p-2 music-disc border border-slate-600 mt-2 shadow-[0_0_15px_rgba(0,0,0,0.5)] mute-btn cursor-pointer hover:scale-105 transition-transform active:scale-95" aria-label="Toggle sound">
                          <div class="w-full h-full rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center overflow-hidden relative">
-                            <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=2563eb&color=fff" class="absolute inset-0 w-full h-full opacity-50 mix-blend-overlay">
+                            <img src="https://ui-avatars.com/api/?name={{ post.user.username }}&background=2563eb&color=fff" class="absolute inset-0 w-full h-full opacity-50 mix-blend-overlay" alt="">
                             <div class="w-3 h-3 bg-black rounded-full z-10"></div>
                          </div>
-                    </div>
+                    </button>
                 </div>
 
             </div>
@@ -149,20 +164,251 @@
 
     </main>
 
+    <!-- Comment drawer -->
+    <div id="commentDrawer" class="fixed inset-0 z-[100] hidden" aria-hidden="true">
+        <div id="commentBackdrop" class="absolute inset-0 bg-black/60"></div>
+        <div class="absolute bottom-0 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-[450px] bg-[#1a1a1a] rounded-t-2xl border-t border-slate-700 flex flex-col max-h-[70vh] animate-[slideUp_0.25s_ease-out]">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+                <h3 class="font-semibold text-white"><span id="commentCountHeader">0</span> comments</h3>
+                <button type="button" id="closeComments" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition" aria-label="Close comments">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+            <div id="commentList" class="flex-1 overflow-y-auto px-4 py-3 space-y-3 no-scrollbar"></div>
+            <form id="commentForm" class="p-3 border-t border-slate-700 flex items-center gap-2">
+                <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=2563eb&color=fff" class="w-8 h-8 rounded-full flex-shrink-0" alt="">
+                <input type="text" id="commentInput" placeholder="Add a comment..." class="flex-1 bg-slate-800 rounded-full px-4 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-pink-500/50" autocomplete="off">
+                <button type="submit" class="text-pink-500 font-semibold text-sm px-2 hover:text-pink-400 transition disabled:opacity-40" id="commentSubmit" disabled>Post</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] bg-slate-800 text-white text-sm px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrftoken = getCookie('csrftoken');
+
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                setTimeout(() => toast.classList.replace('opacity-100', 'opacity-0'), 2000);
+            }
+
+            let activePostId = null;
+
+            const commentDrawer = document.getElementById('commentDrawer');
+            const commentList = document.getElementById('commentList');
+            const commentForm = document.getElementById('commentForm');
+            const commentInput = document.getElementById('commentInput');
+            const commentSubmit = document.getElementById('commentSubmit');
+            const commentCountHeader = document.getElementById('commentCountHeader');
+
+            function renderComment(c) {
+                const el = document.createElement('div');
+                el.className = 'flex gap-2';
+                el.innerHTML = `
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.username)}&background=2563eb&color=fff" class="w-8 h-8 rounded-full flex-shrink-0" alt="">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm"><span class="font-semibold text-white">${c.display_name}</span> <span class="text-slate-400 text-xs ml-1">${c.created_at}</span></p>
+                        <p class="text-sm text-slate-200 mt-0.5 break-words">${c.text.replace(/</g, '&lt;')}</p>
+                    </div>`;
+                return el;
+            }
+
+            function updateCommentCount(postId, count) {
+                const reel = document.querySelector(`.reel-item[data-post-id="${postId}"]`);
+                if (reel) {
+                    const countEl = reel.querySelector('.comment-count');
+                    if (countEl) countEl.textContent = count;
+                }
+                commentCountHeader.textContent = count;
+            }
+
+            function openComments(postId) {
+                activePostId = postId;
+                commentList.innerHTML = '<p class="text-slate-400 text-sm text-center py-4">Loading...</p>';
+                commentDrawer.classList.remove('hidden');
+                commentDrawer.setAttribute('aria-hidden', 'false');
+                commentInput.value = '';
+                commentSubmit.disabled = true;
+
+                fetch(`/post/${postId}/comments/`)
+                    .then(r => r.json())
+                    .then(data => {
+                        commentList.innerHTML = '';
+                        commentCountHeader.textContent = data.comments_count;
+                        if (data.comments.length === 0) {
+                            commentList.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">No comments yet. Be the first!</p>';
+                        } else {
+                            data.comments.forEach(c => commentList.appendChild(renderComment(c)));
+                        }
+                        commentInput.focus();
+                    });
+            }
+
+            function closeComments() {
+                commentDrawer.classList.add('hidden');
+                commentDrawer.setAttribute('aria-hidden', 'true');
+                activePostId = null;
+            }
+
+            document.getElementById('closeComments').addEventListener('click', closeComments);
+            document.getElementById('commentBackdrop').addEventListener('click', closeComments);
+
+            commentInput.addEventListener('input', () => {
+                commentSubmit.disabled = !commentInput.value.trim();
+            });
+
+            commentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = commentInput.value.trim();
+                if (!text || !activePostId) return;
+
+                const formData = new FormData();
+                formData.append('comment_text', text);
+
+                fetch(`/post/${activePostId}/comment/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData,
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        const empty = commentList.querySelector('p.text-center');
+                        if (empty) commentList.innerHTML = '';
+                        commentList.prepend(renderComment(data.comment));
+                        updateCommentCount(activePostId, data.comments_count);
+                        commentInput.value = '';
+                        commentSubmit.disabled = true;
+                    }
+                });
+            });
+
+            document.querySelectorAll('.comment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openComments(btn.dataset.postId);
+                });
+            });
+
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const icon = btn.querySelector('.like-icon');
+                    const countEl = btn.querySelector('.like-count');
+                    const postId = btn.dataset.postId;
+
+                    fetch(`/post/${postId}/like/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.liked) {
+                            icon.classList.remove('text-white', 'group-hover:text-pink-500');
+                            icon.classList.add('text-pink-500');
+                        } else {
+                            icon.classList.remove('text-pink-500');
+                            icon.classList.add('text-white', 'group-hover:text-pink-500');
+                        }
+                        countEl.textContent = data.likes_count;
+                    });
+                });
+            });
+
+            document.querySelectorAll('.share-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const postId = btn.dataset.postId;
+                    const url = `${window.location.origin}/reels/?post=${postId}`;
+                    const label = btn.querySelector('.share-label');
+
+                    try {
+                        if (navigator.share) {
+                            await navigator.share({ title: 'Project Injustice', url });
+                        } else {
+                            await navigator.clipboard.writeText(url);
+                            label.textContent = 'Copied!';
+                            showToast('Link copied to clipboard');
+                            setTimeout(() => { label.textContent = 'Share'; }, 2000);
+                        }
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            await navigator.clipboard.writeText(url);
+                            showToast('Link copied to clipboard');
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.follow-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const username = btn.dataset.username;
+
+                    fetch(`/user/${username}/follow/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.following) {
+                            btn.classList.remove('bg-pink-500');
+                            btn.classList.add('bg-slate-600');
+                            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
+                            btn.setAttribute('aria-label', `Unfollow ${username}`);
+                            showToast(`Following @${username}`);
+                        } else {
+                            btn.classList.remove('bg-slate-600');
+                            btn.classList.add('bg-pink-500');
+                            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>`;
+                            btn.setAttribute('aria-label', `Follow ${username}`);
+                            showToast(`Unfollowed @${username}`);
+                        }
+                    });
+                });
+            });
+
             const reels = document.querySelectorAll('.reel-item');
-            
+
             reels.forEach(reel => {
                 const video = reel.querySelector('video');
                 const overlay = reel.querySelector('.play-pause-overlay');
                 const playIcon = overlay.querySelector('.play-icon');
                 const discContainer = reel.querySelector('.music-disc');
-                
-                reel.addEventListener('click', (e) => {
-                    if(e.target.closest('.action-btn') || e.target.closest('a') || e.target.closest('.marquee')) return;
+                const muteBtn = reel.querySelector('.mute-btn');
 
-                    if(video.paused) {
+                muteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    video.muted = !video.muted;
+                    discContainer.style.opacity = video.muted ? '0.5' : '1';
+                    showToast(video.muted ? 'Sound off' : 'Sound on');
+                });
+
+                reel.addEventListener('click', (e) => {
+                    if (e.target.closest('.action-btn') || e.target.closest('.follow-btn') || e.target.closest('a') || e.target.closest('.marquee') || e.target.closest('.mute-btn')) return;
+
+                    if (video.paused) {
                         video.play();
                         playIcon.classList.add('hidden');
                         overlay.classList.remove('opacity-100');
@@ -182,7 +428,7 @@
                 threshold: 0.7
             };
 
-            const observerCallback = (entries, observer) => {
+            const observerCallback = (entries) => {
                 entries.forEach(entry => {
                     const video = entry.target.querySelector('video');
                     const overlay = entry.target.querySelector('.play-pause-overlay');
@@ -192,11 +438,11 @@
                     if (entry.isIntersecting) {
                         const playPromise = video.play();
                         if (playPromise !== undefined) {
-                            playPromise.then(_ => {
+                            playPromise.then(() => {
                                 playIcon.classList.add('hidden');
                                 overlay.classList.remove('opacity-100');
                                 discContainer.style.animationPlayState = 'running';
-                            }).catch(error => {
+                            }).catch(() => {
                                 video.pause();
                                 playIcon.classList.remove('hidden');
                                 overlay.classList.add('opacity-100', 'bg-black/40');
@@ -212,16 +458,17 @@
             };
 
             const observer = new IntersectionObserver(observerCallback, observerOptions);
+            reels.forEach(reel => observer.observe(reel));
 
-            reels.forEach(reel => {
-                observer.observe(reel);
-            });
-            
             const style = document.createElement('style');
             style.innerHTML = `
                 @keyframes marquee {
                     0% { transform: translateX(100%); }
                     100% { transform: translateX(-150%); }
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
                 }
             `;
             document.head.appendChild(style);

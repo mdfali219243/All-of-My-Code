@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox | Project Injustice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+    </script>
+</head>
+<body class="bg-[#18191a] text-slate-200 font-sans min-h-screen overflow-hidden flex flex-col">
+
+    <header class="sticky top-0 z-50 w-full h-[56px] bg-[#242526] border-b border-[#393a3b] shadow-sm flex items-center justify-between px-4 flex-shrink-0">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'home' %}" class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl hover:bg-indigo-500 transition">
+                <span class="text-transparent bg-clip-text bg-gradient-to-tr from-white to-pink-200">In</span>
+            </a>
+            <div class="hidden md:flex items-center bg-[#3a3b3c] rounded-full px-3 py-2 w-64">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input type="text" placeholder="Search Injustice" class="bg-transparent border-none outline-none text-sm ml-2 text-slate-200 w-full placeholder-gray-400">
+            </div>
+        </div>
+
+        <div class="hidden sm:flex flex-1 justify-center max-w-2xl gap-2 h-full">
+            <a href="{% url 'home' %}" class="w-24 h-full flex items-center justify-center hover:bg-[#3a3b3c] rounded-lg text-gray-400 hover:text-gray-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" /></svg>
+            </a>
+            <a href="{% url 'inbox' %}" class="w-24 h-full flex items-center justify-center text-indigo-500 relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-indigo-500 after:rounded-t-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            </a>
+            <a href="{% url 'reels' %}" class="w-24 h-full flex items-center justify-center hover:bg-[#3a3b3c] rounded-lg text-gray-400 hover:text-gray-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'logout' %}" class="h-10 px-4 rounded-full bg-[#3a3b3c] hover:bg-[#4e4f50] flex items-center justify-center transition text-sm font-medium">Logout</a>
+            <a href="{% url 'profile' user.username %}" class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 overflow-hidden relative border border-[#3a3b3c]">
+                <img src="https://ui-avatars.com/api/?name={{ user.username|default:'U' }}&background=transparent&color=fff" class="w-full h-full object-cover" alt="">
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 max-w-[1200px] w-full mx-auto overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-full sm:w-[360px] border-r border-[#393a3b] bg-[#242526] flex flex-col {% if active_user %}hidden sm:flex{% endif %}">
+            <div class="p-4 border-b border-[#393a3b]">
+                <h1 class="text-2xl font-bold text-white">Inbox</h1>
+                <p class="text-sm text-gray-400 mt-1">Message followers &amp; friends</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                {% if conversations %}
+                <div class="p-2">
+                    <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Chats</p>
+                    {% for item in conversations %}
+                    <a href="{% url 'inbox_chat' item.other_user.username %}"
+                       class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#3a3b3c] transition {% if active_user and active_user.username == item.other_user.username %}bg-[#3a3b3c]{% endif %}">
+                        <img src="https://ui-avatars.com/api/?name={{ item.other_user.username }}&background=2563eb&color=fff" class="w-12 h-12 rounded-full flex-shrink-0" alt="">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline gap-2">
+                                <span class="font-semibold text-white truncate">{{ item.other_user.first_name|default:item.other_user.username }}</span>
+                                {% if item.last_message %}
+                                <span class="text-xs text-gray-400 flex-shrink-0">{{ item.last_message.created_at|time:"g:i A" }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-400 truncate">
+                                {% if item.last_message %}
+                                    {% if item.last_message.sender == user %}You: {% endif %}{{ item.last_message.text }}
+                                {% else %}
+                                    Start a conversation
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if item.unread_count %}
+                        <span class="w-5 h-5 bg-indigo-600 rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">{{ item.unread_count }}</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if contacts %}
+                <div class="p-2 border-t border-[#393a3b]">
+                    <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Followers &amp; Friends</p>
+                    {% for item in contacts %}
+                    <a href="{% url 'inbox_chat' item.user.username %}"
+                       class="flex items-center gap-3 p-3 rounded-xl hover:bg-[#3a3b3c] transition">
+                        <img src="https://ui-avatars.com/api/?name={{ item.user.username }}&background=2563eb&color=fff" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-white truncate">{{ item.user.first_name|default:item.user.username }}</p>
+                            <p class="text-xs text-indigo-400">{{ item.connection_label }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-gray-400 text-sm">
+                    <p>Follow people to start chatting.</p>
+                    <a href="{% url 'home' %}" class="text-indigo-400 hover:underline mt-2 inline-block">Explore feed</a>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Chat panel -->
+        <main class="flex-1 flex flex-col bg-[#18191a] {% if not active_user %}hidden sm:flex{% endif %}">
+            {% if active_user %}
+            <div class="h-[60px] border-b border-[#393a3b] bg-[#242526] flex items-center gap-3 px-4 flex-shrink-0">
+                <a href="{% url 'inbox' %}" class="sm:hidden w-9 h-9 rounded-full hover:bg-[#3a3b3c] flex items-center justify-center text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </a>
+                <img src="https://ui-avatars.com/api/?name={{ active_user.username }}&background=2563eb&color=fff" class="w-10 h-10 rounded-full" alt="">
+                <div>
+                    <p class="font-semibold text-white">{{ active_user.first_name|default:active_user.username }}</p>
+                    <p class="text-xs text-gray-400">@{{ active_user.username }}</p>
+                </div>
+                <a href="{% url 'profile' active_user.username %}" class="ml-auto text-sm text-indigo-400 hover:underline">View profile</a>
+            </div>
+
+            <div id="messageList" class="flex-1 overflow-y-auto p-4 space-y-3">
+                {% for msg in active_messages %}
+                <div class="flex {% if msg.sender == user %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[15px] {% if msg.sender == user %}bg-indigo-600 text-white rounded-br-md{% else %}bg-[#3a3b3c] text-slate-200 rounded-bl-md{% endif %}">
+                        <p class="whitespace-pre-wrap break-words">{{ msg.text }}</p>
+                        <p class="text-[11px] mt-1 {% if msg.sender == user %}text-indigo-200{% else %}text-gray-400{% endif %} text-right">{{ msg.created_at|time:"g:i A" }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form id="messageForm" class="p-4 border-t border-[#393a3b] bg-[#242526] flex gap-2 flex-shrink-0">
+                <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off"
+                       class="flex-1 bg-[#3a3b3c] rounded-full px-4 py-2.5 text-[15px] text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-indigo-500/50">
+                <button type="submit" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full font-semibold text-sm transition disabled:opacity-40" disabled>Send</button>
+            </form>
+            {% else %}
+            <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                <div class="w-20 h-20 rounded-full bg-[#3a3b3c] flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Your messages</h2>
+                <p class="text-gray-400 max-w-sm">Send private messages to people who follow you or whom you follow.</p>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    {% if active_user %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatUsername = '{{ active_user.username }}';
+            const messageList = document.getElementById('messageList');
+            const messageForm = document.getElementById('messageForm');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrftoken = getCookie('csrftoken');
+
+            function scrollToBottom() {
+                messageList.scrollTop = messageList.scrollHeight;
+            }
+            scrollToBottom();
+
+            function appendMessage(msg) {
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex ${msg.is_me ? 'justify-end' : 'justify-start'}`;
+                wrapper.innerHTML = `
+                    <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[15px] ${msg.is_me ? 'bg-indigo-600 text-white rounded-br-md' : 'bg-[#3a3b3c] text-slate-200 rounded-bl-md'}">
+                        <p class="whitespace-pre-wrap break-words"></p>
+                        <p class="text-[11px] mt-1 ${msg.is_me ? 'text-indigo-200' : 'text-gray-400'} text-right">${msg.created_at}</p>
+                    </div>`;
+                wrapper.querySelector('p').textContent = msg.text;
+                messageList.appendChild(wrapper);
+                scrollToBottom();
+            }
+
+            messageInput.addEventListener('input', () => {
+                sendBtn.disabled = !messageInput.value.trim();
+            });
+
+            messageForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = messageInput.value.trim();
+                if (!text) return;
+
+                const formData = new FormData();
+                formData.append('message', text);
+
+                fetch(`/inbox/${chatUsername}/send/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                    body: formData,
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        appendMessage(data.message);
+                        messageInput.value = '';
+                        sendBtn.disabled = true;
+                    }
+                });
+            });
+
+            let lastId = {% if active_messages %}{{ active_messages.last.id }}{% else %}0{% endif %};
+            setInterval(() => {
+                fetch(`/inbox/${chatUsername}/messages/?last_id=${lastId}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        data.messages.forEach(msg => {
+                            appendMessage(msg);
+                            lastId = msg.id;
+                        });
+                    });
+            }, 3000);
+        });
+    </script>
+    {% endif %}
+</body>
+</html>
