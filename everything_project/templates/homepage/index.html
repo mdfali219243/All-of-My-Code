@@ -3,140 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>StudyFlow — Your Study Workspace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='homepage/style.css') }}">
-<style>
-        #feature-menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 4rem;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-        }
-        body {
-            padding-left: 4rem;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-    <div id="feature-menu" class="strip bg-gray-300">
-        <a href="{{ url_for('home') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a> 
-        <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a>   
-        <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a>
-        <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a>
-        <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a>
-        <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
-            </div>
-        </a>
-        <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
-            </div>
-        </a>
-        <a href="{{ url_for('serve_page', page='grades/index.html') }}">
-            <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
-                <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
-            </div>
-        </a>
-    </div>
+<body class="sf-app sf-mesh-bg has-sf-sidebar sf-themed">
 
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-8 relative">
-            <div class="absolute top-0 right-0 flex items-center gap-4 mt-2">
-                <span class="text-gray-600 dark:text-gray-300">Welcome, <strong>{{ user.username }}</strong>!</span>
-                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 text-sm font-semibold shadow-md">
-                    Logout
+    <div class="sf-blob sf-blob-1" aria-hidden="true"></div>
+    <div class="sf-blob sf-blob-2" aria-hidden="true"></div>
+
+    {% include 'partials/feature_menu.html' %}
+
+    <div class="sf-content-wrap">
+        <main class="sf-main">
+            <header class="sf-topbar">
+                <div>
+                    <span class="sf-badge"><span class="sf-badge-dot"></span> AI-powered study hub</span>
+                    <h1 class="sf-hero-title" id="sf-hero-heading" data-username="{{ user.username }}">Hello, {{ user.username }}</h1>
+                    <p class="sf-hero-sub">Everything you need to plan, learn, and stay on track — in one calm workspace built for students.</p>
+                </div>
+                <div class="sf-user-pill">
+                    <div class="sf-avatar" aria-hidden="true">{{ user.username[0] }}</div>
+                    <a href="{{ url_for('logout') }}" class="sf-btn-ghost sf-btn-logout">Sign out</a>
+                </div>
+            </header>
+
+            <div class="sf-insight" id="sf-insight" role="status" aria-live="polite">
+                <div class="sf-insight-text" id="sf-insight-text"></div>
+            </div>
+
+            <div class="sf-stats">
+                <div class="sf-stat">
+                    <div class="sf-stat-value">7</div>
+                    <div class="sf-stat-label">Study tools</div>
+                </div>
+                <div class="sf-stat">
+                    <div class="sf-stat-value">1</div>
+                    <div class="sf-stat-label">Workspace</div>
+                </div>
+                <div class="sf-stat">
+                    <div class="sf-stat-value">∞</div>
+                    <div class="sf-stat-label">Possibilities</div>
+                </div>
+            </div>
+
+            <p class="sf-section-label">Your toolkit</p>
+            <div class="sf-tools-grid">
+                <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}" class="sf-tool-card" data-theme="green">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon green">✓</div>
+                    <h3>To-Do List</h3>
+                    <p>Capture assignments, deadlines, and daily tasks so nothing slips through.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}" class="sf-tool-card" data-theme="rose">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon rose">📓</div>
+                    <h3>Notes</h3>
+                    <p>Jot lecture ideas, summaries, and quick thoughts in one place.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}" class="sf-tool-card" data-theme="amber">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon amber">🔥</div>
+                    <h3>Habit Tracker</h3>
+                    <p>Build routines that stick — study daily, sleep well, stay consistent.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}" class="sf-tool-card" data-theme="purple">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon purple">🃏</div>
+                    <h3>Flashcards</h3>
+                    <p>Drill vocab, formulas, and facts with active recall that actually works.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='calendar/index.html') }}" class="sf-tool-card" data-theme="pink">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon pink">📅</div>
+                    <h3>Calendar</h3>
+                    <p>See exams, classes, and study blocks at a glance — plan ahead with ease.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}" class="sf-tool-card" data-theme="orange">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon orange">⏱</div>
+                    <h3>Focus Timer</h3>
+                    <p>Pomodoro sessions and flip-clock focus — beat procrastination one sprint at a time.</p>
+                </a>
+
+                <a href="{{ url_for('serve_page', page='grades/index.html') }}" class="sf-tool-card" data-theme="indigo">
+                    <span class="sf-tool-arrow" aria-hidden="true">→</span>
+                    <div class="sf-tool-icon indigo">📊</div>
+                    <h3>Grade Tracker</h3>
+                    <p>Monitor your academic progress and know where to put in extra effort.</p>
                 </a>
             </div>
-            <h1 class="text-4xl font-bold">My Projects</h1>
-            <p class="text-lg text-gray-600 dark:text-gray-400">A collection of my web applications.</p>
-        </header>
 
-        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Calendar -->
-            <a href="{{ url_for('serve_page', page='calendar/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Calendar</h2>
-                    <p class="text-gray-600 dark:text-gray-400">A full-featured calendar application.</p>
-                </div>
-            </a>
-
-            <!-- Grades -->
-            <a href="{{ url_for('serve_page', page='grades/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Grade Tracker</h2>
-                    <p class="text-gray-600 dark:text-gray-400">Track your academic grades.</p>
-                </div>
-            </a>
-
-            <!-- Flashcard -->
-            <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Flashcards</h2>
-                    <p class="text-gray-600 dark:text-gray-400">Study with interactive flashcards.</p>
-                </div>
-            </a>
-
-            <!-- Flip Clock -->
-            <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Flip Clock</h2>
-                    <p class="text-gray-600 dark:text-gray-400">A classic flip clock.</p>
-                </div>
-            </a>
-
-            <!-- Habits -->
-            <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Habit Tracker</h2>
-                    <p class="text-gray-600 dark:text-gray-400">Monitor and build your habits.</p>
-                </div>
-            </a>
-
-            <!-- Notes -->
-            <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">Notes</h2>
-                    <p class="text-gray-600 dark:text-gray-400">A simple note-taking app.</p>
-                </div>
-            </a>
-
-            <!-- Todolist -->
-            <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}" class="project-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div class="p-6">
-                    <h2 class="text-2xl font-semibold mb-2">To-do List</h2>
-                    <p class="text-gray-600 dark:text-gray-400">Organize your tasks.</p>
-                </div>
-            </a>
+            <footer class="sf-footer">
+                StudyFlow — built for students who want to learn smarter, not harder.
+            </footer>
         </main>
     </div>
 
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
     <script src="{{ url_for('static', filename='homepage/script.js') }}"></script>
 </body>
 </html>

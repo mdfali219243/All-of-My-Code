@@ -6,8 +6,11 @@
     <title>Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/dark_mode.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<body class="sf-app sf-mesh-bg has-sf-sidebar sf-themed">
+    {% include 'partials/feature_menu.html' %}
     <div class="container mx-auto mt-10 p-4">
         <h1 class="text-3xl font-bold">Settings</h1>
         <div class="mt-8">
@@ -36,5 +39,6 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='calendar/javascript/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
 </body>
 </html>

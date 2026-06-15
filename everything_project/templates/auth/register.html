@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Everything Project</title>
+    <title>Create Account — StudyFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
     <!-- Use Outfit font for premium tech feel -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,39 +19,24 @@
             },
         }
     </script>
-    <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .mesh-bg {
-            background-color: #0b0f19;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(242,56%,35%,0.15) 0, transparent 50%),
-                radial-gradient(at 0% 100%, hsla(258,45%,28%,0.15) 0, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(225,80%,15%,0.3) 0, transparent 50%);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/auth.css') }}">
 </head>
-<body class="mesh-bg text-gray-100 flex items-center justify-center min-h-screen p-4 overflow-hidden relative font-sans">
+<body class="auth-page auth-mesh-bg text-gray-100 flex items-center justify-center min-h-screen p-4 overflow-hidden relative font-sans">
     
     <!-- Decorative floating glowing blobs -->
     <div class="absolute w-96 h-96 rounded-full bg-blue-500/10 blur-[100px] top-10 left-10 pointer-events-none animate-pulse"></div>
     <div class="absolute w-96 h-96 rounded-full bg-purple-500/10 blur-[100px] bottom-10 right-10 pointer-events-none animate-pulse"></div>
 
-    <div class="glass w-full max-w-md p-8 rounded-3xl shadow-2xl relative z-10 transform hover:scale-[1.01] transition-all duration-300">
+    <div class="auth-glass w-full max-w-md p-8 rounded-3xl shadow-2xl relative z-10 transform hover:scale-[1.01] transition-all duration-300">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 shadow-lg shadow-indigo-500/30 mb-4 transform hover:-rotate-6 transition-transform duration-300">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
                 </svg>
             </div>
-            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Create Account</h1>
-            <p class="text-sm text-slate-400 mt-2 font-light">Join the portal & configure your workspace</p>
+            <p class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-2">StudyFlow</p>
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Start your journey</h1>
+            <p class="text-sm text-slate-400 mt-2 font-light">Join thousands of students organizing life smarter</p>
         </div>
 
         {% if error %}

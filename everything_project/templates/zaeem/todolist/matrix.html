@@ -12,10 +12,13 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    </head>
-    <body>
+        <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
+  </head>
+    <body class="has-sf-sidebar sf-app sf-mesh-bg sf-themed">
         <main id="container">
-            <div id="feature-menu" class="strip"></div>
+            {% include 'partials/feature_menu.html' %}
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
             <div id="todolist-menu" class="strip">
                 <div class="todo-dates">
                 <div class="todo-date-container">

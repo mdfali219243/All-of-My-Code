@@ -6,9 +6,12 @@
     <title>Events</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='calendar/style/dark_mode.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto mt-10">
+<body class="sf-app sf-mesh-bg has-sf-sidebar sf-themed">
+    {% include 'partials/feature_menu.html' %}
+    <div class="container mx-auto mt-10 px-4">
         <div class="mb-4">
             <button aria-label="Back to Calendar" onclick="goBackCalendar()" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -148,5 +151,6 @@
         list.appendChild(frag);
       })();
     </script>
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
 </body>
 </html>

@@ -11,52 +11,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/theme.css') }}">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="{{ url_for('static', filename='foysal/flashcard.2.0/javasript/start.js') }}" defer></script>
-</head>
-<body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
+  </head>
+<body class="has-sf-sidebar sf-app sf-mesh-bg sf-themed">
   <div class="container">
     <!-- Left spacer / feature rail -->
-    <div id="feature-menu" class="strip bg-gray-300 min-w-[45px]">
-      <a href="{{ url_for('home') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-blue-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="web" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a> 
-      <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-green-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="todolist" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a>   
-      <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-red-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="notes" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a>
-      <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-yellow-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="habits" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a>
-      <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-purple-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="flashcards" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a>
-      <a href="{{ url_for('serve_page', page='calendar/index.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-pink-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="calendar" class="w-[1.5rem] h-[1.5rem]">
-          </div>
-      </a>
-      <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}">
-          <div class="w-full h-[4rem] flex items-center justify-center bg-orange-500">
-              <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="clock" class="w-[2rem] h-[2rem]">
-          </div>
-      </a>
-      <a href="{{ url_for('serve_page', page='grades/index.html') }}">
-        <div class="w-full h-[4rem] flex items-center justify-center bg-gray-500">
-            <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="grades" class="w-[2rem] h-[2rem]">
-        </div>
-      </a>
-    </div>
+    {% include 'partials/feature_menu.html' %}
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
 
     <!-- Sidebar -->
     <div class="flashcard-container">

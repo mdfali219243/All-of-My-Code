@@ -1,0 +1,37 @@
+<nav id="feature-menu" class="sf-sidebar" aria-label="App navigation">
+  <a href="{{ url_for('home') }}" class="sf-sidebar-brand" title="StudyFlow">SF</a>
+  <div class="sf-sidebar-nav">
+    <a href="{{ url_for('home') }}" class="sf-sidebar-link" data-page="home" data-accent="indigo">
+      <img src="{{ url_for('static', filename='feature-menu/icons/home.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Home</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='zaeem/todolist/index.html') }}" class="sf-sidebar-link" data-page="todolist" data-accent="green">
+      <img src="{{ url_for('static', filename='feature-menu/icons/todolist.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">To-Do List</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='zaeem/notes/index.html') }}" class="sf-sidebar-link" data-page="notes" data-accent="rose">
+      <img src="{{ url_for('static', filename='feature-menu/icons/notes.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Notes</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='zaeem/habits/index.html') }}" class="sf-sidebar-link" data-page="habits" data-accent="amber">
+      <img src="{{ url_for('static', filename='feature-menu/icons/habits.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Habits</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='foysal/flashcard.2.0/index.html') }}" class="sf-sidebar-link" data-page="flashcards" data-accent="purple">
+      <img src="{{ url_for('static', filename='feature-menu/icons/flashcards.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Flashcards</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='calendar/index.html') }}" class="sf-sidebar-link" data-page="calendar" data-accent="pink">
+      <img src="{{ url_for('static', filename='feature-menu/icons/calendar.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Calendar</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='foysal/Flip Clock/clock/clock.html') }}" class="sf-sidebar-link" data-page="clock" data-accent="orange">
+      <img src="{{ url_for('static', filename='feature-menu/icons/clock.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Focus Timer</span>
+    </a>
+    <a href="{{ url_for('serve_page', page='grades/index.html') }}" class="sf-sidebar-link" data-page="grades" data-accent="slate">
+      <img src="{{ url_for('static', filename='feature-menu/icons/grades.png') }}" alt="">
+      <span class="sf-sidebar-tooltip">Grades</span>
+    </a>
+  </div>
+</nav>

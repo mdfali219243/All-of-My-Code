@@ -1,0 +1,575 @@
+/**
+ * StudyFlow unified theme — load AFTER app-specific CSS.
+ * Apply with: body.sf-themed.sf-app.sf-mesh-bg
+ */
+
+body.sf-themed {
+  --bg: #0b0f19;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(99, 102, 241, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --sidebar: rgba(8, 12, 22, 0.92);
+  --sidebar-text: #94a3b8;
+  --sidebar-text-strong: #f1f5f9;
+  --brand: #6366f1;
+  --zaeem-accent: #6366f1;
+  --zaeem-accent-hover: #4f46e5;
+  --zaeem-panel: rgba(8, 12, 22, 0.78);
+  --zaeem-card: rgba(255, 255, 255, 0.05);
+  --zaeem-card-hover: rgba(255, 255, 255, 0.08);
+}
+
+body.sf-themed,
+body.sf-themed html {
+  font-family: var(--sf-font) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed h1,
+body.sf-themed h2,
+body.sf-themed h3,
+body.sf-themed h4 {
+  color: var(--sf-text);
+}
+
+/* Tailwind utility overrides */
+body.sf-themed .bg-white { background-color: var(--zaeem-card) !important; color: var(--sf-text) !important; }
+body.sf-themed .bg-gray-50 { background-color: rgba(255, 255, 255, 0.02) !important; }
+body.sf-themed .bg-gray-100 { background-color: var(--zaeem-panel) !important; color: var(--sf-text) !important; }
+body.sf-themed .bg-gray-200 { background-color: var(--zaeem-card) !important; }
+body.sf-themed .bg-gray-300 { background-color: var(--zaeem-card-hover) !important; }
+body.sf-themed .bg-blue-300 { background-color: transparent !important; }
+body.sf-themed .bg-blue-500 { background-color: transparent !important; color: var(--sf-text) !important; }
+body.sf-themed .text-gray-500 { color: var(--sf-text-muted) !important; }
+body.sf-themed .text-gray-800 { color: var(--sf-text) !important; }
+body.sf-themed .border-black { border-color: var(--sf-border) !important; }
+body.sf-themed .divide-gray-200 > * + * { border-color: var(--sf-border) !important; }
+body.sf-themed .hover\:bg-gray-200:hover { background-color: var(--sf-surface-hover) !important; }
+body.sf-themed .hover\:bg-gray-300:hover { background-color: var(--sf-surface-hover) !important; }
+
+/* ═══ Zaeem: To-Do, Habits, Notes ═══ */
+body.sf-themed #container {
+  background: transparent;
+}
+
+body.sf-themed #todolist-menu,
+body.sf-themed #habits-menu,
+body.sf-themed #todo-stats,
+body.sf-themed #habits-stats-container,
+body.sf-themed #notes-menu {
+  background: var(--zaeem-panel) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed #todo-container,
+body.sf-themed #habits-container,
+body.sf-themed #notes-container {
+  background: transparent !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed footer {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text-muted) !important;
+  border: 1px solid var(--sf-border);
+}
+
+body.sf-themed footer a { color: #a5b4fc !important; }
+
+body.sf-themed .vertical-line,
+body.sf-themed .vertical-line-container .vertical-line {
+  background-color: var(--sf-border) !important;
+}
+
+body.sf-themed .todo-date-container:hover,
+body.sf-themed .habits-time-container:hover,
+body.sf-themed .folder-div:hover,
+body.sf-themed .time-tracker-container:hover,
+body.sf-themed .matrix-container:hover,
+body.sf-themed .todo-header-icon:hover,
+body.sf-themed .collapse-sidebar-icon:hover,
+body.sf-themed .expand-sidebar-icon:hover,
+body.sf-themed .close-stats-panel-icon:hover {
+  background-color: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .current-filter {
+  background: rgba(99, 102, 241, 0.22) !important;
+  color: #c7d2fe !important;
+}
+
+body.sf-themed .current-filter:hover {
+  background: rgba(99, 102, 241, 0.32) !important;
+}
+
+body.sf-themed .input-plus-add-icon-container {
+  background: var(--zaeem-card) !important;
+  border: 1px solid var(--sf-border) !important;
+}
+
+body.sf-themed #todo-input,
+body.sf-themed input,
+body.sf-themed textarea,
+body.sf-themed select {
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .todo-date,
+body.sf-themed .habits-time,
+body.sf-themed .folder,
+body.sf-themed .todolist-feature {
+  color: var(--sf-text-muted) !important;
+}
+
+body.sf-themed .folder-more-icon-menu-container,
+body.sf-themed .pop-up-stats-panel,
+body.sf-themed .pop-up-menu,
+body.sf-themed .modal,
+body.sf-themed .modal-box,
+body.sf-themed .folder-add-modal,
+body.sf-themed .habit-more-menu-container,
+body.sf-themed .add-habit-menu-container,
+body.sf-themed .habit-repeat-daily-item-menu,
+body.sf-themed .habit-repeat-interval-item-menu,
+body.sf-themed .habit-repeat-monthly-item-menu {
+  background: rgba(15, 23, 42, 0.97) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.sf-themed .habits-action,
+body.sf-themed .habits-date-picker-container {
+  background: var(--zaeem-card) !important;
+  border: 1px solid var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .habits-action.primary,
+body.sf-themed .add-habit-button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: white !important;
+  border: none !important;
+}
+
+body.sf-themed .arrow { border-left-color: var(--sf-text-muted) !important; }
+
+body.sf-themed .todo-item,
+body.sf-themed .habit-item,
+body.sf-themed .todo-subtask-container {
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .stats-panel-overlay {
+  background: rgba(11, 15, 25, 0.92) !important;
+  color: var(--sf-text-muted) !important;
+}
+
+body.sf-themed .todo-input-gray,
+body.sf-themed .add-habit-input {
+  border-color: var(--sf-border) !important;
+  background: var(--zaeem-card) !important;
+}
+
+body.sf-themed .add-habit-input:hover,
+body.sf-themed .add-habit-input:focus,
+body.sf-themed .add-habit-input:focus-within {
+  border-color: var(--sf-accent) !important;
+}
+
+body.sf-themed .priority-menu,
+body.sf-themed .date-picker-menu,
+body.sf-themed .reminder-menu,
+body.sf-themed .subtask-menu,
+body.sf-themed .todo-more-menu {
+  background: rgba(15, 23, 42, 0.97) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .matrix-quadrant {
+  background: var(--zaeem-card) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .content-container .space-y-2 {
+  background: var(--zaeem-card) !important;
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+}
+
+body.sf-themed .page-title {
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .list-marker { color: var(--sf-text-muted) !important; }
+
+/* ═══ Calendar ═══ */
+body.sf-themed .header {
+  background: rgba(8, 12, 22, 0.9) !important;
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--sf-border) !important;
+  box-shadow: none !important;
+}
+
+body.sf-themed .icon-button svg { color: var(--sf-text-muted) !important; }
+body.sf-themed .icon-button:hover { background: var(--sf-surface-hover) !important; }
+
+body.sf-themed .today-button {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .today-button:hover {
+  background: var(--sf-surface-hover) !important;
+  box-shadow: none !important;
+}
+
+body.sf-themed .current-display { color: var(--sf-text) !important; }
+
+body.sf-themed #main_view {
+  background: transparent !important;
+}
+
+body.sf-themed .week-grid,
+body.sf-themed .month-grid,
+body.sf-themed .day-time-grid,
+body.sf-themed .day-view {
+  background: var(--zaeem-card) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .week-grid-header,
+body.sf-themed .month-grid-header,
+body.sf-themed .time-label,
+body.sf-themed .time-label-cell {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--sf-text-muted) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .week-all-day-row,
+body.sf-themed .month-cell,
+body.sf-themed .calendar-day,
+body.sf-themed .week-cell,
+body.sf-themed .day-cell {
+  background: transparent !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .week-cell:hover,
+body.sf-themed .day-cell:hover,
+body.sf-themed .month-cell:hover {
+  background: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .sidebar {
+  background: var(--zaeem-panel) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .sidebar .feature-menu {
+  background: var(--zaeem-panel) !important;
+}
+
+/* Calendar slide-out nav (not the global SF sidebar) */
+body.sf-themed nav.feature-menu:not(.sf-sidebar),
+body.sf-themed .feature-menu.show {
+  background: var(--zaeem-panel) !important;
+  border-right: 1px solid var(--sf-border);
+}
+
+body.sf-themed .search-input,
+body.sf-themed .form-control {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+/* ═══ Flashcards ═══ */
+body.sf-themed .container {
+  background: transparent !important;
+}
+
+body.sf-themed .flashcard-container {
+  background: var(--sidebar) !important;
+  border-right: 1px solid var(--sf-border) !important;
+  box-shadow: none !important;
+}
+
+body.sf-themed .header {
+  background: rgba(8, 12, 22, 0.92) !important;
+}
+
+body.sf-themed .Main-content,
+body.sf-themed .main-content {
+  background: transparent !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .create_box,
+body.sf-themed .recent_box,
+body.sf-themed .reminder_box,
+body.sf-themed .flashcard-set-card {
+  background: var(--zaeem-card) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .create_button {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+body.sf-themed .create_button:hover {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: var(--sf-accent) !important;
+}
+
+body.sf-themed .search-bar {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .search-button {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+/* ═══ Focus Timer / Clock ═══ */
+body.sf-themed .container.clock-layout,
+body.sf-themed > .container {
+  background: transparent !important;
+}
+
+body.sf-themed .clock-container {
+  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08) 0%, #0b0f19 70%) !important;
+}
+
+body.sf-themed .flip-card {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid var(--sf-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px var(--sf-accent-glow) !important;
+}
+
+body.sf-themed .top,
+body.sf-themed .bottom,
+body.sf-themed .top-flip,
+body.sf-themed .bottom-flip {
+  background: linear-gradient(135deg, #312e81, #1e1b4b) !important;
+  color: #e0e7ff !important;
+}
+
+body.sf-themed .button-container {
+  background: var(--zaeem-panel) !important;
+  border-left: 1px solid var(--sf-border) !important;
+}
+
+body.sf-themed .clock-button,
+body.sf-themed .promodro-button button,
+body.sf-themed #promodroBtn {
+  background: var(--zaeem-card) !important;
+  color: var(--sf-text) !important;
+  border: 1px solid var(--sf-border) !important;
+}
+
+body.sf-themed .clock-button.active,
+body.sf-themed #clockBtn.active {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  color: #c7d2fe !important;
+}
+
+body.sf-themed .button-hint { color: var(--sf-text-dim) !important; }
+
+/* ═══ Pomodoro ═══ */
+body.sf-themed .main-content {
+  background: transparent !important;
+}
+
+body.sf-themed .timer-container,
+body.sf-themed .timer-card {
+  background: var(--zaeem-card) !important;
+  border: 1px solid var(--sf-border) !important;
+}
+
+body.sf-themed .timer-display { color: var(--sf-text) !important; }
+
+/* ═══ Generic polish ═══ */
+body.sf-themed ::-webkit-scrollbar { width: 8px; height: 8px; }
+body.sf-themed ::-webkit-scrollbar-track { background: transparent; }
+body.sf-themed ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+body.sf-themed ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.sf-themed hr {
+  border-color: var(--sf-border) !important;
+  opacity: 1;
+}
+
+body.sf-themed a:not(.sf-sidebar-link):not(.sf-tool-card):not(.sf-sidebar-brand) {
+  color: #a5b4fc;
+}
+
+body.sf-themed .box-shadow-normal {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Zaeem list items & hovers */
+body.sf-themed .task:hover,
+body.sf-themed .sub-task:hover,
+body.sf-themed .habit:hover {
+  background-color: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .task-more-date-icon:hover,
+body.sf-themed .task-more-priority-icon:hover,
+body.sf-themed .folder-more-icon-menu:hover,
+body.sf-themed .habit-more-menu-item-container:hover,
+body.sf-themed .times-menu-item:hover,
+body.sf-themed .per-menu-item:hover,
+body.sf-themed .habit-repeat-menu-item:hover,
+body.sf-themed .habit-time-item-container:hover,
+body.sf-themed .habit-folder-item-container:hover {
+  background-color: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .habit-repeat-monthly-item-calendar-row-item:hover {
+  background-color: var(--zaeem-accent) !important;
+  color: white !important;
+}
+
+body.sf-themed .habits-stats-header-right div:hover,
+body.sf-themed .habit-editor:hover {
+  background-color: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .task,
+body.sf-themed .sub-task,
+body.sf-themed .habit {
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .due-date,
+body.sf-themed .task-folder {
+  color: var(--sf-text-muted) !important;
+}
+
+/* Calendar extended */
+body.sf-themed .day-all-day-row,
+body.sf-themed .day-all-day-row .time-label,
+body.sf-themed .day-all-day-row .all-day-events-container {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .month-grid,
+body.sf-themed .calendar-day {
+  background: var(--zaeem-card) !important;
+  border-color: var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .calendar-day:hover,
+body.sf-themed .month-cell:hover {
+  background: var(--sf-surface-hover) !important;
+}
+
+body.sf-themed .day-view-header,
+body.sf-themed .day-header-today {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: #c7d2fe !important;
+}
+
+body.sf-themed .time-slot {
+  border-color: var(--sf-border) !important;
+}
+
+/* Flashcard layout with fixed header */
+body.sf-themed .container:has(.header) {
+  padding-top: 64px;
+}
+
+body.sf-themed #feature-menu.sf-sidebar {
+  z-index: 1001;
+}
+
+/* Pomodoro homepage */
+body.sf-themed .top-bar h1 {
+  background: linear-gradient(135deg, #fff, #c7d2fe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.sf-themed .session-card,
+body.sf-themed .preset-card {
+  background: var(--zaeem-card) !important;
+  border: 1px solid var(--sf-border) !important;
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .start-btn,
+body.sf-themed .primary-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Calendar subpages */
+body.sf-themed .container.mx-auto {
+  color: var(--sf-text);
+}
+
+body.sf-themed .container.mx-auto h1 {
+  color: var(--sf-text);
+}
+
+/* Bootstrap modals (calendar) */
+body.sf-themed .modal-content,
+body.sf-themed .modal-header,
+body.sf-themed .modal-body,
+body.sf-themed .modal-footer,
+body.sf-themed .offcanvas {
+  background: rgba(15, 23, 42, 0.98) !important;
+  color: var(--sf-text) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .modal-title,
+body.sf-themed .form-label {
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .btn-close {
+  filter: invert(1) opacity(0.6);
+}
+
+body.sf-themed .dropdown-menu {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border-color: var(--sf-border) !important;
+}
+
+body.sf-themed .dropdown-item {
+  color: var(--sf-text) !important;
+}
+
+body.sf-themed .dropdown-item:hover {
+  background: var(--sf-surface-hover) !important;
+}

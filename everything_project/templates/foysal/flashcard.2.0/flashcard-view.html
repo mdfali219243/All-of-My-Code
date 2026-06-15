@@ -10,14 +10,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/vertical-bar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/main_content.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='foysal/flashcard.2.0/style/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='shared/app-theme.css') }}">
     <script src="{{ url_for('static', filename='foysal/flashcard.2.0/javasript/start.js') }}" defer></script>
 </head>
 
-<body>
+<body class="has-sf-sidebar sf-app sf-mesh-bg sf-themed">
+
+    {% include 'partials/feature_menu.html' %}
 
     <div class="container">
-        <!-- Feature menu on the left side -->
-        <div class="feature-menu"></div>
 
         <!-- Flashcard container (sidebar menu) -->
         <div class="flashcard-container">
@@ -133,6 +135,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='foysal/flashcard.2.0/javasript/flashcard-view.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='shared/feature-menu.js') }}"></script>
 </body>
 
 </html>

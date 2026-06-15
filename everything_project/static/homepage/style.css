@@ -1,0 +1,13 @@
+/* Homepage-specific overrides */
+.sf-insight-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.sf-insight-text .sf-insight-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
