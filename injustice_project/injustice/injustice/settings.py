@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,13 +25,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*n*i=!p7pnz9w%^f=k*k6l(jxbke*1hf1&qg6xua0#%yr^54#v'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-*n*i=!p7pnz9w%^f=k*k6l(jxbke*1hf1&qg6xua0#%yr^54#v',
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', '*']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,10.0.2.2').split(',')
+    if host.strip()
+]
+if DEBUG:
+    ALLOWED_HOSTS.extend(['*'])
 
 
 # Application definition
@@ -85,6 +98,12 @@ DATABASES = {
     }
 }
 
+_database_url = os.environ.get('DATABASE_URL')
+if _database_url:
+    import dj_database_url
+
+    DATABASES['default'] = dj_database_url.parse(_database_url, conn_max_age=600)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -128,7 +147,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Media files (Uploaded by users)
-import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -143,19 +161,23 @@ REST_FRAMEWORK = {
     ],
 }
 
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
-# Allow Expo web (localhost) and mobile dev clients
+# Allow Expo web (localhost), Vercel production, and mobile dev clients
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
     'http://127.0.0.1:8081',
     'http://localhost:19006',
     'http://127.0.0.1:19006',
+    'https://injustice-nine.vercel.app',
 ]
+_extra_cors = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+if _extra_cors:
+    CORS_ALLOWED_ORIGINS.extend(
+        origin.strip() for origin in _extra_cors.split(',') if origin.strip()
+    )
 CORS_ALLOW_CREDENTIALS = True
 
