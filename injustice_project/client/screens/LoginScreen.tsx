@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { useAuth } from '../contexts/AuthContext';
+import { colors, spacing } from '../shared/theme';
 import { validateLogin } from '../shared/validation';
 
 export function LoginScreen() {
@@ -34,57 +36,67 @@ export function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Injustice</Text>
-      <Text style={styles.subtitle}>Sign in to your account</Text>
-
-      <Input label="Username" value={username} onChangeText={setUsername} error={errors.username} />
+    <AuthLayout title="Welcome back" subtitle="Sign in to pick up debates, posts, and messages right where you left off.">
+      <Input
+        label="Username"
+        value={username}
+        onChangeText={setUsername}
+        error={errors.username}
+        placeholder="your_username"
+      />
       <Input
         label="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         error={errors.password}
+        placeholder="••••••••"
       />
 
-      {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
+      {apiError ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.apiError}>{apiError}</Text>
+        </View>
+      ) : null}
 
-      <Button title={submitting ? 'Signing in...' : 'Sign in'} onPress={handleSubmit} disabled={submitting} />
+      <Button
+        title="Sign in"
+        onPress={handleSubmit}
+        disabled={submitting}
+        loading={submitting}
+      />
 
-      <Link href="/register" style={styles.link}>
-        <Text style={styles.linkText}>Create an account</Text>
+      <Link href="/register" asChild>
+        <Pressable style={styles.footerLink}>
+          <Text style={styles.footerText}>Create an account</Text>
+        </Pressable>
       </Link>
-    </View>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: '#f9fafb',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 24,
+  errorBox: {
+    backgroundColor: colors.errorBg,
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.25)',
   },
   apiError: {
-    color: '#ef4444',
-    marginBottom: 12,
+    color: colors.error,
+    textAlign: 'center',
+    fontSize: 14,
   },
-  link: {
-    marginTop: 16,
-    alignSelf: 'center',
+  footerLink: {
+    marginTop: spacing.md,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
-  linkText: {
-    color: '#2563eb',
+  footerText: {
+    color: colors.brandLight,
     fontWeight: '600',
+    fontSize: 15,
   },
 });

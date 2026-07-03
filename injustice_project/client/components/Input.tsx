@@ -1,5 +1,7 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { colors, radius, spacing } from '../shared/theme';
+
 type Props = {
   label: string;
   value: string;
@@ -7,6 +9,7 @@ type Props = {
   secureTextEntry?: boolean;
   error?: string;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  placeholder?: string;
 };
 
 export function Input({
@@ -16,6 +19,7 @@ export function Input({
   secureTextEntry,
   error,
   autoCapitalize = 'none',
+  placeholder,
 }: Props) {
   return (
     <View style={styles.wrapper}>
@@ -25,6 +29,8 @@ export function Input({
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textDim}
         style={[styles.input, error ? styles.inputError : null]}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -34,29 +40,33 @@ export function Input({
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     marginBottom: 6,
-    color: '#374151',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surfaceMuted,
+    color: colors.text,
   },
   inputError: {
-    borderColor: '#ef4444',
+    borderColor: colors.error,
+    backgroundColor: colors.errorBg,
   },
   error: {
-    color: '#ef4444',
-    marginTop: 4,
+    color: colors.error,
+    marginTop: 6,
     fontSize: 13,
   },
 });

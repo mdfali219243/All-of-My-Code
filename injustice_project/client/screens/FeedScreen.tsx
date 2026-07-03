@@ -1,114 +1,171 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { fetchPosts } from '../api/posts';
+import { createDebate, fetchDebates } from '../api/social';
+import { AppHeader } from '../components/AppHeader';
+import { CreatePostCard } from '../components/CreatePostCard';
+import { DebatesCarousel } from '../components/DebatesCarousel';
 import { PostCard } from '../components/PostCard';
-import { useAuth } from '../contexts/AuthContext';
-import type { Post } from '../shared/types';
+import type { Debate, Post } from '../shared/types';
+import { colors, radius, spacing } from '../shared/theme';
 
 export function FeedScreen() {
-  const { user, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [debates, setDebates] = useState<Debate[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const [debateModal, setDebateModal] = useState(false);
+  const [debateTopic, setDebateTopic] = useState('');
 
-  const loadPosts = useCallback(async () => {
-    try {
-      setError('');
-      const data = await fetchPosts();
-      setPosts(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load posts');
-    }
+  const loadAll = useCallback(async () => {
+    const [postsData, debatesData] = await Promise.all([fetchPosts(), fetchDebates()]);
+    setPosts(postsData);
+    setDebates(debatesData);
   }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadPosts();
-    setRefreshing(false);
-  }, [loadPosts]);
+    try {
+      await loadAll();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadAll]);
 
   useEffect(() => {
-    loadPosts().finally(() => setLoading(false));
-  }, [loadPosts]);
+    loadAll().finally(() => setLoading(false));
+  }, [loadAll]);
+
+  async function handleCreateDebate() {
+    const topic = debateTopic.trim();
+    if (!topic) return;
+    try {
+      await createDebate(topic);
+      setDebateModal(false);
+      setDebateTopic('');
+      await loadAll();
+      Alert.alert('Debate started', 'Your live debate is now active.');
+    } catch (e) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'Could not create debate');
+    }
+  }
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Welcome, @{user?.username}</Text>
-          <Text style={styles.hint}>Same feed on website and mobile app</Text>
-        </View>
-        <Text style={styles.logout} onPress={() => logout()}>
-          Log out
-        </Text>
-      </View>
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <AppHeader activeTab="feed" />
 
       <FlatList
         data={posts}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <PostCard post={item} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={<Text style={styles.empty}>No posts yet. Create one from the Django site.</Text>}
+        renderItem={({ item }) => <PostCard post={item} onUpdate={loadAll} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+        }
+        ListHeaderComponent={
+          <>
+            <CreatePostCard onPosted={loadAll} onOpenDebate={() => setDebateModal(true)} />
+            <DebatesCarousel debates={debates} />
+          </>
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>No posts yet</Text>
+            <Text style={styles.emptySub}>When your friends share photos and videos, they'll appear here.</Text>
+          </View>
+        }
         contentContainerStyle={styles.list}
       />
+
+      <Modal visible={debateModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Start a Live Debate</Text>
+            <TextInput
+              value={debateTopic}
+              onChangeText={setDebateTopic}
+              placeholder="What's the topic?"
+              placeholderTextColor={colors.textDim}
+              style={styles.modalInput}
+            />
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalCancel} onPress={() => setDebateModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.modalStart} onPress={handleCreateDebate}>
+                <Text style={styles.modalStartText}>Start Debate</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 56,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  greeting: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  hint: {
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  logout: {
-    color: '#ef4444',
-    fontWeight: '600',
-  },
-  list: {
-    padding: 16,
-  },
+  container: { flex: 1, backgroundColor: colors.bgSecondary },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
+  list: { padding: spacing.md, paddingBottom: spacing.xxl },
   empty: {
-    textAlign: 'center',
-    color: '#6b7280',
-    marginTop: 40,
+    alignItems: 'center',
+    padding: spacing.xxl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  error: {
-    color: '#ef4444',
-    padding: 16,
+  emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 8 },
+  emptySub: { color: colors.textDim, textAlign: 'center', lineHeight: 22 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    padding: spacing.lg,
   },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: spacing.md },
+  modalInput: {
+    backgroundColor: colors.surfaceHover,
+    borderRadius: radius.md,
+    padding: 14,
+    color: colors.text,
+    fontSize: 16,
+    marginBottom: spacing.md,
+  },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm },
+  modalCancel: { padding: 12 },
+  modalCancelText: { color: colors.textDim, fontWeight: '600' },
+  modalStart: {
+    backgroundColor: colors.brand,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.sm,
+  },
+  modalStartText: { color: colors.white, fontWeight: '700' },
 });

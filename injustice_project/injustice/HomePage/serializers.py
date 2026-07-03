@@ -1,7 +1,13 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import VideoPost, Comment, UserFollow
+from .models import VideoPost, Comment, UserFollow, DebateRoom
+
+
+def _source_post(post):
+    while post.shared_from_id:
+        post = post.shared_from
+    return post
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,6 +53,9 @@ class PostSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     video_url = serializers.SerializerMethodField()
     shared_from_username = serializers.SerializerMethodField()
+    source_id = serializers.SerializerMethodField()
+    source_username = serializers.SerializerMethodField()
+    source_display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = VideoPost
@@ -55,6 +64,7 @@ class PostSerializer(serializers.ModelSerializer):
             'image_url', 'video_url', 'created_at',
             'likes_count', 'comments_count', 'is_liked',
             'shared_from_username',
+            'source_id', 'source_username', 'source_display_name',
         ]
 
     def get_display_name(self, obj):
@@ -91,10 +101,45 @@ class PostSerializer(serializers.ModelSerializer):
             return obj.shared_from.user.username
         return None
 
+    def get_source_id(self, obj):
+        return _source_post(obj).id
+
+    def get_source_username(self, obj):
+        return _source_post(obj).user.username
+
+    def get_source_display_name(self, obj):
+        source = _source_post(obj)
+        return source.user.first_name or source.user.username
+
 
 class ProfileSerializer(serializers.Serializer):
     user = UserSerializer()
     posts = PostSerializer(many=True)
+    photo_posts = PostSerializer(many=True)
+    video_posts = PostSerializer(many=True)
     followers_count = serializers.IntegerField()
     following_count = serializers.IntegerField()
     is_following = serializers.BooleanField()
+    is_own_profile = serializers.BooleanField()
+
+
+class DebateSerializer(serializers.ModelSerializer):
+    creator_username = serializers.CharField(source='creator.username', read_only=True)
+    creator_display_name = serializers.SerializerMethodField()
+    is_host = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DebateRoom
+        fields = [
+            'id', 'topic', 'creator_username', 'creator_display_name',
+            'created_at', 'is_active', 'is_host',
+        ]
+
+    def get_creator_display_name(self, obj):
+        return obj.creator.first_name or obj.creator.username
+
+    def get_is_host(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.creator_id == request.user.id
+        return False

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { useAuth } from '../contexts/AuthContext';
+import { colors, spacing } from '../shared/theme';
 import { validateRegister } from '../shared/validation';
 
 export function RegisterScreen() {
@@ -43,74 +45,88 @@ export function RegisterScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create account</Text>
-      <Text style={styles.subtitle}>Sign up on web or mobile — same Django account</Text>
+    <AuthLayout
+      title="Join Injustice"
+      subtitle="One account for web and mobile. Sign up here and your profile syncs everywhere."
+    >
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <Input
+            label="First name"
+            value={firstName}
+            onChangeText={setFirstName}
+            autoCapitalize="words"
+            placeholder="Alex"
+          />
+        </View>
+        <View style={styles.half}>
+          <Input
+            label="Last name"
+            value={lastName}
+            onChangeText={setLastName}
+            autoCapitalize="words"
+            placeholder="Kim"
+          />
+        </View>
+      </View>
 
-      <Input label="Username" value={username} onChangeText={setUsername} error={errors.username} />
-      <Input label="Email" value={email} onChangeText={setEmail} error={errors.email} />
+      <Input label="Username" value={username} onChangeText={setUsername} error={errors.username} placeholder="alex_k" />
+      <Input label="Email" value={email} onChangeText={setEmail} error={errors.email} placeholder="you@email.com" />
       <Input
         label="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         error={errors.password}
-      />
-      <Input
-        label="First name"
-        value={firstName}
-        onChangeText={setFirstName}
-        autoCapitalize="words"
-      />
-      <Input
-        label="Last name"
-        value={lastName}
-        onChangeText={setLastName}
-        autoCapitalize="words"
+        placeholder="At least 8 characters"
       />
 
-      {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
+      {apiError ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.apiError}>{apiError}</Text>
+        </View>
+      ) : null}
 
-      <Button
-        title={submitting ? 'Creating account...' : 'Sign up'}
-        onPress={handleSubmit}
-        disabled={submitting}
-      />
+      <Button title="Create account" onPress={handleSubmit} disabled={submitting} loading={submitting} />
 
-      <Link href="/login" style={styles.link}>
-        <Text style={styles.linkText}>Already have an account? Sign in</Text>
+      <Link href="/login" asChild>
+        <Pressable style={styles.footerLink}>
+          <Text style={styles.footerText}>Already have an account? Sign in</Text>
+        </Pressable>
       </Link>
-    </View>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  row: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  half: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: '#f9fafb',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6b7280',
-    marginBottom: 24,
+  errorBox: {
+    backgroundColor: colors.errorBg,
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.25)',
   },
   apiError: {
-    color: '#ef4444',
-    marginBottom: 12,
+    color: colors.error,
+    textAlign: 'center',
+    fontSize: 14,
   },
-  link: {
-    marginTop: 16,
-    alignSelf: 'center',
+  footerLink: {
+    marginTop: spacing.md,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
-  linkText: {
-    color: '#2563eb',
+  footerText: {
+    color: colors.brandLight,
     fontWeight: '600',
+    fontSize: 15,
   },
 });

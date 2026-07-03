@@ -16,6 +16,9 @@ export type Post = {
   username: string;
   display_name: string;
   caption: string;
+  source_id: number;
+  source_username: string;
+  source_display_name: string;
   image_url: string | null;
   video_url: string | null;
   created_at: string;
@@ -25,12 +28,72 @@ export type Post = {
   shared_from_username: string | null;
 };
 
+export type Comment = {
+  id: number;
+  username: string;
+  display_name: string;
+  text: string;
+  created_at: string;
+};
+
 export type Profile = {
   user: User;
   posts: Post[];
+  photo_posts: Post[];
+  video_posts: Post[];
   followers_count: number;
   following_count: number;
   is_following: boolean;
+  is_own_profile: boolean;
+};
+
+export type Debate = {
+  id: number;
+  topic: string;
+  creator_username: string;
+  creator_display_name: string;
+  created_at: string;
+  is_active: boolean;
+  is_host: boolean;
+};
+
+export type InboxConversation = {
+  username: string;
+  display_name: string;
+  last_message: string | null;
+  last_message_time: string | null;
+  unread_count: number;
+  connection_label: string;
+};
+
+export type InboxContact = {
+  username: string;
+  display_name: string;
+  connection_label: string;
+};
+
+export type DirectMessage = {
+  id: number;
+  text: string;
+  created_at: string;
+  is_me: boolean;
+  sender_id?: number;
+  sender_username?: string;
+};
+
+export type DebateMessage = {
+  id: number;
+  text: string;
+  created_at: string;
+  is_me: boolean;
+  sender_id?: number;
+  sender_username?: string;
+  display_name?: string;
+};
+
+export type ShareContact = {
+  username: string;
+  display_name: string;
 };
 
 export type RegisterInput = {
@@ -50,3 +113,5 @@ export type ValidationResult = {
   valid: boolean;
   errors: Record<string, string>;
 };
+
+export type AppTab = 'feed' | 'inbox' | 'reels';

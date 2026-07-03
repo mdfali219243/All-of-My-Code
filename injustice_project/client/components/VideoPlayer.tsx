@@ -43,7 +43,7 @@ export function VideoPlayer({
 
   if (Platform.OS === 'web') {
     return (
-      <View style={[styles.wrap, style]}>
+      <View style={[styles.wrap, style, styles.fill]}>
         <video
           src={src}
           autoPlay={autoPlay}
@@ -102,7 +102,12 @@ export function VideoPlayer({
     `;
 
     return (
-      <View style={[styles.wrap, style]}>
+      <View style={[styles.wrap, style, styles.fill]}>
+        {loading ? (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator color={colors.brandLight} />
+          </View>
+        ) : null}
         <WebView
           source={{ html }}
           style={styles.webview}
@@ -112,17 +117,17 @@ export function VideoPlayer({
           onLoadEnd={() => setLoading(false)}
           onError={() => setLoading(false)}
         />
-        {loading ? (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator color={colors.brandLight} />
-          </View>
-        ) : null}
       </View>
     );
   }
 
   return (
-    <View style={[styles.wrap, style]}>
+    <View style={[styles.wrap, style, styles.fill]}>
+      {loading ? (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator color={colors.brandLight} />
+        </View>
+      ) : null}
       <Video
         ref={videoRef}
         source={{ uri: src }}
@@ -138,11 +143,6 @@ export function VideoPlayer({
           setFailed(true);
         }}
       />
-      {loading ? (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator color={colors.brandLight} />
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -153,6 +153,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: radius.md,
     position: 'relative',
+  },
+  fill: {
+    width: '100%',
+    height: '100%',
   },
   webview: {
     flex: 1,
