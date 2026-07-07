@@ -9,18 +9,36 @@ type Props = {
   jitsiApi: JitsiApi | null;
   onEndDebate: () => Promise<void>;
   ending: boolean;
+  recording?: boolean;
 };
 
-export function DebateHostPanel({ jitsiApi, onEndDebate, ending }: Props) {
+export function DebateHostPanel({ jitsiApi, onEndDebate, ending, recording }: Props) {
   const [open, setOpen] = useState(false);
   const [participants, setParticipants] = useState<JitsiParticipant[]>([]);
 
   const refreshParticipants = useCallback(() => {
     if (!jitsiApi?.getParticipantsInfo) return;
-    const list = jitsiApi.getParticipantsInfo().map((p) => ({
-      id: p.participantId,
-      displayName: p.displayName || 'Guest',
-    }));
+
+    const myId = jitsiApi.getMyUserId?.();
+    const seen = new Set<string>();
+    const list: JitsiParticipant[] = [];
+
+    const localName = jitsiApi.getDisplayName?.();
+    if (localName) {
+      list.push({ id: myId ?? 'local', displayName: `${localName} (You)` });
+      seen.add(myId ?? localName);
+    }
+
+    for (const p of jitsiApi.getParticipantsInfo()) {
+      if (myId && p.participantId === myId) continue;
+      if (seen.has(p.participantId)) continue;
+      seen.add(p.participantId);
+      list.push({
+        id: p.participantId,
+        displayName: p.displayName || 'Guest',
+      });
+    }
+
     setParticipants(list);
   }, [jitsiApi]);
 
@@ -80,7 +98,9 @@ export function DebateHostPanel({ jitsiApi, onEndDebate, ending }: Props) {
       {open ? (
         <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
           <Text style={styles.hint}>
-            You are the debate host. Join first to get moderator powers on Jitsi.
+            {recording
+              ? 'Recording is on. When you end the debate, the video is saved to your profile feed.'
+              : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
           </Text>
 
           <View style={styles.row}>
@@ -89,9 +109,9 @@ export function DebateHostPanel({ jitsiApi, onEndDebate, ending }: Props) {
             </Pressable>
             <Pressable
               style={styles.btn}
-              onPress={() => runCommand('Lobby', 'toggleLobby', true)}
+              onPress={() => runCommand('Turn off lobby', 'toggleLobby', false)}
             >
-              <Text style={styles.btnText}>Lobby on</Text>
+              <Text style={styles.btnText}>Open room</Text>
             </Pressable>
           </View>
 

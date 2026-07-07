@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,6 +23,7 @@ import type { Debate, Post } from '../shared/types';
 import { colors, radius, spacing } from '../shared/theme';
 
 export function FeedScreen() {
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [debates, setDebates] = useState<Debate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +54,10 @@ export function FeedScreen() {
     const topic = debateTopic.trim();
     if (!topic) return;
     try {
-      await createDebate(topic);
+      const debate = await createDebate(topic);
       setDebateModal(false);
       setDebateTopic('');
-      await loadAll();
-      Alert.alert('Debate started', 'Your live debate is now active.');
+      router.push(`/(app)/debate/${debate.id}`);
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not create debate');
     }
@@ -84,7 +85,7 @@ export function FeedScreen() {
         ListHeaderComponent={
           <>
             <CreatePostCard onPosted={loadAll} onOpenDebate={() => setDebateModal(true)} />
-            <DebatesCarousel debates={debates} />
+            <DebatesCarousel debates={debates} onChanged={loadAll} />
           </>
         }
         ListEmptyComponent={

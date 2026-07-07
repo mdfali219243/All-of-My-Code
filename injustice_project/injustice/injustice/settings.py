@@ -173,6 +173,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:19006',
     'http://127.0.0.1:19006',
     'https://injustice-nine.vercel.app',
+    'https://project-injustice.com',
+    'https://www.project-injustice.com',
 ]
 _extra_cors = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 if _extra_cors:

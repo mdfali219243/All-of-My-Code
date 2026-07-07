@@ -32,7 +32,24 @@ export async function sendDebateMessage(roomId: number, message: string): Promis
   return data.message;
 }
 
-export async function endDebate(roomId: number): Promise<{ status: string }> {
+export async function endDebate(roomId: number, videoBlob?: Blob | null): Promise<{ status: string }> {
+  const token = await getAccessToken();
+
+  if (videoBlob) {
+    const form = new FormData();
+    form.append('video_file', videoBlob, 'debate_recording.webm');
+
+    const response = await fetch(`${API_BASE_URL}/debates/${roomId}/end/`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail ?? 'Failed to end debate');
+    return data as { status: string };
+  }
+
   return apiRequest(`/debates/${roomId}/end/`, { method: 'POST' });
 }
 

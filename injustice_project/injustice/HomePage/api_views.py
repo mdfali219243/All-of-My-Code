@@ -238,7 +238,6 @@ def debate_messages_view(request, room_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
 def end_debate_view(request, room_id):
     room = get_object_or_404(DebateRoom, id=room_id)
 

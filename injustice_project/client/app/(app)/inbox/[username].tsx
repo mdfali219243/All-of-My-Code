@@ -1,14 +1,10 @@
-import { Redirect } from 'expo-router';
-
 import { ChatScreen } from '../../../screens/ChatScreen';
-import { useAuth } from '../../../contexts/AuthContext';
+import { RequireAuth } from '../../../components/RequireAuth';
 
 export default function ChatRoute() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  return <ChatScreen />;
+  return (
+    <RequireAuth>
+      <ChatScreen />
+    </RequireAuth>
+  );
 }

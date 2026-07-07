@@ -1,14 +1,10 @@
-import { Redirect } from 'expo-router';
-
 import { InboxScreen } from '../../../screens/InboxScreen';
-import { useAuth } from '../../../contexts/AuthContext';
+import { RequireAuth } from '../../../components/RequireAuth';
 
 export default function InboxRoute() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  return <InboxScreen />;
+  return (
+    <RequireAuth>
+      <InboxScreen />
+    </RequireAuth>
+  );
 }

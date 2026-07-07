@@ -1,14 +1,10 @@
-import { Redirect } from 'expo-router';
-
 import { ProfileScreen } from '../../../screens/ProfileScreen';
-import { useAuth } from '../../../contexts/AuthContext';
+import { RequireAuth } from '../../../components/RequireAuth';
 
 export default function ProfileRoute() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  return <ProfileScreen />;
+  return (
+    <RequireAuth>
+      <ProfileScreen />
+    </RequireAuth>
+  );
 }

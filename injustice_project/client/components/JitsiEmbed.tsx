@@ -19,7 +19,6 @@ const HOST_TOOLBAR = [
   'tileview',
   'participants-pane',
   'mute-everyone',
-  'security',
   'settings',
 ];
 
@@ -29,15 +28,22 @@ export function getJitsiRoomName(roomId: number) {
   return `InjusticeDebate${roomId}`;
 }
 
-export function getJitsiUrl(roomId: number, isHost = false) {
+export function getJitsiUrl(roomId: number, isHost = false, displayName?: string) {
   const room = getJitsiRoomName(roomId);
   const muted = isHost ? 'false' : 'true';
+  const nameParam = displayName ? `&userInfo.displayName="${encodeURIComponent(displayName)}"` : '';
   return (
     `https://${JITSI_DOMAIN}/${room}` +
     `#config.prejoinPageEnabled=false` +
-    `&config.startWithAudioMuted=${muted}` +
+    `&config.prejoinConfig.enabled=false` +
+    `&config.requireDisplayName=false` +
+    `&config.enableWelcomePage=false` +
+    `&config.enableLobby=false` +
+    `&config.lobby.enabled=false` +
+    `&config.startAudioMuted=${muted}` +
     `&config.startWithVideoMuted=${muted}` +
-    `&config.disableReactions=${isHost ? 'false' : 'true'}`
+    `&config.disableReactions=${isHost ? 'false' : 'true'}` +
+    nameParam
   );
 }
 
@@ -52,6 +58,8 @@ export type JitsiApi = {
   addEventListener: (event: string, listener: (payload: unknown) => void) => void;
   removeEventListener: (event: string, listener: (payload: unknown) => void) => void;
   getParticipantsInfo?: () => Array<{ participantId: string; displayName: string }>;
+  getMyUserId?: () => string;
+  getDisplayName?: () => string;
 };
 
 declare global {
@@ -74,6 +82,11 @@ function buildJitsiOptions(
     userInfo: displayName ? { displayName } : undefined,
     configOverwrite: {
       prejoinPageEnabled: false,
+      prejoinConfig: { enabled: false },
+      requireDisplayName: false,
+      enableWelcomePage: false,
+      enableLobby: false,
+      lobby: { enabled: false, autoKnock: false, enableChat: false },
       startWithAudioMuted: !isHost,
       startWithVideoMuted: !isHost,
       disableReactions: !isHost,
@@ -96,23 +109,42 @@ type Props = {
 function WebJitsiEmbed({ roomId, displayName, isHost = false, onApiReady }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiApi | null>(null);
-  const url = getJitsiUrl(roomId, isHost);
+  const onApiReadyRef = useRef(onApiReady);
+  const displayNameRef = useRef(displayName);
+  const url = getJitsiUrl(roomId, isHost, displayName);
+
+  onApiReadyRef.current = onApiReady;
+  displayNameRef.current = displayName;
 
   useEffect(() => {
     const parentNode = hostRef.current;
     if (!parentNode) return;
 
+    let cancelled = false;
     parentNode.innerHTML = '';
 
     const mount = () => {
-      if (!window.JitsiMeetExternalAPI || !hostRef.current) return;
+      if (cancelled || !window.JitsiMeetExternalAPI || !hostRef.current) return;
       apiRef.current?.dispose();
       const api = new window.JitsiMeetExternalAPI(
         JITSI_DOMAIN,
-        buildJitsiOptions(roomId, hostRef.current, displayName, isHost),
+        buildJitsiOptions(roomId, hostRef.current, displayNameRef.current, isHost),
       );
       apiRef.current = api;
-      onApiReady?.(api);
+
+      if (isHost) {
+        const startRoom = () => {
+          try {
+            api.executeCommand('toggleLobby', false);
+          } catch {
+            /* lobby may already be off */
+          }
+        };
+        api.addEventListener('videoConferenceJoined', startRoom);
+        api.addEventListener('readyToClose', startRoom);
+      }
+
+      onApiReadyRef.current?.(api);
     };
 
     if (window.JitsiMeetExternalAPI) {
@@ -126,11 +158,12 @@ function WebJitsiEmbed({ roomId, displayName, isHost = false, onApiReady }: Prop
     }
 
     return () => {
-      onApiReady?.(null);
+      cancelled = true;
+      onApiReadyRef.current?.(null);
       apiRef.current?.dispose();
       apiRef.current = null;
     };
-  }, [roomId, displayName, isHost, onApiReady]);
+  }, [roomId, isHost]);
 
   return (
     <View style={styles.container}>
@@ -160,7 +193,7 @@ export function JitsiEmbed({ roomId, displayName, isHost = false, onApiReady }: 
 
   return (
     <WebView
-      source={{ uri: getJitsiUrl(roomId, isHost) }}
+      source={{ uri: getJitsiUrl(roomId, isHost, displayName) }}
       style={styles.webview}
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}

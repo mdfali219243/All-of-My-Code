@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +20,7 @@ import { useDebateSocket } from '../api/websocket';
 import { DebateHostPanel } from '../components/DebateHostPanel';
 import { JitsiEmbed, type JitsiApi } from '../components/JitsiEmbed';
 import { useAuth } from '../contexts/AuthContext';
+import { startDebateRecording, type DebateRecorder } from '../shared/debateRecording';
 import type { Debate, DebateMessage } from '../shared/types';
 import { colors, radius, spacing } from '../shared/theme';
 
@@ -33,6 +34,9 @@ export function DebateScreen() {
   const [text, setText] = useState('');
   const [jitsiApi, setJitsiApi] = useState<JitsiApi | null>(null);
   const [ending, setEnding] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
+  const recorderRef = useRef<DebateRecorder | null>(null);
 
   const roomId = debate?.id;
   const isHost = Boolean(debate?.is_host);
@@ -60,6 +64,36 @@ export function DebateScreen() {
     }
   }, [debate, router]);
 
+  useEffect(() => {
+    if (!isHost || Platform.OS !== 'web' || recordingReady) return;
+
+    let cancelled = false;
+
+    (async () => {
+      const recorder = await startDebateRecording();
+      if (cancelled) {
+        await recorder?.stop();
+        return;
+      }
+      if (recorder) {
+        recorderRef.current = recorder;
+        setRecording(true);
+      }
+      setRecordingReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHost, recordingReady]);
+
+  useEffect(() => {
+    return () => {
+      void recorderRef.current?.stop();
+      recorderRef.current = null;
+    };
+  }, []);
+
   const handleJitsiApi = useCallback((api: JitsiApi | null) => {
     setJitsiApi(api);
   }, []);
@@ -79,7 +113,10 @@ export function DebateScreen() {
     if (!roomId) return;
     setEnding(true);
     try {
-      await endDebate(roomId);
+      const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
+      recorderRef.current = null;
+      setRecording(false);
+      await endDebate(roomId, videoBlob);
       router.back();
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not end debate');
@@ -107,6 +144,9 @@ export function DebateScreen() {
             <View style={styles.liveDot} />
             <Text style={styles.liveText}>LIVE</Text>
             {isHost ? <Text style={styles.hostBadge}>YOU ARE HOST</Text> : null}
+            {isHost && recording ? (
+              <Text style={styles.recBadge}>REC</Text>
+            ) : null}
           </View>
           <Text style={styles.topic} numberOfLines={1}>{debate.topic}</Text>
           <Text style={styles.host}>Host: {debate.creator_display_name}</Text>
@@ -119,13 +159,27 @@ export function DebateScreen() {
       <View style={styles.main}>
         <JitsiEmbed
           roomId={debate.id}
-          displayName={user?.first_name || user?.username}
+          displayName={user?.username ?? user?.first_name ?? 'Host'}
           isHost={isHost}
           onApiReady={handleJitsiApi}
         />
 
+        {isHost && Platform.OS === 'web' && !recordingReady ? (
+          <View style={styles.recordingOverlay}>
+            <Text style={styles.recordingTitle}>Starting recording…</Text>
+            <Text style={styles.recordingHint}>
+              Choose the browser tab with this debate and allow audio so the session can be saved to your feed.
+            </Text>
+          </View>
+        ) : null}
+
         {isHost ? (
-          <DebateHostPanel jitsiApi={jitsiApi} onEndDebate={handleEndDebate} ending={ending} />
+          <DebateHostPanel
+            jitsiApi={jitsiApi}
+            onEndDebate={handleEndDebate}
+            ending={ending}
+            recording={recording}
+          />
         ) : null}
 
         {chatOpen ? (
@@ -201,9 +255,28 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
   },
+  recBadge: {
+    color: '#fecaca',
+    fontWeight: '800',
+    fontSize: 10,
+    backgroundColor: 'rgba(220,38,38,0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
   topic: { color: colors.text, fontWeight: '700', fontSize: 16 },
   host: { color: colors.textDim, fontSize: 13 },
   main: { flex: 1 },
+  recordingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    zIndex: 20,
+  },
+  recordingTitle: { color: colors.white, fontWeight: '700', fontSize: 18, marginBottom: spacing.sm },
+  recordingHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 320 },
   chatPanel: {
     height: 240,
     backgroundColor: colors.surface,

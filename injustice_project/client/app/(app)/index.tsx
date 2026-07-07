@@ -1,14 +1,10 @@
-import { Redirect } from 'expo-router';
-
 import { FeedScreen } from '../../screens/FeedScreen';
-import { useAuth } from '../../contexts/AuthContext';
+import { RequireAuth } from '../../components/RequireAuth';
 
 export default function HomeRoute() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  return <FeedScreen />;
+  return (
+    <RequireAuth>
+      <FeedScreen />
+    </RequireAuth>
+  );
 }

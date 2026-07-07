@@ -1,14 +1,10 @@
-import { Redirect } from 'expo-router';
-
 import { DebateScreen } from '../../../screens/DebateScreen';
-import { useAuth } from '../../../contexts/AuthContext';
+import { RequireAuth } from '../../../components/RequireAuth';
 
 export default function DebateRoute() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  return <DebateScreen />;
+  return (
+    <RequireAuth>
+      <DebateScreen />
+    </RequireAuth>
+  );
 }
