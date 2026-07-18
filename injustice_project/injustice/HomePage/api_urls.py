@@ -25,4 +25,5 @@ urlpatterns = [
     path('users/<str:username>/follow/', api_views.follow_user_view, name='api_follow_user'),
     path('profile/<str:username>/', api_views.profile_view, name='api_profile'),
     path('profile/<str:username>/photos/', api_views.upload_photo_view, name='api_upload_photo'),
+    path('search/', api_views.search_view, name='api_search'),
 ]

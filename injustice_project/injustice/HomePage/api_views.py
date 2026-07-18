@@ -16,6 +16,7 @@ from .serializers import (
     RegisterSerializer, UserSerializer, PostSerializer,
     CommentSerializer, DebateSerializer,
 )
+from .video_utils import prepare_video_upload
 from .views import (
     users_can_message, get_messageable_users, _connection_label, _original_post,
 )
@@ -94,7 +95,7 @@ def posts_view(request):
         post = VideoPost.objects.create(
             user=request.user,
             caption=caption,
-            video_file=video_file if video_file else None,
+            video_file=prepare_video_upload(video_file) if video_file else None,
             image_file=image_file if image_file else None,
         )
         serializer = PostSerializer(post, context={'request': request})
@@ -252,7 +253,7 @@ def end_debate_view(request, room_id):
         VideoPost.objects.create(
             user=request.user,
             caption=f"Live Debate Recording: {room.topic}",
-            video_file=video_file,
+            video_file=prepare_video_upload(video_file),
         )
 
     return Response({'status': 'ok'})
@@ -432,6 +433,81 @@ def follow_user_view(request, username):
     return Response({'following': following})
 
 
+def _field_relevance_score(text, q_lower):
+    """Score a single text field: exact > starts-with > contains."""
+    if not text:
+        return 0
+    text_lower = text.lower()
+    if text_lower == q_lower:
+        return 3
+    if text_lower.startswith(q_lower):
+        return 2
+    if q_lower in text_lower:
+        return 1
+    return 0
+
+
+def _user_search_score(user, q_lower):
+    username_score = _field_relevance_score(user.username, q_lower)
+    if username_score:
+        return username_score * 100
+
+    name_score = max(
+        _field_relevance_score(user.first_name, q_lower),
+        _field_relevance_score(user.last_name, q_lower),
+    )
+    if name_score:
+        return name_score * 10
+
+    if _field_relevance_score(user.email, q_lower):
+        return 1
+    return 0
+
+
+def _post_search_score(post, q_lower):
+    return _field_relevance_score(post.caption or '', q_lower)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_view(request):
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return Response({'users': [], 'posts': []})
+
+    q_lower = q.lower()
+    user_q = (
+        Q(username__icontains=q)
+        | Q(first_name__icontains=q)
+        | Q(last_name__icontains=q)
+        | Q(email__icontains=q)
+    )
+    users = sorted(
+        User.objects.filter(user_q).distinct(),
+        key=lambda u: (-_user_search_score(u, q_lower), u.username.lower()),
+    )[:20]
+
+    post_qs = VideoPost.objects.filter(
+        caption__icontains=q,
+    ).exclude(
+        video_file='',
+    ).exclude(
+        video_file__isnull=True,
+    ).select_related(
+        'user', 'shared_from', 'shared_from__user',
+    ).prefetch_related('likes', 'comments')
+    posts = sorted(
+        post_qs,
+        key=lambda p: (-_post_search_score(p, q_lower), -p.created_at.timestamp()),
+    )[:20]
+
+    ctx = {'request': request}
+    return Response({
+        'users': UserSerializer(users, many=True).data,
+        'posts': PostSerializer(posts, many=True, context=ctx).data,
+    })
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_root_view(request):
@@ -447,5 +523,6 @@ def api_root_view(request):
             'debates': '/api/debates/',
             'inbox': '/api/inbox/',
             'profile': '/api/profile/<username>/',
+            'search': '/api/search/?q=...',
         },
     })
