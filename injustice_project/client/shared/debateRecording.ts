@@ -16,9 +16,10 @@ export async function startDebateRecording(): Promise<DebateRecorder | null> {
       audio: true,
     });
 
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-      ? 'video/webm;codecs=vp9,opus'
-      : 'video/webm';
+    const mimeType =
+      ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((type) =>
+        MediaRecorder.isTypeSupported(type),
+      ) ?? 'video/webm';
 
     const recorder = new MediaRecorder(stream, { mimeType });
     const chunks: Blob[] = [];

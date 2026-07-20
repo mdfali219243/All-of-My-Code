@@ -152,6 +152,8 @@ export function DebateScreen() {
   const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
   const recorderRef = useRef<DebateRecorder | null>(null);
   const endingRef = useRef(false);
+  const presenceGenerationRef = useRef(0);
+  const [hostInConference, setHostInConference] = useState(Platform.OS !== 'web');
 
   const roomId = debate?.id;
   const isHost = Boolean(debate?.is_host);
@@ -180,21 +182,49 @@ export function DebateScreen() {
   }, [debate, router]);
 
   useEffect(() => {
-    if (!isHost || !roomId || !debate?.is_active) return;
+    if (!isHost || !roomId || !debate?.is_active || !hostInConference) return;
 
-    void sendHostHeartbeat(roomId).catch(() => {});
+    const generation = ++presenceGenerationRef.current;
 
-    const interval = setInterval(() => {
+    const sendHeartbeat = () => {
+      if (generation !== presenceGenerationRef.current || endingRef.current) return;
       void sendHostHeartbeat(roomId).catch(() => {});
-    }, 30_000);
+    };
+
+    sendHeartbeat();
+
+    const interval = setInterval(sendHeartbeat, 30_000);
 
     return () => {
       clearInterval(interval);
+      if (generation === presenceGenerationRef.current) {
+        presenceGenerationRef.current += 1;
+      }
       if (!endingRef.current) {
         void clearHostPresence(roomId).catch(() => {});
       }
     };
-  }, [isHost, roomId, debate?.is_active]);
+  }, [isHost, roomId, debate?.is_active, hostInConference]);
+
+  useEffect(() => {
+    if (!jitsiApi || !isHost || !roomId || Platform.OS !== 'web') return;
+
+    const onJoined = () => setHostInConference(true);
+    const onLeft = () => {
+      setHostInConference(false);
+      if (endingRef.current) return;
+      presenceGenerationRef.current += 1;
+      void clearHostPresence(roomId).catch(() => {});
+    };
+
+    jitsiApi.addEventListener('videoConferenceJoined', onJoined);
+    jitsiApi.addEventListener('videoConferenceLeft', onLeft);
+
+    return () => {
+      jitsiApi.removeEventListener('videoConferenceJoined', onJoined);
+      jitsiApi.removeEventListener('videoConferenceLeft', onLeft);
+    };
+  }, [jitsiApi, isHost, roomId]);
 
   useEffect(() => {
     if (!isHost || Platform.OS !== 'web' || recordingReady) return;
@@ -245,6 +275,8 @@ export function DebateScreen() {
     if (!roomId) return;
     setEnding(true);
     endingRef.current = true;
+    presenceGenerationRef.current += 1;
+    setHostInConference(false);
     try {
       const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
       recorderRef.current = null;
@@ -252,6 +284,7 @@ export function DebateScreen() {
       await endDebate(roomId, videoBlob);
       router.back();
     } catch (e) {
+      endingRef.current = false;
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not end debate');
     } finally {
       setEnding(false);

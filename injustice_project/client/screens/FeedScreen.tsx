@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -90,6 +90,10 @@ export function FeedScreen() {
     setDebates(debatesData);
   }, []);
 
+  const removeDebate = useCallback((debateId: number) => {
+    setDebates((prev) => prev.filter((debate) => debate.id !== debateId));
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -108,6 +112,13 @@ export function FeedScreen() {
 
     return () => clearInterval(interval);
   }, [loadAll]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (loading) return;
+      void fetchDebates().then(setDebates).catch(() => {});
+    }, [loading]),
+  );
 
   async function handleCreateDebate() {
     const topic = debateTopic.trim();
@@ -144,7 +155,7 @@ export function FeedScreen() {
         ListHeaderComponent={
           <>
             <CreatePostCard onPosted={loadAll} onOpenDebate={() => setDebateModal(true)} />
-            <DebatesCarousel debates={debates} onChanged={loadAll} />
+            <DebatesCarousel debates={debates} onChanged={loadAll} onRemove={removeDebate} />
           </>
         }
         ListEmptyComponent={

@@ -247,9 +247,12 @@ def end_debate_view(request, room_id):
     if request.user != room.creator:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-    room.is_active = False
-    room.host_online = False
-    room.save()
+    updated = DebateRoom.objects.filter(
+        id=room.id,
+        creator=request.user,
+    ).update(is_active=False, host_online=False)
+    if not updated:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
     video_file = request.FILES.get('video_file')
     if video_file:
@@ -270,12 +273,13 @@ def host_heartbeat_view(request, room_id):
     if request.user != room.creator:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-    if not room.is_active:
+    updated = DebateRoom.objects.filter(
+        id=room.id,
+        creator=request.user,
+        is_active=True,
+    ).update(host_online=True, host_last_seen=timezone.now())
+    if not updated:
         return Response({'detail': 'Debate is not active.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    room.host_online = True
-    room.host_last_seen = timezone.now()
-    room.save(update_fields=['host_online', 'host_last_seen'])
 
     return Response({'status': 'ok'})
 
@@ -288,8 +292,7 @@ def host_leave_view(request, room_id):
     if request.user != room.creator:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-    room.host_online = False
-    room.save(update_fields=['host_online'])
+    DebateRoom.objects.filter(id=room.id, creator=request.user).update(host_online=False)
 
     return Response({'status': 'ok'})
 

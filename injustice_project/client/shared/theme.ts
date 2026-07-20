@@ -1,4 +1,29 @@
-export const colors = {
+export type ThemeMode = 'dark' | 'light';
+
+export type ThemeColors = {
+  bg: string;
+  bgSecondary: string;
+  surface: string;
+  surfaceHover: string;
+  surfaceMuted: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  textDim: string;
+  brand: string;
+  brandDark: string;
+  brandLight: string;
+  brandGlow: string;
+  accent: string;
+  accentSoft: string;
+  error: string;
+  errorBg: string;
+  success: string;
+  white: string;
+  overlay: string;
+};
+
+export const darkColors: ThemeColors = {
   bg: '#0f1117',
   bgSecondary: '#18191a',
   surface: '#242526',
@@ -20,6 +45,36 @@ export const colors = {
   white: '#ffffff',
   overlay: 'rgba(15, 17, 23, 0.85)',
 };
+
+export const lightColors: ThemeColors = {
+  bg: '#f0f2f5',
+  bgSecondary: '#ffffff',
+  surface: '#ffffff',
+  surfaceHover: '#e4e6eb',
+  surfaceMuted: '#f7f8fa',
+  border: '#dddfe2',
+  text: '#050505',
+  textMuted: '#65676b',
+  textDim: '#8a8d91',
+  brand: '#6366f1',
+  brandDark: '#4f46e5',
+  brandLight: '#4f46e5',
+  brandGlow: 'rgba(99, 102, 241, 0.2)',
+  accent: '#db2777',
+  accentSoft: 'rgba(219, 39, 119, 0.1)',
+  error: '#dc2626',
+  errorBg: 'rgba(220, 38, 38, 0.08)',
+  success: '#059669',
+  white: '#ffffff',
+  overlay: 'rgba(0, 0, 0, 0.45)',
+};
+
+/** Default dark palette — prefer `useTheme().colors` in new UI. */
+export const colors = darkColors;
+
+export function getThemeColors(mode: ThemeMode): ThemeColors {
+  return mode === 'light' ? lightColors : darkColors;
+}
 
 export const spacing = {
   xs: 4,

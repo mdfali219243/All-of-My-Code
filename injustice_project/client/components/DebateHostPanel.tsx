@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { JitsiApi, JitsiParticipant } from './JitsiEmbed';
+import { confirmDestructive } from '../shared/confirm';
 import { colors, radius, spacing } from '../shared/theme';
 
 type Props = {
@@ -73,18 +74,15 @@ export function DebateHostPanel({ jitsiApi, onEndDebate, ending, recording }: Pr
     }
   }
 
-  function confirmEnd() {
-    Alert.alert('End debate?', 'Everyone will be removed and the room will close.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'End debate',
-        style: 'destructive',
-        onPress: () => {
-          jitsiApi?.executeCommand('hangup');
-          onEndDebate();
-        },
-      },
-    ]);
+  async function confirmEnd() {
+    const confirmed = await confirmDestructive(
+      'End debate?',
+      'Everyone will be removed and the room will close.',
+      'End debate',
+    );
+    if (!confirmed) return;
+
+    await onEndDebate();
   }
 
   return (
@@ -145,7 +143,7 @@ export function DebateHostPanel({ jitsiApi, onEndDebate, ending, recording }: Pr
           <Pressable
             style={[styles.endBtn, ending && styles.endBtnDisabled]}
             disabled={ending}
-            onPress={confirmEnd}
+            onPress={() => void confirmEnd()}
           >
             <Text style={styles.endBtnText}>{ending ? 'Ending…' : 'End debate for everyone'}</Text>
           </Pressable>
