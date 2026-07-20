@@ -32,7 +32,10 @@ export async function sendDebateMessage(roomId: number, message: string): Promis
   return data.message;
 }
 
-export async function endDebate(roomId: number, videoBlob?: Blob | null): Promise<{ status: string }> {
+export async function endDebate(
+  roomId: number,
+  videoBlob?: Blob | null,
+): Promise<{ status: string; post_id?: number; post?: Post }> {
   const token = await getAccessToken();
 
   if (videoBlob) {
@@ -48,10 +51,20 @@ export async function endDebate(roomId: number, videoBlob?: Blob | null): Promis
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.detail ?? 'Failed to end debate');
-    return data as { status: string };
+    return {
+      ...(data as { status: string; post_id?: number; post?: Post }),
+      post: data.post ? normalizePost(data.post as Post) : undefined,
+    };
   }
 
-  return apiRequest(`/debates/${roomId}/end/`, { method: 'POST' });
+  const data = await apiRequest<{ status: string; post_id?: number; post?: Post }>(
+    `/debates/${roomId}/end/`,
+    { method: 'POST' },
+  );
+  return {
+    ...data,
+    post: data.post ? normalizePost(data.post) : undefined,
+  };
 }
 
 export async function sendHostHeartbeat(roomId: number): Promise<void> {

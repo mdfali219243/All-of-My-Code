@@ -426,13 +426,10 @@ def end_debate_upload(request, room_id):
     room.host_online = False
     room.save()
     
-    video_file = request.FILES.get('video_file')
-    if video_file:
-        from .video_utils import prepare_video_upload
-        VideoPost.objects.create(
-            user=request.user,
-            caption=f"Live Debate Recording: {room.topic}",
-            video_file=prepare_video_upload(video_file),
-        )
-        
-    return JsonResponse({'status': 'ok'})
+    from .debate_recording import publish_debate_recording
+
+    post = publish_debate_recording(room, video_file=request.FILES.get('video_file'))
+    payload = {'status': 'ok'}
+    if post:
+        payload['post_id'] = post.id
+    return JsonResponse(payload)

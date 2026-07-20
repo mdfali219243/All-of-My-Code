@@ -17,8 +17,9 @@ from .serializers import (
     RegisterSerializer, UserSerializer, PostSerializer,
     CommentSerializer, DebateSerializer,
 )
-from .video_utils import prepare_video_upload
+from .debate_recording import publish_debate_recording
 from .debate_presence import live_debates_queryset
+from .video_utils import prepare_video_upload
 from .views import (
     users_can_message, get_messageable_users, _connection_label, _original_post,
 )
@@ -241,6 +242,7 @@ def debate_messages_view(request, room_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def end_debate_view(request, room_id):
     room = get_object_or_404(DebateRoom, id=room_id)
 
@@ -254,15 +256,14 @@ def end_debate_view(request, room_id):
     if not updated:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-    video_file = request.FILES.get('video_file')
-    if video_file:
-        VideoPost.objects.create(
-            user=request.user,
-            caption=f"Live Debate Recording: {room.topic}",
-            video_file=prepare_video_upload(video_file),
-        )
+    post = publish_debate_recording(room, video_file=request.FILES.get('video_file'))
 
-    return Response({'status': 'ok'})
+    payload = {'status': 'ok'}
+    if post:
+        payload['post_id'] = post.id
+        serializer = PostSerializer(post, context={'request': request})
+        payload['post'] = serializer.data
+    return Response(payload)
 
 
 @api_view(['POST'])

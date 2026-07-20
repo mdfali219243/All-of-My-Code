@@ -321,6 +321,7 @@ export function DebateScreen() {
       recorderRef.current = null;
       setRecording(false);
       await endDebate(roomId, videoBlob);
+      Alert.alert('Debate ended', videoBlob ? 'Your recording was posted to the feed.' : 'The debate has ended.');
       router.back();
     } catch (e) {
       endingRef.current = false;

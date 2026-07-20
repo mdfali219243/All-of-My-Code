@@ -116,8 +116,8 @@ export function FeedScreen() {
   useFocusEffect(
     useCallback(() => {
       if (loading) return;
-      void fetchDebates().then(setDebates).catch(() => {});
-    }, [loading]),
+      void loadAll().catch(() => {});
+    }, [loading, loadAll]),
   );
 
   async function handleCreateDebate() {

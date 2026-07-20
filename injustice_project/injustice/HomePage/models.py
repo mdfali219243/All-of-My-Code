@@ -42,6 +42,14 @@ class DebateRoom(models.Model):
     is_active = models.BooleanField(default=True)
     host_online = models.BooleanField(default=False)
     host_last_seen = models.DateTimeField(null=True, blank=True)
+    recording_file = models.FileField(upload_to='debate_recordings/', blank=True, null=True)
+    recording_post = models.OneToOneField(
+        VideoPost,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='debate_room',
+    )
 
     def __str__(self):
         return self.topic
