@@ -21,7 +21,13 @@ import { DebateHostPanel } from '../components/DebateHostPanel';
 import { JitsiEmbed, type JitsiApi } from '../components/JitsiEmbed';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { startDebateRecording, type DebateRecorder } from '../shared/debateRecording';
+import {
+  recordingErrorMessage,
+  startDebateRecording,
+  type DebateRecorder,
+  type DebateRecordingError,
+} from '../shared/debateRecording';
+import { confirmDestructive } from '../shared/confirm';
 import type { Debate, DebateMessage } from '../shared/types';
 import { radius, spacing, type ThemeColors } from '../shared/theme';
 
@@ -150,6 +156,8 @@ export function DebateScreen() {
   const [ending, setEnding] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
+  const [recordingPromptOpen, setRecordingPromptOpen] = useState(false);
+  const [recordingError, setRecordingError] = useState<DebateRecordingError | null>(null);
   const recorderRef = useRef<DebateRecorder | null>(null);
   const endingRef = useRef(false);
   const presenceGenerationRef = useRef(0);
@@ -206,6 +214,33 @@ export function DebateScreen() {
     };
   }, [isHost, roomId, debate?.is_active, hostInConference]);
 
+  const beginRecording = useCallback(async () => {
+    if (!isHost || Platform.OS !== 'web') return;
+
+    setRecordingPromptOpen(true);
+    setRecordingError(null);
+
+    const result = await startDebateRecording();
+    if (result.recorder) {
+      result.recorder.onStopped(() => {
+        if (endingRef.current) return;
+        setRecording(false);
+        setRecordingError('failed');
+        recorderRef.current = null;
+        Alert.alert(
+          'Recording stopped',
+          'Screen sharing ended. Tap Retry in Host controls to record again, or end the debate to save what was captured.',
+        );
+      });
+      recorderRef.current = result.recorder;
+      setRecording(true);
+    } else if (result.error) {
+      setRecordingError(result.error);
+    }
+    setRecordingPromptOpen(false);
+    setRecordingReady(true);
+  }, [isHost]);
+
   useEffect(() => {
     if (!jitsiApi || !isHost || !roomId || Platform.OS !== 'web') return;
 
@@ -215,6 +250,12 @@ export function DebateScreen() {
       if (endingRef.current) return;
       presenceGenerationRef.current += 1;
       void clearHostPresence(roomId).catch(() => {});
+      if (recorderRef.current) {
+        Alert.alert(
+          'Save recording?',
+          'You left the video room. Use Host controls → End debate for everyone to upload the recording.',
+        );
+      }
     };
 
     jitsiApi.addEventListener('videoConferenceJoined', onJoined);
@@ -227,27 +268,9 @@ export function DebateScreen() {
   }, [jitsiApi, isHost, roomId]);
 
   useEffect(() => {
-    if (!isHost || Platform.OS !== 'web' || recordingReady) return;
-
-    let cancelled = false;
-
-    (async () => {
-      const recorder = await startDebateRecording();
-      if (cancelled) {
-        await recorder?.stop();
-        return;
-      }
-      if (recorder) {
-        recorderRef.current = recorder;
-        setRecording(true);
-      }
-      setRecordingReady(true);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isHost, recordingReady]);
+    if (!isHost || Platform.OS !== 'web' || !hostInConference || recordingReady) return;
+    void beginRecording();
+  }, [isHost, hostInConference, recordingReady, beginRecording]);
 
   useEffect(() => {
     return () => {
@@ -269,6 +292,22 @@ export function DebateScreen() {
 
     const sent = await sendDebateMessage(roomId, msg);
     appendMessage(sent);
+  }
+
+  async function handleLeave() {
+    if (!isHost || !debate?.is_active) {
+      router.back();
+      return;
+    }
+
+    const confirmed = await confirmDestructive(
+      'Leave debate?',
+      recording
+        ? 'Leaving without ending will discard the recording. Use Host controls → End debate for everyone to save the video.'
+        : 'The debate stays live until you end it from Host controls.',
+      'Leave anyway',
+    );
+    if (confirmed) router.back();
   }
 
   async function handleEndDebate() {
@@ -302,7 +341,7 @@ export function DebateScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => void handleLeave()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
         <View style={styles.headerCenter}>
@@ -330,11 +369,11 @@ export function DebateScreen() {
           onApiReady={handleJitsiApi}
         />
 
-        {isHost && Platform.OS === 'web' && !recordingReady ? (
+        {isHost && Platform.OS === 'web' && recordingPromptOpen ? (
           <View style={styles.recordingOverlay}>
             <Text style={styles.recordingTitle}>Starting recording…</Text>
             <Text style={styles.recordingHint}>
-              Choose the browser tab with this debate and allow audio so the session can be saved to your feed.
+              Choose this browser tab and allow audio when prompted so the session can be saved to your feed.
             </Text>
           </View>
         ) : null}
@@ -343,8 +382,10 @@ export function DebateScreen() {
           <DebateHostPanel
             jitsiApi={jitsiApi}
             onEndDebate={handleEndDebate}
+            onRetryRecording={recordingError ? () => void beginRecording() : undefined}
             ending={ending}
             recording={recording}
+            recordingError={recordingError ? recordingErrorMessage(recordingError) : undefined}
           />
         ) : null}
 

@@ -9,11 +9,20 @@ import { colors, radius, spacing } from '../shared/theme';
 type Props = {
   jitsiApi: JitsiApi | null;
   onEndDebate: () => Promise<void>;
+  onRetryRecording?: () => void;
   ending: boolean;
   recording?: boolean;
+  recordingError?: string;
 };
 
-export function DebateHostPanel({ jitsiApi, onEndDebate, ending, recording }: Props) {
+export function DebateHostPanel({
+  jitsiApi,
+  onEndDebate,
+  onRetryRecording,
+  ending,
+  recording,
+  recordingError,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [participants, setParticipants] = useState<JitsiParticipant[]>([]);
 
@@ -98,8 +107,16 @@ export function DebateHostPanel({ jitsiApi, onEndDebate, ending, recording }: Pr
           <Text style={styles.hint}>
             {recording
               ? 'Recording is on. When you end the debate, the video is saved to your profile feed.'
-              : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
+              : recordingError
+                ? recordingError
+                : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
           </Text>
+
+          {recordingError && onRetryRecording ? (
+            <Pressable style={styles.btn} onPress={onRetryRecording}>
+              <Text style={styles.btnText}>Retry recording</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.row}>
             <Pressable style={styles.btn} onPress={() => runCommand('Mute all', 'muteEveryone')}>

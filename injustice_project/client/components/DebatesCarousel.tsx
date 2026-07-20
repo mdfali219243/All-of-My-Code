@@ -65,9 +65,9 @@ export function DebatesCarousel({ debates, onChanged, onRemove }: Props) {
 
   async function handleDelete(debate: Debate) {
     const confirmed = await confirmDestructive(
-      'End debate?',
-      `Remove "${debate.topic}" and stop the live meeting?`,
-      'End debate',
+      'End without saving video?',
+      'Ending from the feed does not upload a recording. Open the debate and tap "End debate for everyone" in Host controls to save the video.',
+      'End without video',
     );
     if (!confirmed) return;
 
