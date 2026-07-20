@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,6 +18,7 @@ from .serializers import (
     CommentSerializer, DebateSerializer,
 )
 from .video_utils import prepare_video_upload
+from .debate_presence import live_debates_queryset
 from .views import (
     users_can_message, get_messageable_users, _connection_label, _original_post,
 )
@@ -175,7 +177,7 @@ def upload_photo_view(request, username):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def debates_view(request):
-    debates = DebateRoom.objects.filter(is_active=True).select_related('creator').order_by('-created_at')
+    debates = live_debates_queryset().order_by('-created_at')
     serializer = DebateSerializer(debates, many=True, context={'request': request})
     return Response({'debates': serializer.data})
 
@@ -246,6 +248,7 @@ def end_debate_view(request, room_id):
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
     room.is_active = False
+    room.host_online = False
     room.save()
 
     video_file = request.FILES.get('video_file')
@@ -255,6 +258,38 @@ def end_debate_view(request, room_id):
             caption=f"Live Debate Recording: {room.topic}",
             video_file=prepare_video_upload(video_file),
         )
+
+    return Response({'status': 'ok'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def host_heartbeat_view(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+
+    if request.user != room.creator:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    if not room.is_active:
+        return Response({'detail': 'Debate is not active.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    room.host_online = True
+    room.host_last_seen = timezone.now()
+    room.save(update_fields=['host_online', 'host_last_seen'])
+
+    return Response({'status': 'ok'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def host_leave_view(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+
+    if request.user != room.creator:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    room.host_online = False
+    room.save(update_fields=['host_online'])
 
     return Response({'status': 'ok'})
 

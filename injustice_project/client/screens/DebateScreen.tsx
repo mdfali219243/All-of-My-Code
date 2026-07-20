@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,19 +15,133 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { endDebate, fetchDebate, fetchDebateMessages, sendDebateMessage } from '../api/social';
+import { endDebate, fetchDebate, fetchDebateMessages, sendDebateMessage, sendHostHeartbeat, clearHostPresence } from '../api/social';
 import { useDebateSocket } from '../api/websocket';
 import { DebateHostPanel } from '../components/DebateHostPanel';
 import { JitsiEmbed, type JitsiApi } from '../components/JitsiEmbed';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { startDebateRecording, type DebateRecorder } from '../shared/debateRecording';
 import type { Debate, DebateMessage } from '../shared/types';
-import { colors, radius, spacing } from '../shared/theme';
+import { radius, spacing, type ThemeColors } from '../shared/theme';
+
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgSecondary },
+    loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      gap: spacing.sm,
+    },
+    backBtn: { padding: 4 },
+    headerCenter: { flex: 1 },
+    chatToggle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceHover,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    liveRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+    liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
+    liveText: { color: '#ef4444', fontWeight: '800', fontSize: 11 },
+    hostBadge: {
+      color: '#a5b4fc',
+      fontWeight: '800',
+      fontSize: 10,
+      backgroundColor: 'rgba(99,102,241,0.2)',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    recBadge: {
+      color: '#fecaca',
+      fontWeight: '800',
+      fontSize: 10,
+      backgroundColor: 'rgba(220,38,38,0.35)',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    topic: { color: colors.text, fontWeight: '700', fontSize: 16 },
+    host: { color: colors.textDim, fontSize: 13 },
+    main: { flex: 1 },
+    recordingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlay,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+      zIndex: 20,
+    },
+    recordingTitle: { color: colors.white, fontWeight: '700', fontSize: 18, marginBottom: spacing.sm },
+    recordingHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 320 },
+    chatPanel: {
+      height: 240,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    chatTitle: {
+      color: colors.textDim,
+      fontSize: 12,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+    },
+    chatList: { flex: 1 },
+    chatMessages: { padding: spacing.md, gap: spacing.sm },
+    chatBubble: {
+      borderRadius: radius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      maxWidth: '85%',
+    },
+    chatBubbleMe: { alignSelf: 'flex-end', backgroundColor: colors.brand },
+    chatBubbleThem: { alignSelf: 'flex-start', backgroundColor: colors.surfaceHover },
+    chatAuthor: { color: colors.textDim, fontSize: 11, marginBottom: 2 },
+    chatText: { color: colors.text, fontSize: 14 },
+    chatInputBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    chatInput: {
+      flex: 1,
+      backgroundColor: colors.surfaceHover,
+      borderRadius: radius.xl,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      color: colors.text,
+      fontSize: 14,
+    },
+    chatSend: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.brand,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
+}
 
 export function DebateScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [debate, setDebate] = useState<Debate | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState<DebateMessage[]>([]);
@@ -37,6 +151,7 @@ export function DebateScreen() {
   const [recording, setRecording] = useState(false);
   const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
   const recorderRef = useRef<DebateRecorder | null>(null);
+  const endingRef = useRef(false);
 
   const roomId = debate?.id;
   const isHost = Boolean(debate?.is_host);
@@ -63,6 +178,23 @@ export function DebateScreen() {
       ]);
     }
   }, [debate, router]);
+
+  useEffect(() => {
+    if (!isHost || !roomId || !debate?.is_active) return;
+
+    void sendHostHeartbeat(roomId).catch(() => {});
+
+    const interval = setInterval(() => {
+      void sendHostHeartbeat(roomId).catch(() => {});
+    }, 30_000);
+
+    return () => {
+      clearInterval(interval);
+      if (!endingRef.current) {
+        void clearHostPresence(roomId).catch(() => {});
+      }
+    };
+  }, [isHost, roomId, debate?.is_active]);
 
   useEffect(() => {
     if (!isHost || Platform.OS !== 'web' || recordingReady) return;
@@ -112,6 +244,7 @@ export function DebateScreen() {
   async function handleEndDebate() {
     if (!roomId) return;
     setEnding(true);
+    endingRef.current = true;
     try {
       const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
       recorderRef.current = null;
@@ -220,112 +353,3 @@ export function DebateScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgSecondary },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.sm,
-  },
-  backBtn: { padding: 4 },
-  headerCenter: { flex: 1 },
-  chatToggle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceHover,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
-  liveText: { color: '#ef4444', fontWeight: '800', fontSize: 11 },
-  hostBadge: {
-    color: '#a5b4fc',
-    fontWeight: '800',
-    fontSize: 10,
-    backgroundColor: 'rgba(99,102,241,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  recBadge: {
-    color: '#fecaca',
-    fontWeight: '800',
-    fontSize: 10,
-    backgroundColor: 'rgba(220,38,38,0.35)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  topic: { color: colors.text, fontWeight: '700', fontSize: 16 },
-  host: { color: colors.textDim, fontSize: 13 },
-  main: { flex: 1 },
-  recordingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-    zIndex: 20,
-  },
-  recordingTitle: { color: colors.white, fontWeight: '700', fontSize: 18, marginBottom: spacing.sm },
-  recordingHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 320 },
-  chatPanel: {
-    height: 240,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  chatTitle: {
-    color: colors.textDim,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  chatList: { flex: 1 },
-  chatMessages: { padding: spacing.md, gap: spacing.sm },
-  chatBubble: {
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    maxWidth: '85%',
-  },
-  chatBubbleMe: { alignSelf: 'flex-end', backgroundColor: colors.brand },
-  chatBubbleThem: { alignSelf: 'flex-start', backgroundColor: colors.surfaceHover },
-  chatAuthor: { color: colors.textDim, fontSize: 11, marginBottom: 2 },
-  chatText: { color: colors.text, fontSize: 14 },
-  chatInputBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  chatInput: {
-    flex: 1,
-    backgroundColor: colors.surfaceHover,
-    borderRadius: radius.xl,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    color: colors.text,
-    fontSize: 14,
-  },
-  chatSend: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

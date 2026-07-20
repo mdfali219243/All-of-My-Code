@@ -37,7 +37,8 @@ export async function endDebate(roomId: number, videoBlob?: Blob | null): Promis
 
   if (videoBlob) {
     const form = new FormData();
-    form.append('video_file', videoBlob, 'debate_recording.webm');
+    const ext = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+    form.append('video_file', videoBlob, `debate_recording.${ext}`);
 
     const response = await fetch(`${API_BASE_URL}/debates/${roomId}/end/`, {
       method: 'POST',
@@ -51,6 +52,14 @@ export async function endDebate(roomId: number, videoBlob?: Blob | null): Promis
   }
 
   return apiRequest(`/debates/${roomId}/end/`, { method: 'POST' });
+}
+
+export async function sendHostHeartbeat(roomId: number): Promise<void> {
+  await apiRequest(`/debates/${roomId}/host-heartbeat/`, { method: 'POST' });
+}
+
+export async function clearHostPresence(roomId: number): Promise<void> {
+  await apiRequest(`/debates/${roomId}/host-leave/`, { method: 'POST' });
 }
 
 export async function likePost(postId: number): Promise<{ liked: boolean; likes_count: number }> {

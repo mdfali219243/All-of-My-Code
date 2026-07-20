@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from .models import VideoPost, Comment, DebateRoom, DebateMessage, UserFollow, Conversation, DirectMessage
+from .debate_presence import live_debates_queryset
 
 
 def users_can_message(user_a, user_b):
@@ -73,7 +74,7 @@ def home(request):
 
     # Fetch all video posts dynamically
     posts = VideoPost.objects.select_related('user', 'shared_from', 'shared_from__user').order_by('-created_at')
-    debates = DebateRoom.objects.filter(is_active=True).order_by('-created_at')
+    debates = live_debates_queryset().order_by('-created_at')
     
     return render(request, 'home.html', {
         'user': request.user,
@@ -422,15 +423,16 @@ def end_debate_upload(request, room_id):
         return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
         
     room.is_active = False
+    room.host_online = False
     room.save()
     
     video_file = request.FILES.get('video_file')
     if video_file:
-        # Save as a VideoPost so it shows up in the feed
+        from .video_utils import prepare_video_upload
         VideoPost.objects.create(
             user=request.user,
             caption=f"Live Debate Recording: {room.topic}",
-            video_file=video_file
+            video_file=prepare_video_upload(video_file),
         )
         
     return JsonResponse({'status': 'ok'})

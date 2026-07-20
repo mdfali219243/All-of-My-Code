@@ -40,6 +40,8 @@ class DebateRoom(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_debates')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    host_online = models.BooleanField(default=False)
+    host_last_seen = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.topic
