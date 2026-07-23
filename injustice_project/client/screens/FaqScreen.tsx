@@ -22,7 +22,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: 'How does recording work?',
-    a: 'On web (Chrome or Edge), after you join the video room as host, the browser asks to record this tab. Allow screen and audio capture. When you tap End debate for everyone in Host controls, the recording uploads to your profile feed. The mobile app does not record debates yet.',
+    a: 'On desktop Chrome or Edge, after you join as host you must tap “Start screen recording”, then choose This tab and enable Share tab audio. Recording is required for hosts — the debate cannot skip past that prompt silently. When you End debate for everyone, the video is saved as a draft for review. The mobile app does not record debates yet.',
   },
   {
     q: 'What are Reels?',

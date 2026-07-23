@@ -15,6 +15,8 @@ type Props = {
   recording?: boolean;
   recordingPaused?: boolean;
   recordingError?: string;
+  /** When true, host must start screen capture before a clean end. */
+  recordingRequired?: boolean;
 };
 
 export function DebateHostPanel({
@@ -26,6 +28,7 @@ export function DebateHostPanel({
   recording,
   recordingPaused,
   recordingError,
+  recordingRequired,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [participants, setParticipants] = useState<JitsiParticipant[]>([]);
@@ -113,9 +116,11 @@ export function DebateHostPanel({
               ? recordingPaused
                 ? 'Recording is paused. Resume or end the debate to review and publish your video.'
                 : 'Recording is on. End the debate to review your video before posting to the feed.'
-              : recordingError
-                ? recordingError
-                : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
+              : recordingRequired
+                ? 'Screen recording is required for host debates. Use the prompt (or Retry) to capture this tab with audio before you end.'
+                : recordingError
+                  ? recordingError
+                  : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
           </Text>
 
           {recording && onToggleRecordingPause ? (
@@ -124,9 +129,9 @@ export function DebateHostPanel({
             </Pressable>
           ) : null}
 
-          {recordingError && onRetryRecording ? (
+          {(recordingError || recordingRequired) && onRetryRecording ? (
             <Pressable style={styles.btn} onPress={onRetryRecording}>
-              <Text style={styles.btnText}>Retry recording</Text>
+              <Text style={styles.btnText}>Start / retry recording</Text>
             </Pressable>
           ) : null}
 

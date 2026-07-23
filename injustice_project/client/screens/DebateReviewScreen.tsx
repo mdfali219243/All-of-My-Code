@@ -141,7 +141,10 @@ export function DebateReviewScreen() {
   const numericPostId = postId ? Number(postId) : null;
   const hasVideo = Boolean(playbackUrl);
   const recordingWasDenied = recordingError === 'denied';
-  const recordingFailed = recordingError === 'failed' || recordingError === 'unsupported';
+  const recordingFailed =
+    recordingError === 'failed' ||
+    recordingError === 'unsupported' ||
+    recordingError === 'empty';
   const noRecordingCaptured = hasRecording !== '1' && !hasVideo;
 
   useEffect(() => {

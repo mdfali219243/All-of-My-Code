@@ -21,6 +21,9 @@ import { JitsiEmbed, type JitsiApi } from '../components/JitsiEmbed';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
+  clearRecordingBackup,
+  isDebateRecordingSupported,
+  loadRecordingBackup,
   recordingErrorMessage,
   startDebateRecording,
   type DebateRecorder,
@@ -79,14 +82,57 @@ function makeStyles(colors: ThemeColors) {
     main: { flex: 1 },
     recordingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.overlay,
+      backgroundColor: 'rgba(0,0,0,0.88)',
       alignItems: 'center',
       justifyContent: 'center',
       padding: spacing.lg,
-      zIndex: 20,
+      zIndex: 40,
+      gap: spacing.md,
     },
-    recordingTitle: { color: colors.white, fontWeight: '700', fontSize: 18, marginBottom: spacing.sm },
-    recordingHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 320 },
+    recordingTitle: { color: colors.white, fontWeight: '800', fontSize: 20, textAlign: 'center' },
+    recordingHint: {
+      color: '#d1d5db',
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 21,
+      maxWidth: 360,
+    },
+    recordingErrorText: {
+      color: '#fca5a5',
+      fontSize: 13,
+      textAlign: 'center',
+      lineHeight: 19,
+      maxWidth: 360,
+    },
+    recordingPrimaryBtn: {
+      backgroundColor: '#dc2626',
+      borderRadius: radius.md,
+      paddingVertical: 14,
+      paddingHorizontal: 22,
+      minWidth: 240,
+      alignItems: 'center',
+    },
+    recordingPrimaryBtnDisabled: { opacity: 0.6 },
+    recordingPrimaryBtnText: { color: colors.white, fontWeight: '800', fontSize: 15 },
+    recordingSecondaryBtn: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+    },
+    recordingSecondaryBtnText: { color: '#9ca3af', fontWeight: '600', fontSize: 13 },
+    toast: {
+      position: 'absolute',
+      top: spacing.md,
+      alignSelf: 'center',
+      backgroundColor: 'rgba(220,38,38,0.95)',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: radius.md,
+      zIndex: 50,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    toastText: { color: colors.white, fontWeight: '700', fontSize: 13 },
     endingOverlay: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: colors.overlay,
@@ -165,22 +211,34 @@ export function DebateScreen() {
   const [endingPhase, setEndingPhase] = useState<'closing' | 'recording' | 'uploading' | null>(null);
   const [recording, setRecording] = useState(false);
   const [recordingPaused, setRecordingPaused] = useState(false);
-  const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
-  const [recordingPromptOpen, setRecordingPromptOpen] = useState(false);
+  const [recordingGateOpen, setRecordingGateOpen] = useState(false);
+  const [recordingBusy, setRecordingBusy] = useState(false);
   const [recordingError, setRecordingError] = useState<DebateRecordingError | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const recorderRef = useRef<DebateRecorder | null>(null);
   const endingRef = useRef(false);
   const presenceGenerationRef = useRef(0);
-  const [hostInConference, setHostInConference] = useState(Platform.OS !== 'web');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Evaluate in-component (not module scope) so SSR / first paint cannot permanently disable capture.
+  const recordingSupported = isDebateRecordingSupported();
+  // Mobile / unsupported: skip gate. Web hosts must record.
+  const [hostInConference, setHostInConference] = useState(() => !isDebateRecordingSupported());
 
   const roomId = debate?.id;
   const isHost = Boolean(debate?.is_host);
+  const mustRecord = isHost && recordingSupported;
 
   const appendMessage = useCallback((msg: DebateMessage) => {
     setMessages((prev) => (prev.some((item) => item.id === msg.id) ? prev : [...prev, msg]));
   }, []);
 
   const { sendText } = useDebateSocket(roomId, appendMessage, Boolean(roomId && chatOpen));
+
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
+  }, []);
 
   useEffect(() => {
     if (id) fetchDebate(Number(id)).then(setDebate);
@@ -223,37 +281,69 @@ export function DebateScreen() {
     };
   }, [isHost, roomId, debate?.is_active, hostInConference]);
 
-  const beginRecording = useCallback(async () => {
-    if (!isHost || Platform.OS !== 'web') return;
-
-    setRecordingPromptOpen(true);
-    setRecordingError(null);
-
-    const result = await startDebateRecording();
-    if (result.recorder) {
-      result.recorder.onStopped(() => {
+  const attachRecorder = useCallback(
+    (recorder: DebateRecorder) => {
+      recorder.onStopped(() => {
         if (endingRef.current) return;
         setRecording(false);
+        setRecordingPaused(false);
         setRecordingError('failed');
         recorderRef.current = null;
+        setRecordingGateOpen(true);
         showAlert(
           'Recording stopped',
-          'Screen sharing ended. Tap Retry in Host controls to record again, or end the debate to save what was captured.',
+          'Screen sharing ended. You must start recording again before ending the debate, or your session will have no video.',
         );
       });
-      recorderRef.current = result.recorder;
+      recorderRef.current = recorder;
       setRecording(true);
+      setRecordingPaused(false);
+      setRecordingError(null);
+      setRecordingGateOpen(false);
+      showToast('Recording started — keep this tab selected');
+    },
+    [showToast],
+  );
+
+  /** Must be invoked from a button click (user gesture) — browsers block getDisplayMedia otherwise. */
+  const beginRecording = useCallback(async () => {
+    if (!isHost || !recordingSupported || !roomId) return;
+    if (recordingBusy) return;
+
+    setRecordingBusy(true);
+    setRecordingError(null);
+
+    // Stop any prior half-dead recorder before retrying.
+    if (recorderRef.current) {
+      try {
+        await recorderRef.current.stop();
+      } catch {
+        /* ignore */
+      }
+      recorderRef.current = null;
+    }
+
+    const result = await startDebateRecording(roomId);
+    if (result.recorder) {
+      attachRecorder(result.recorder);
     } else if (result.error) {
       setRecordingError(result.error);
+      setRecording(false);
+      setRecordingGateOpen(true);
     }
-    setRecordingPromptOpen(false);
-    setRecordingReady(true);
-  }, [isHost]);
+    setRecordingBusy(false);
+  }, [isHost, roomId, recordingBusy, attachRecorder, recordingSupported]);
 
   useEffect(() => {
-    if (!jitsiApi || !isHost || !roomId || Platform.OS !== 'web') return;
+    if (!jitsiApi || !isHost || !roomId || !recordingSupported) return;
 
-    const onJoined = () => setHostInConference(true);
+    const onJoined = () => {
+      setHostInConference(true);
+      // Open mandatory gate — do NOT auto-call getDisplayMedia (needs user gesture).
+      if (!recorderRef.current) {
+        setRecordingGateOpen(true);
+      }
+    };
     const onLeft = () => {
       setHostInConference(false);
       if (endingRef.current) return;
@@ -274,17 +364,19 @@ export function DebateScreen() {
       jitsiApi.removeEventListener('videoConferenceJoined', onJoined);
       jitsiApi.removeEventListener('videoConferenceLeft', onLeft);
     };
-  }, [jitsiApi, isHost, roomId]);
+  }, [jitsiApi, isHost, roomId, recordingSupported]);
 
+  // Open the mandatory gate as soon as Jitsi is ready (join events can race past listeners).
   useEffect(() => {
-    if (!isHost || Platform.OS !== 'web' || !hostInConference || recordingReady) return;
-    void beginRecording();
-  }, [isHost, hostInConference, recordingReady, beginRecording]);
+    if (!mustRecord || recording || ending || !jitsiApi) return;
+    setRecordingGateOpen(true);
+  }, [mustRecord, jitsiApi, recording, ending]);
 
   useEffect(() => {
     return () => {
       void recorderRef.current?.stop();
       recorderRef.current = null;
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
 
@@ -345,26 +437,11 @@ export function DebateScreen() {
     setJitsiApi(null);
   }
 
-  async function handleEndDebate() {
+  async function finishEndDebate(videoBlob: Blob | null, capturedRecordingError: DebateRecordingError | null) {
     if (!roomId) return;
 
-    setEnding(true);
-    setEndingPhase('closing');
-    endingRef.current = true;
-    presenceGenerationRef.current += 1;
-    setHostInConference(false);
-    disposeJitsi();
-
-    const capturedRecordingError = recordingError;
-
+    setEndingPhase('uploading');
     try {
-      setEndingPhase('recording');
-      const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
-      recorderRef.current = null;
-      setRecording(false);
-      setRecordingPaused(false);
-
-      setEndingPhase('uploading');
       const result = await endDebate(roomId, videoBlob);
       const draft = result.draft;
       const postId = draft?.id ?? result.post_id;
@@ -372,6 +449,10 @@ export function DebateScreen() {
         Platform.OS === 'web' && videoBlob && typeof URL !== 'undefined'
           ? URL.createObjectURL(videoBlob)
           : draft?.video_url ?? '';
+
+      if (videoBlob) {
+        void clearRecordingBackup(roomId);
+      }
 
       navigateToReview({
         postId: postId ? String(postId) : '',
@@ -381,12 +462,69 @@ export function DebateScreen() {
         recordingError: capturedRecordingError ?? '',
       });
     } catch (e) {
+      // Keep local backup so review can still play the blob URL we create.
+      const previewUrl =
+        Platform.OS === 'web' && videoBlob && typeof URL !== 'undefined'
+          ? URL.createObjectURL(videoBlob)
+          : '';
+      navigateToReview({
+        postId: '',
+        previewUrl,
+        videoUrl: '',
+        hasRecording: videoBlob ? '1' : '0',
+        recordingError: capturedRecordingError ?? '',
+        uploadError: e instanceof Error ? e.message : 'Could not end debate',
+      });
+    }
+  }
+
+  async function handleEndDebate() {
+    if (!roomId) return;
+
+    if (mustRecord && !recording) {
+      setRecordingGateOpen(true);
+      const proceed = await confirmDestructive(
+        'No recording yet',
+        'This debate has no active recording. End without a video, or cancel and tap Start screen recording.',
+        'End without recording',
+      );
+      if (!proceed) return;
+    }
+
+    setEnding(true);
+    setEndingPhase('closing');
+    endingRef.current = true;
+    presenceGenerationRef.current += 1;
+    setHostInConference(false);
+    setRecordingGateOpen(false);
+    disposeJitsi();
+
+    const capturedRecordingError = recordingError;
+
+    try {
+      setEndingPhase('recording');
+      let videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
+      recorderRef.current = null;
+      setRecording(false);
+      setRecordingPaused(false);
+
+      if (!videoBlob || videoBlob.size === 0) {
+        videoBlob = await loadRecordingBackup(roomId);
+      }
+
+      const finalError: DebateRecordingError | null =
+        videoBlob && videoBlob.size > 0
+          ? null
+          : capturedRecordingError ?? (mustRecord ? 'empty' : null);
+
+      await finishEndDebate(videoBlob && videoBlob.size > 0 ? videoBlob : null, finalError);
+    } catch (e) {
       navigateToReview({
         postId: '',
         previewUrl: '',
         videoUrl: '',
         hasRecording: '0',
-        recordingError: capturedRecordingError ?? '',
+        recordingError: capturedRecordingError ?? 'failed',
         uploadError: e instanceof Error ? e.message : 'Could not end debate',
       });
     }
@@ -413,6 +551,8 @@ export function DebateScreen() {
     );
   }
 
+  const showRecordingGate = mustRecord && recordingGateOpen && !ending && !recording;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -437,6 +577,13 @@ export function DebateScreen() {
       </View>
 
       <View style={styles.main}>
+        {toast ? (
+          <View style={styles.toast}>
+            <Ionicons name="radio-button-on" size={14} color="#fff" />
+            <Text style={styles.toastText}>{toast}</Text>
+          </View>
+        ) : null}
+
         {!ending ? (
           <JitsiEmbed
             roomId={debate.id}
@@ -462,11 +609,35 @@ export function DebateScreen() {
           </View>
         ) : null}
 
-        {isHost && Platform.OS === 'web' && recordingPromptOpen ? (
+        {showRecordingGate ? (
           <View style={styles.recordingOverlay}>
-            <Text style={styles.recordingTitle}>Starting recording…</Text>
+            <Ionicons name="videocam" size={40} color="#f87171" />
+            <Text style={styles.recordingTitle}>Recording required</Text>
             <Text style={styles.recordingHint}>
-              Choose this browser tab and allow audio when prompted so the session can be saved for review after the debate.
+              Every host debate must be recorded. Tap the button below, then choose{' '}
+              <Text style={{ fontWeight: '800', color: '#fff' }}>This tab</Text>
+              {' '}(or this Chrome Tab) and turn on{' '}
+              <Text style={{ fontWeight: '800', color: '#fff' }}>Share tab audio</Text>
+              {' '}so the meeting is saved.
+            </Text>
+            {recordingError ? (
+              <Text style={styles.recordingErrorText}>{recordingErrorMessage(recordingError)}</Text>
+            ) : null}
+            <Pressable
+              style={[styles.recordingPrimaryBtn, recordingBusy && styles.recordingPrimaryBtnDisabled]}
+              disabled={recordingBusy}
+              onPress={() => void beginRecording()}
+            >
+              {recordingBusy ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.recordingPrimaryBtnText}>
+                  {recordingError ? 'Retry screen recording' : 'Start screen recording'}
+                </Text>
+              )}
+            </Pressable>
+            <Text style={styles.recordingSecondaryBtnText}>
+              Browsers only show the capture prompt after you click this button.
             </Text>
           </View>
         ) : null}
@@ -475,12 +646,19 @@ export function DebateScreen() {
           <DebateHostPanel
             jitsiApi={jitsiApi}
             onEndDebate={handleEndDebate}
-            onRetryRecording={recordingError ? () => void beginRecording() : undefined}
+            onRetryRecording={
+              mustRecord && !recording ? () => {
+                setRecordingGateOpen(true);
+              } : recordingError ? () => {
+                setRecordingGateOpen(true);
+              } : undefined
+            }
             onToggleRecordingPause={recording ? handleToggleRecordingPause : undefined}
             ending={ending}
             recording={recording}
             recordingPaused={recordingPaused}
             recordingError={recordingError ? recordingErrorMessage(recordingError) : undefined}
+            recordingRequired={mustRecord && !recording}
           />
         ) : null}
 
