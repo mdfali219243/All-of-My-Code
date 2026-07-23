@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,19 +20,140 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchProfile } from '../api/posts';
 import { followUser, uploadPhoto } from '../api/social';
 import { Avatar } from '../components/Avatar';
+import { MenuButton } from '../components/MenuButton';
 import { PostCard } from '../components/PostCard';
-import type { Profile } from '../shared/types';
-import { colors, radius, spacing } from '../shared/theme';
+import { VideoPlayer } from '../components/VideoPlayer';
+import { useTheme } from '../contexts/ThemeContext';
+import type { Post, Profile } from '../shared/types';
+import { radius, spacing, type ThemeColors } from '../shared/theme';
 
-type Tab = 'posts' | 'about' | 'photos' | 'videos';
+type Tab = 'posts' | 'about' | 'photos' | 'videos' | 'drafts';
+
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgSecondary },
+    loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
+    topSafe: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingRight: spacing.sm,
+    },
+    backRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: 4 },
+    backText: { color: colors.text, fontSize: 16 },
+    cover: { height: 180, backgroundColor: colors.surfaceMuted },
+    profileHead: { alignItems: 'center', paddingHorizontal: spacing.lg, marginTop: -60 },
+    avatarWrap: { borderWidth: 4, borderColor: colors.bgSecondary, borderRadius: 999 },
+    name: { color: colors.text, fontSize: 24, fontWeight: '800', marginTop: spacing.sm },
+    handle: { color: colors.textDim, fontSize: 15, marginTop: 4 },
+    stats: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.md, marginBottom: spacing.md },
+    stat: { color: colors.textDim, fontSize: 14 },
+    statNum: { color: colors.text, fontWeight: '700' },
+    actionBtn: {
+      backgroundColor: colors.brand,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: radius.sm,
+      marginBottom: spacing.md,
+    },
+    actionBtnText: { color: colors.white, fontWeight: '700' },
+    tabBar: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    tab: { flex: 1, alignItems: 'center', paddingVertical: 14 },
+    tabActive: { borderBottomWidth: 3, borderBottomColor: colors.brand },
+    tabText: { color: colors.textDim, fontWeight: '600' },
+    tabTextActive: { color: colors.brandLight },
+    tabContent: { padding: spacing.md },
+    aboutCard: {
+      margin: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    aboutLabel: { color: colors.textDim, fontSize: 12, textTransform: 'uppercase', marginTop: spacing.sm },
+    aboutValue: { color: colors.text, fontSize: 16, marginTop: 4 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.sm },
+    gridItem: { width: '33.33%', aspectRatio: 1, padding: 2 },
+    videoGridItem: {
+      width: '33.33%',
+      aspectRatio: 1,
+      padding: 2,
+      position: 'relative',
+      overflow: 'hidden',
+      borderRadius: radius.sm,
+      backgroundColor: colors.surface,
+    },
+    videoGridPlayer: {
+      width: '100%',
+      height: '100%',
+      minHeight: 0,
+    },
+    videoGridOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.25)',
+    },
+    videoModalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      padding: spacing.md,
+    },
+    videoModalCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      maxWidth: 720,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    videoModalClose: {
+      alignSelf: 'flex-end',
+      padding: spacing.sm,
+    },
+    videoModalCaption: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    videoModalPlayer: {
+      width: '100%',
+      aspectRatio: 16 / 10,
+      minHeight: 220,
+      backgroundColor: colors.bgSecondary,
+    },
+    emptyTab: {
+      color: colors.textDim,
+      textAlign: 'center',
+      paddingVertical: spacing.xl,
+      fontSize: 15,
+      width: '100%',
+    },
+  });
+}
 
 export function ProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tab, setTab] = useState<Tab>('posts');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<Post | null>(null);
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -66,6 +189,14 @@ export function ProfileScreen() {
     }
   }
 
+  function handleBack() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(app)');
+    }
+  }
+
   if (loading || !profile) {
     return (
       <View style={styles.loading}>
@@ -80,18 +211,33 @@ export function ProfileScreen() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'posts', label: 'Posts' },
+    ...(profile.is_own_profile ? [{ key: 'drafts' as Tab, label: 'Drafts' }] : []),
     { key: 'about', label: 'About' },
     { key: 'photos', label: 'Photos' },
     { key: 'videos', label: 'Videos' },
   ];
 
+  function openDraftReview(post: Post) {
+    router.push({
+      pathname: '/(app)/debate/review',
+      params: {
+        postId: String(post.id),
+        topic: post.caption ?? '',
+        videoUrl: post.video_url ?? '',
+      },
+    });
+  }
+
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.topSafe}>
-        <Pressable onPress={() => router.back()} style={styles.backRow}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-          <Text style={styles.backText}>Back</Text>
-        </Pressable>
+        <View style={styles.topBar}>
+          <Pressable onPress={handleBack} style={styles.backRow}>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Text style={styles.backText}>Back</Text>
+          </Pressable>
+          <MenuButton color={colors.text} />
+        </View>
       </SafeAreaView>
 
       <ScrollView
@@ -118,11 +264,8 @@ export function ProfileScreen() {
               <Text style={styles.actionBtnText}>Upload Photo</Text>
             </Pressable>
           ) : (
-            <Pressable
-              style={[styles.actionBtn, profile.is_following && styles.actionBtnFollowing]}
-              onPress={handleFollow}
-            >
-              <Text style={styles.actionBtnText}>{profile.is_following ? 'Following' : 'Follow'}</Text>
+            <Pressable style={styles.actionBtn} onPress={handleFollow}>
+              <Text style={styles.actionBtnText}>{profile.is_following ? 'Unfollow' : 'Follow'}</Text>
             </Pressable>
           )}
         </View>
@@ -143,6 +286,35 @@ export function ProfileScreen() {
           </View>
         )}
 
+        {tab === 'drafts' && profile.is_own_profile ? (
+          <View style={styles.grid}>
+            {(profile.draft_posts ?? []).length === 0 ? (
+              <Text style={styles.emptyTab}>No draft recordings yet</Text>
+            ) : null}
+            {(profile.draft_posts ?? []).map((post) =>
+              post.video_url ? (
+                <Pressable
+                  key={post.id}
+                  style={styles.videoGridItem}
+                  onPress={() => openDraftReview(post)}
+                >
+                  <VideoPlayer
+                    uri={post.video_url}
+                    style={styles.videoGridPlayer}
+                    nativeControls={false}
+                    muted
+                    resizeMode={ResizeMode.COVER}
+                  />
+                  <Text style={styles.draftBadge}>DRAFT</Text>
+                  <View style={styles.videoGridOverlay}>
+                    <Ionicons name="create-outline" size={28} color={colors.white} />
+                  </View>
+                </Pressable>
+              ) : null,
+            )}
+          </View>
+        ) : null}
+
         {tab === 'about' && (
           <View style={styles.aboutCard}>
             <Text style={styles.aboutLabel}>Username</Text>
@@ -154,82 +326,61 @@ export function ProfileScreen() {
 
         {tab === 'photos' && (
           <View style={styles.grid}>
-            {profile.photo_posts.map((post) => (
+            {profile.photo_posts.filter((post) => post.image_url).length === 0 ? (
+              <Text style={styles.emptyTab}>No photos yet</Text>
+            ) : null}
+            {profile.photo_posts.map((post) =>
               post.image_url ? (
                 <Image key={post.id} source={{ uri: post.image_url }} style={styles.gridItem} />
-              ) : null
-            ))}
+              ) : null,
+            )}
           </View>
         )}
 
         {tab === 'videos' && (
           <View style={styles.grid}>
-            {profile.video_posts.map((post) => (
+            {profile.video_posts.length === 0 ? (
+              <Text style={styles.emptyTab}>No videos yet</Text>
+            ) : null}
+            {profile.video_posts.map((post) =>
               post.video_url ? (
-                <View key={post.id} style={styles.videoTile}>
-                  <Ionicons name="play-circle" size={40} color={colors.white} />
-                </View>
-              ) : null
-            ))}
+                <Pressable
+                  key={post.id}
+                  style={styles.videoGridItem}
+                  onPress={() => setActiveVideo(post)}
+                >
+                  <VideoPlayer
+                    uri={post.video_url}
+                    style={styles.videoGridPlayer}
+                    nativeControls={false}
+                    muted
+                    resizeMode={ResizeMode.COVER}
+                  />
+                  <View style={styles.videoGridOverlay}>
+                    <Ionicons name="play-circle" size={28} color={colors.white} />
+                  </View>
+                </Pressable>
+              ) : null,
+            )}
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={Boolean(activeVideo)} animationType="fade" transparent onRequestClose={() => setActiveVideo(null)}>
+        <View style={styles.videoModalBackdrop}>
+          <View style={styles.videoModalCard}>
+            <Pressable style={styles.videoModalClose} onPress={() => setActiveVideo(null)}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </Pressable>
+            {activeVideo?.caption ? (
+              <Text style={styles.videoModalCaption} numberOfLines={2}>{activeVideo.caption}</Text>
+            ) : null}
+            {activeVideo?.video_url ? (
+              <VideoPlayer uri={activeVideo.video_url} style={styles.videoModalPlayer} nativeControls />
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgSecondary },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
-  topSafe: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-  backRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: 4 },
-  backText: { color: colors.text, fontSize: 16 },
-  cover: { height: 180, backgroundColor: '#1e293b' },
-  profileHead: { alignItems: 'center', paddingHorizontal: spacing.lg, marginTop: -60 },
-  avatarWrap: { borderWidth: 4, borderColor: colors.bgSecondary, borderRadius: 999 },
-  name: { color: colors.text, fontSize: 24, fontWeight: '800', marginTop: spacing.sm },
-  handle: { color: colors.textDim, fontSize: 15, marginTop: 4 },
-  stats: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.md, marginBottom: spacing.md },
-  stat: { color: colors.textDim, fontSize: 14 },
-  statNum: { color: colors.text, fontWeight: '700' },
-  actionBtn: {
-    backgroundColor: colors.brand,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: radius.sm,
-    marginBottom: spacing.md,
-  },
-  actionBtnFollowing: { backgroundColor: colors.surfaceHover },
-  actionBtnText: { color: colors.white, fontWeight: '700' },
-  tabBar: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-  tabActive: { borderBottomWidth: 3, borderBottomColor: colors.brand },
-  tabText: { color: colors.textDim, fontWeight: '600' },
-  tabTextActive: { color: colors.brandLight },
-  tabContent: { padding: spacing.md },
-  aboutCard: {
-    margin: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  aboutLabel: { color: colors.textDim, fontSize: 12, textTransform: 'uppercase', marginTop: spacing.sm },
-  aboutValue: { color: colors.text, fontSize: 16, marginTop: 4 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.sm },
-  gridItem: { width: '33.33%', aspectRatio: 1, padding: 2 },
-  videoTile: {
-    width: '33.33%',
-    aspectRatio: 9 / 16,
-    padding: 2,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

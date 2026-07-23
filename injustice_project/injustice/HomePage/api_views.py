@@ -17,7 +17,7 @@ from .serializers import (
     RegisterSerializer, UserSerializer, PostSerializer,
     CommentSerializer, DebateSerializer,
 )
-from .debate_recording import publish_debate_recording
+from .debate_recording import save_debate_recording_draft, publish_debate_draft
 from .debate_presence import live_debates_queryset
 from .video_utils import prepare_video_upload
 from .views import (
@@ -31,6 +31,10 @@ def _tokens_for_user(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
+
+def _published_posts():
+    return VideoPost.objects.filter(is_published=True)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -104,7 +108,7 @@ def posts_view(request):
         serializer = PostSerializer(post, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    posts = VideoPost.objects.select_related(
+    posts = _published_posts().select_related(
         'user', 'shared_from', 'shared_from__user'
     ).prefetch_related('likes', 'comments').order_by('-created_at')
     serializer = PostSerializer(posts, many=True, context={'request': request})
@@ -114,7 +118,7 @@ def posts_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def reels_view(request):
-    posts = VideoPost.objects.prefetch_related('likes', 'comments').select_related(
+    posts = _published_posts().prefetch_related('likes', 'comments').select_related(
         'user', 'shared_from', 'shared_from__user'
     ).order_by('-created_at')
     followed_ids = list(
@@ -131,7 +135,14 @@ def profile_view(request, username):
     if not profile_user:
         return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    posts = VideoPost.objects.filter(user=profile_user).select_related(
+    posts = _published_posts().filter(user=profile_user).select_related(
+        'shared_from', 'shared_from__user'
+    ).prefetch_related('likes', 'comments').order_by('-created_at')
+
+    draft_posts = VideoPost.objects.filter(
+        user=profile_user,
+        is_published=False,
+    ).select_related(
         'shared_from', 'shared_from__user'
     ).prefetch_related('likes', 'comments').order_by('-created_at')
 
@@ -139,7 +150,7 @@ def profile_view(request, username):
     video_posts = posts.exclude(video_file='').exclude(video_file__isnull=True)
     ctx = {'request': request}
 
-    return Response({
+    payload = {
         'user': UserSerializer(profile_user).data,
         'posts': PostSerializer(posts, many=True, context=ctx).data,
         'photo_posts': PostSerializer(photo_posts, many=True, context=ctx).data,
@@ -150,7 +161,10 @@ def profile_view(request, username):
             follower=request.user, following=profile_user
         ).exists(),
         'is_own_profile': request.user == profile_user,
-    })
+    }
+    if request.user == profile_user:
+        payload['draft_posts'] = PostSerializer(draft_posts, many=True, context=ctx).data
+    return Response(payload)
 
 
 @api_view(['POST'])
@@ -256,14 +270,83 @@ def end_debate_view(request, room_id):
     if not updated:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-    post = publish_debate_recording(room, video_file=request.FILES.get('video_file'))
+    post = save_debate_recording_draft(room, video_file=request.FILES.get('video_file'))
 
     payload = {'status': 'ok'}
     if post:
         payload['post_id'] = post.id
         serializer = PostSerializer(post, context={'request': request})
-        payload['post'] = serializer.data
+        payload['draft'] = serializer.data
     return Response(payload)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def publish_debate_view(request, room_id):
+    room = get_object_or_404(DebateRoom, id=room_id)
+
+    if request.user != room.creator:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    caption = request.data.get('caption')
+    if caption is not None:
+        caption = str(caption).strip()
+
+    post = publish_debate_draft(room, caption=caption)
+    if not post:
+        return Response({'detail': 'No draft recording found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = PostSerializer(post, context={'request': request})
+    return Response({'status': 'ok', 'post': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def drafts_view(request):
+    drafts = VideoPost.objects.filter(
+        user=request.user,
+        is_published=False,
+    ).select_related('user', 'shared_from', 'shared_from__user').prefetch_related(
+        'likes', 'comments'
+    ).order_by('-created_at')
+    serializer = PostSerializer(drafts, many=True, context={'request': request})
+    return Response({'drafts': serializer.data})
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_post_view(request, post_id):
+    post = get_object_or_404(VideoPost, id=post_id)
+
+    if post.user != request.user:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    caption = request.data.get('caption')
+    if caption is not None:
+        post.caption = str(caption).strip()
+        post.save(update_fields=['caption'])
+
+    serializer = PostSerializer(post, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def publish_post_view(request, post_id):
+    post = get_object_or_404(VideoPost, id=post_id)
+
+    if post.user != request.user:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    caption = request.data.get('caption')
+    if caption is not None:
+        post.caption = str(caption).strip()
+
+    post.is_published = True
+    post.save(update_fields=['caption', 'is_published'])
+
+    serializer = PostSerializer(post, context={'request': request})
+    return Response({'status': 'ok', 'post': serializer.data})
 
 
 @api_view(['POST'])
@@ -526,7 +609,7 @@ def search_view(request):
         key=lambda u: (-_user_search_score(u, q_lower), u.username.lower()),
     )[:20]
 
-    post_qs = VideoPost.objects.filter(
+    post_qs = _published_posts().filter(
         caption__icontains=q,
     ).exclude(
         video_file='',
@@ -560,6 +643,7 @@ def api_root_view(request):
             'posts': '/api/posts/',
             'reels': '/api/reels/',
             'debates': '/api/debates/',
+            'drafts': '/api/drafts/',
             'inbox': '/api/inbox/',
             'profile': '/api/profile/<username>/',
             'search': '/api/search/?q=...',

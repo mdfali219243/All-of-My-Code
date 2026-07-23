@@ -6,6 +6,7 @@ class VideoPost(models.Model):
     caption = models.CharField(max_length=500, blank=True)
     image_file = models.FileField(upload_to='photos/', blank=True, null=True)
     video_file = models.FileField(upload_to='videos/', blank=True, null=True)
+    is_published = models.BooleanField(default=True)
     shared_from = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.CASCADE, related_name='reshares'
     )

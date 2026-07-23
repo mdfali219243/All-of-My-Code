@@ -26,6 +26,7 @@ export type Post = {
   comments_count: number;
   is_liked: boolean;
   shared_from_username: string | null;
+  is_published?: boolean;
 };
 
 export type Comment = {
@@ -45,6 +46,7 @@ export type Profile = {
   following_count: number;
   is_following: boolean;
   is_own_profile: boolean;
+  draft_posts?: Post[];
 };
 
 export type Debate = {

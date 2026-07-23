@@ -10,8 +10,10 @@ type Props = {
   jitsiApi: JitsiApi | null;
   onEndDebate: () => Promise<void>;
   onRetryRecording?: () => void;
+  onToggleRecordingPause?: () => void;
   ending: boolean;
   recording?: boolean;
+  recordingPaused?: boolean;
   recordingError?: string;
 };
 
@@ -19,8 +21,10 @@ export function DebateHostPanel({
   jitsiApi,
   onEndDebate,
   onRetryRecording,
+  onToggleRecordingPause,
   ending,
   recording,
+  recordingPaused,
   recordingError,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -106,11 +110,19 @@ export function DebateHostPanel({
         <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
           <Text style={styles.hint}>
             {recording
-              ? 'Recording is on. When you end the debate, the video is saved to your profile feed.'
+              ? recordingPaused
+                ? 'Recording is paused. Resume or end the debate to review and publish your video.'
+                : 'Recording is on. End the debate to review your video before posting to the feed.'
               : recordingError
                 ? recordingError
                 : 'You are the debate host and join automatically — no need to sign in again in the video room.'}
           </Text>
+
+          {recording && onToggleRecordingPause ? (
+            <Pressable style={styles.btn} onPress={onToggleRecordingPause}>
+              <Text style={styles.btnText}>{recordingPaused ? 'Resume recording' : 'Pause recording'}</Text>
+            </Pressable>
+          ) : null}
 
           {recordingError && onRetryRecording ? (
             <Pressable style={styles.btn} onPress={onRetryRecording}>

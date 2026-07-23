@@ -2,6 +2,9 @@ import { Platform } from 'react-native';
 
 export type DebateRecorder = {
   stop: () => Promise<Blob | null>;
+  pause: () => void;
+  resume: () => void;
+  isPaused: () => boolean;
   onStopped: (callback: () => void) => void;
 };
 
@@ -57,6 +60,13 @@ export async function startDebateRecording(): Promise<DebateRecordingResult> {
         onStopped: (callback) => {
           stoppedCallback = callback;
         },
+        pause: () => {
+          if (recorder.state === 'recording') recorder.pause();
+        },
+        resume: () => {
+          if (recorder.state === 'paused') recorder.resume();
+        },
+        isPaused: () => recorder.state === 'paused',
         stop: () =>
           new Promise((resolve) => {
             recorder.onstop = () => {

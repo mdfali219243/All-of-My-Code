@@ -426,9 +426,9 @@ def end_debate_upload(request, room_id):
     room.host_online = False
     room.save()
     
-    from .debate_recording import publish_debate_recording
+    from .debate_recording import save_debate_recording_draft
 
-    post = publish_debate_recording(room, video_file=request.FILES.get('video_file'))
+    post = save_debate_recording_draft(room, video_file=request.FILES.get('video_file'))
     payload = {'status': 'ok'}
     if post:
         payload['post_id'] = post.id

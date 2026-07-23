@@ -35,7 +35,7 @@ export async function sendDebateMessage(roomId: number, message: string): Promis
 export async function endDebate(
   roomId: number,
   videoBlob?: Blob | null,
-): Promise<{ status: string; post_id?: number; post?: Post }> {
+): Promise<{ status: string; post_id?: number; draft?: Post }> {
   const token = await getAccessToken();
 
   if (videoBlob) {
@@ -52,19 +52,51 @@ export async function endDebate(
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.detail ?? 'Failed to end debate');
     return {
-      ...(data as { status: string; post_id?: number; post?: Post }),
-      post: data.post ? normalizePost(data.post as Post) : undefined,
+      ...(data as { status: string; post_id?: number; draft?: Post }),
+      draft: data.draft ? normalizePost(data.draft as Post) : undefined,
     };
   }
 
-  const data = await apiRequest<{ status: string; post_id?: number; post?: Post }>(
+  const data = await apiRequest<{ status: string; post_id?: number; draft?: Post }>(
     `/debates/${roomId}/end/`,
     { method: 'POST' },
   );
   return {
     ...data,
-    post: data.post ? normalizePost(data.post) : undefined,
+    draft: data.draft ? normalizePost(data.draft) : undefined,
   };
+}
+
+export async function publishDebate(
+  roomId: number,
+  caption?: string,
+): Promise<Post> {
+  const data = await apiRequest<{ status: string; post: Post }>(
+    `/debates/${roomId}/publish/`,
+    { method: 'POST', body: caption !== undefined ? { caption } : {} },
+  );
+  return normalizePost(data.post);
+}
+
+export async function fetchDrafts(): Promise<Post[]> {
+  const data = await apiRequest<{ drafts: Post[] }>('/drafts/');
+  return data.drafts.map(normalizePost);
+}
+
+export async function updatePostCaption(postId: number, caption: string): Promise<Post> {
+  const data = await apiRequest<Post>(`/posts/${postId}/`, {
+    method: 'PATCH',
+    body: { caption },
+  });
+  return normalizePost(data);
+}
+
+export async function publishPost(postId: number, caption?: string): Promise<Post> {
+  const data = await apiRequest<{ status: string; post: Post }>(`/posts/${postId}/publish/`, {
+    method: 'POST',
+    body: caption !== undefined ? { caption } : {},
+  });
+  return normalizePost(data.post);
 }
 
 export async function sendHostHeartbeat(roomId: number): Promise<void> {

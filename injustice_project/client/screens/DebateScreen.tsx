@@ -155,6 +155,7 @@ export function DebateScreen() {
   const [jitsiApi, setJitsiApi] = useState<JitsiApi | null>(null);
   const [ending, setEnding] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [recordingPaused, setRecordingPaused] = useState(false);
   const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
   const [recordingPromptOpen, setRecordingPromptOpen] = useState(false);
   const [recordingError, setRecordingError] = useState<DebateRecordingError | null>(null);
@@ -320,14 +321,48 @@ export function DebateScreen() {
       const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
       recorderRef.current = null;
       setRecording(false);
-      await endDebate(roomId, videoBlob);
-      Alert.alert('Debate ended', videoBlob ? 'Your recording was posted to the feed.' : 'The debate has ended.');
+      setRecordingPaused(false);
+      const result = await endDebate(roomId, videoBlob);
+
+      if (videoBlob && result.draft) {
+        const previewUrl =
+          Platform.OS === 'web' && typeof URL !== 'undefined'
+            ? URL.createObjectURL(videoBlob)
+            : result.draft.video_url ?? undefined;
+
+        router.replace({
+          pathname: '/(app)/debate/review',
+          params: {
+            roomId: String(roomId),
+            postId: String(result.draft.id),
+            topic: debate?.topic ?? result.draft.caption ?? '',
+            previewUrl: previewUrl ?? '',
+            videoUrl: result.draft.video_url ?? '',
+          },
+        });
+        return;
+      }
+
+      Alert.alert('Debate ended', 'The debate has ended.');
       router.back();
     } catch (e) {
       endingRef.current = false;
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not end debate');
     } finally {
       setEnding(false);
+    }
+  }
+
+  function handleToggleRecordingPause() {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+
+    if (recorder.isPaused()) {
+      recorder.resume();
+      setRecordingPaused(false);
+    } else {
+      recorder.pause();
+      setRecordingPaused(true);
     }
   }
 
@@ -351,7 +386,7 @@ export function DebateScreen() {
             <Text style={styles.liveText}>LIVE</Text>
             {isHost ? <Text style={styles.hostBadge}>YOU ARE HOST</Text> : null}
             {isHost && recording ? (
-              <Text style={styles.recBadge}>REC</Text>
+              <Text style={styles.recBadge}>{recordingPaused ? 'PAUSED' : 'REC'}</Text>
             ) : null}
           </View>
           <Text style={styles.topic} numberOfLines={1}>{debate.topic}</Text>
@@ -374,7 +409,7 @@ export function DebateScreen() {
           <View style={styles.recordingOverlay}>
             <Text style={styles.recordingTitle}>Starting recording…</Text>
             <Text style={styles.recordingHint}>
-              Choose this browser tab and allow audio when prompted so the session can be saved to your feed.
+              Choose this browser tab and allow audio when prompted so the session can be saved for review after the debate.
             </Text>
           </View>
         ) : null}
@@ -384,8 +419,10 @@ export function DebateScreen() {
             jitsiApi={jitsiApi}
             onEndDebate={handleEndDebate}
             onRetryRecording={recordingError ? () => void beginRecording() : undefined}
+            onToggleRecordingPause={recording ? handleToggleRecordingPause : undefined}
             ending={ending}
             recording={recording}
+            recordingPaused={recordingPaused}
             recordingError={recordingError ? recordingErrorMessage(recordingError) : undefined}
           />
         ) : null}

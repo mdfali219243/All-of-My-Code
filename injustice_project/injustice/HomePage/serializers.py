@@ -63,7 +63,7 @@ class PostSerializer(serializers.ModelSerializer):
             'id', 'username', 'display_name', 'caption',
             'image_url', 'video_url', 'created_at',
             'likes_count', 'comments_count', 'is_liked',
-            'shared_from_username',
+            'shared_from_username', 'is_published',
             'source_id', 'source_username', 'source_display_name',
         ]
 

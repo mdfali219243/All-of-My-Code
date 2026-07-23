@@ -19,5 +19,6 @@ export async function fetchProfile(username: string): Promise<Profile> {
     posts: data.posts.map(normalizePost),
     photo_posts: data.photo_posts.map(normalizePost),
     video_posts: data.video_posts.map(normalizePost),
+    draft_posts: data.draft_posts?.map(normalizePost),
   };
 }
