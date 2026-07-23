@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,17 +14,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { publishDebate, publishPost, updatePostCaption } from '../api/social';
+import { deletePost, publishDebate, publishPost, updatePostCaption } from '../api/social';
 import { Button } from '../components/Button';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { confirmDestructive, showAlert } from '../shared/confirm';
+import { recordingErrorMessage, type DebateRecordingError } from '../shared/debateRecording';
 import { radius, spacing, type ThemeColors } from '../shared/theme';
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.bgSecondary },
-    loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgSecondary },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -39,6 +39,16 @@ function makeStyles(colors: ThemeColors) {
     headerTitle: { flex: 1, color: colors.text, fontWeight: '700', fontSize: 18 },
     content: { padding: spacing.md, gap: spacing.md },
     subtitle: { color: colors.textDim, fontSize: 15, lineHeight: 22 },
+    noticeCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    noticeTitle: { color: colors.text, fontWeight: '700', fontSize: 16 },
+    noticeText: { color: colors.textDim, fontSize: 14, lineHeight: 20 },
     previewCard: {
       backgroundColor: colors.surface,
       borderRadius: radius.lg,
@@ -51,6 +61,12 @@ function makeStyles(colors: ThemeColors) {
       aspectRatio: 16 / 10,
       minHeight: 220,
       backgroundColor: colors.bgSecondary,
+    },
+    previewPlaceholder: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+      gap: spacing.sm,
     },
     previewLabel: {
       color: colors.textDim,
@@ -82,16 +98,33 @@ function makeStyles(colors: ThemeColors) {
       paddingVertical: 4,
       borderRadius: 8,
     },
+    discardBtn: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    discardText: { color: '#f87171', fontWeight: '600', fontSize: 14 },
   });
 }
 
 export function DebateReviewScreen() {
-  const { roomId, postId, topic, previewUrl, videoUrl } = useLocalSearchParams<{
+  const {
+    roomId,
+    postId,
+    topic,
+    previewUrl,
+    videoUrl,
+    hasRecording,
+    recordingError,
+    uploadError,
+  } = useLocalSearchParams<{
     roomId?: string;
     postId?: string;
     topic?: string;
     previewUrl?: string;
     videoUrl?: string;
+    hasRecording?: string;
+    recordingError?: string;
+    uploadError?: string;
   }>();
   const router = useRouter();
   const { user } = useAuth();
@@ -101,10 +134,15 @@ export function DebateReviewScreen() {
   const [caption, setCaption] = useState(topic ?? '');
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
 
   const playbackUrl = previewUrl || videoUrl || null;
   const numericRoomId = roomId ? Number(roomId) : null;
   const numericPostId = postId ? Number(postId) : null;
+  const hasVideo = Boolean(playbackUrl);
+  const recordingWasDenied = recordingError === 'denied';
+  const recordingFailed = recordingError === 'failed' || recordingError === 'unsupported';
+  const noRecordingCaptured = hasRecording !== '1' && !hasVideo;
 
   useEffect(() => {
     return () => {
@@ -119,50 +157,90 @@ export function DebateReviewScreen() {
     else router.replace('/(app)');
   }
 
+  function noticeMessage(): string {
+    if (uploadError) {
+      return `The debate ended, but uploading the recording failed: ${uploadError}. You can still write a caption and discard, or try again from your drafts later if a partial save exists.`;
+    }
+    if (recordingWasDenied) {
+      return recordingErrorMessage('denied');
+    }
+    if (recordingFailed) {
+      return recordingErrorMessage(recordingError as DebateRecordingError);
+    }
+    if (noRecordingCaptured) {
+      return 'No video was captured for this debate. You can still save a caption as a draft note, or discard and return to the feed.';
+    }
+    return 'Preview your debate, write a caption, then save for later or post to the feed when you are ready.';
+  }
+
   async function handleSaveForLater() {
     if (!numericPostId) {
-      handleBack();
+      showAlert('Saved', 'Your debate has ended. No recording was saved, but you can start a new debate anytime.');
+      router.replace(`/(app)/profile/${user?.username ?? ''}`);
       return;
     }
 
     setSaving(true);
     try {
       await updatePostCaption(numericPostId, caption.trim());
-      Alert.alert('Saved', 'Your debate recording was saved as a draft. You can post it anytime from your profile.');
+      showAlert('Saved', 'Your debate recording was saved as a draft. You can post it anytime from your profile.');
       router.replace(`/(app)/profile/${user?.username ?? ''}`);
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Could not save draft');
+      showAlert('Error', e instanceof Error ? e.message : 'Could not save draft');
     } finally {
       setSaving(false);
     }
   }
 
   async function handlePublish() {
+    if (!hasVideo && !numericPostId) {
+      showAlert(
+        'No recording to post',
+        'There is no video to publish. Discard this session or start a new debate with screen capture enabled.',
+      );
+      return;
+    }
+
     setPublishing(true);
     try {
       const trimmed = caption.trim();
-      if (numericRoomId) {
+      if (numericRoomId && numericPostId) {
         await publishDebate(numericRoomId, trimmed);
       } else if (numericPostId) {
         await publishPost(numericPostId, trimmed);
       } else {
         throw new Error('Missing debate or post id');
       }
-      Alert.alert('Posted', 'Your debate recording is now on the feed.');
+      showAlert('Posted', 'Your debate recording is now on the feed.');
       router.replace('/(app)');
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Could not publish');
+      showAlert('Error', e instanceof Error ? e.message : 'Could not publish');
     } finally {
       setPublishing(false);
     }
   }
 
-  if (!playbackUrl && !numericPostId) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.brand} />
-      </View>
+  async function handleDiscard() {
+    const confirmed = await confirmDestructive(
+      numericPostId ? 'Discard recording?' : 'Leave review?',
+      numericPostId
+        ? 'This will delete the draft recording. You cannot undo this.'
+        : 'Return to the feed without posting anything.',
+      numericPostId ? 'Discard' : 'Leave',
     );
+    if (!confirmed) return;
+
+    setDiscarding(true);
+    try {
+      if (numericPostId) {
+        await deletePost(numericPostId);
+      }
+      router.replace('/(app)');
+    } catch (e) {
+      showAlert('Error', e instanceof Error ? e.message : 'Could not discard recording');
+    } finally {
+      setDiscarding(false);
+    }
   }
 
   return (
@@ -179,18 +257,30 @@ export function DebateReviewScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.draftBadge}>DRAFT</Text>
-          <Text style={styles.subtitle}>
-            Preview your debate, write a caption, then save for later or post to the feed when you are ready.
-          </Text>
+          {numericPostId ? <Text style={styles.draftBadge}>DRAFT</Text> : null}
+          <Text style={styles.subtitle}>{noticeMessage()}</Text>
+
+          {uploadError ? (
+            <View style={styles.noticeCard}>
+              <Text style={styles.noticeTitle}>Upload issue</Text>
+              <Text style={styles.noticeText}>{uploadError}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.previewCard}>
             <Text style={styles.previewLabel}>Recording preview</Text>
-            {playbackUrl ? (
-              <VideoPlayer uri={playbackUrl} style={styles.previewPlayer} nativeControls />
+            {hasVideo ? (
+              <VideoPlayer uri={playbackUrl!} style={styles.previewPlayer} nativeControls />
             ) : (
-              <View style={[styles.previewPlayer, styles.loading]}>
-                <ActivityIndicator size="large" color={colors.brand} />
+              <View style={[styles.previewPlayer, styles.previewPlaceholder]}>
+                <Ionicons name="videocam-off-outline" size={40} color={colors.textDim} />
+                <Text style={styles.noticeText}>
+                  {recordingWasDenied
+                    ? 'Screen capture was not allowed.'
+                    : noRecordingCaptured
+                      ? 'No recording available for preview.'
+                      : 'Video preview unavailable.'}
+                </Text>
               </View>
             )}
           </View>
@@ -210,15 +300,28 @@ export function DebateReviewScreen() {
               title="Post to feed"
               onPress={() => void handlePublish()}
               loading={publishing}
-              disabled={saving}
+              disabled={saving || discarding || (!hasVideo && !numericPostId)}
             />
             <Button
               title="Save for later"
               variant="secondary"
               onPress={() => void handleSaveForLater()}
               loading={saving}
-              disabled={publishing}
+              disabled={publishing || discarding}
             />
+            <Pressable
+              style={styles.discardBtn}
+              onPress={() => void handleDiscard()}
+              disabled={saving || publishing || discarding}
+            >
+              {discarding ? (
+                <ActivityIndicator size="small" color="#f87171" />
+              ) : (
+                <Text style={styles.discardText}>
+                  {numericPostId ? 'Discard recording' : 'Leave without posting'}
+                </Text>
+              )}
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

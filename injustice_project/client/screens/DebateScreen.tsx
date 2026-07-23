@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -27,7 +26,7 @@ import {
   type DebateRecorder,
   type DebateRecordingError,
 } from '../shared/debateRecording';
-import { confirmDestructive } from '../shared/confirm';
+import { confirmDestructive, showAlert } from '../shared/confirm';
 import type { Debate, DebateMessage } from '../shared/types';
 import { radius, spacing, type ThemeColors } from '../shared/theme';
 
@@ -88,6 +87,15 @@ function makeStyles(colors: ThemeColors) {
     },
     recordingTitle: { color: colors.white, fontWeight: '700', fontSize: 18, marginBottom: spacing.sm },
     recordingHint: { color: colors.textDim, fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 320 },
+    endingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlay,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+      zIndex: 30,
+      gap: spacing.md,
+    },
     chatPanel: {
       height: 240,
       backgroundColor: colors.surface,
@@ -154,6 +162,7 @@ export function DebateScreen() {
   const [text, setText] = useState('');
   const [jitsiApi, setJitsiApi] = useState<JitsiApi | null>(null);
   const [ending, setEnding] = useState(false);
+  const [endingPhase, setEndingPhase] = useState<'closing' | 'recording' | 'uploading' | null>(null);
   const [recording, setRecording] = useState(false);
   const [recordingPaused, setRecordingPaused] = useState(false);
   const [recordingReady, setRecordingReady] = useState(Platform.OS !== 'web');
@@ -183,10 +192,9 @@ export function DebateScreen() {
   }, [roomId]);
 
   useEffect(() => {
-    if (debate && !debate.is_active) {
-      Alert.alert('Debate ended', 'This live debate has ended.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+    if (debate && !debate.is_active && !endingRef.current) {
+      showAlert('Debate ended', 'This live debate has ended.');
+      router.back();
     }
   }, [debate, router]);
 
@@ -228,7 +236,7 @@ export function DebateScreen() {
         setRecording(false);
         setRecordingError('failed');
         recorderRef.current = null;
-        Alert.alert(
+        showAlert(
           'Recording stopped',
           'Screen sharing ended. Tap Retry in Host controls to record again, or end the debate to save what was captured.',
         );
@@ -252,7 +260,7 @@ export function DebateScreen() {
       presenceGenerationRef.current += 1;
       void clearHostPresence(roomId).catch(() => {});
       if (recorderRef.current) {
-        Alert.alert(
+        showAlert(
           'Save recording?',
           'You left the video room. Use Host controls → End debate for everyone to upload the recording.',
         );
@@ -311,45 +319,76 @@ export function DebateScreen() {
     if (confirmed) router.back();
   }
 
+  function navigateToReview(params: Record<string, string>) {
+    router.replace({
+      pathname: '/(app)/debate/review',
+      params: {
+        roomId: String(roomId),
+        topic: debate?.topic ?? '',
+        ...params,
+      },
+    });
+  }
+
+  function disposeJitsi() {
+    if (!jitsiApi) return;
+    try {
+      jitsiApi.executeCommand('hangup');
+    } catch {
+      /* conference may already be closing */
+    }
+    try {
+      jitsiApi.dispose();
+    } catch {
+      /* ignore dispose errors */
+    }
+    setJitsiApi(null);
+  }
+
   async function handleEndDebate() {
     if (!roomId) return;
+
     setEnding(true);
+    setEndingPhase('closing');
     endingRef.current = true;
     presenceGenerationRef.current += 1;
     setHostInConference(false);
+    disposeJitsi();
+
+    const capturedRecordingError = recordingError;
+
     try {
+      setEndingPhase('recording');
       const videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
       recorderRef.current = null;
       setRecording(false);
       setRecordingPaused(false);
+
+      setEndingPhase('uploading');
       const result = await endDebate(roomId, videoBlob);
+      const draft = result.draft;
+      const postId = draft?.id ?? result.post_id;
+      const previewUrl =
+        Platform.OS === 'web' && videoBlob && typeof URL !== 'undefined'
+          ? URL.createObjectURL(videoBlob)
+          : draft?.video_url ?? '';
 
-      if (videoBlob && result.draft) {
-        const previewUrl =
-          Platform.OS === 'web' && typeof URL !== 'undefined'
-            ? URL.createObjectURL(videoBlob)
-            : result.draft.video_url ?? undefined;
-
-        router.replace({
-          pathname: '/(app)/debate/review',
-          params: {
-            roomId: String(roomId),
-            postId: String(result.draft.id),
-            topic: debate?.topic ?? result.draft.caption ?? '',
-            previewUrl: previewUrl ?? '',
-            videoUrl: result.draft.video_url ?? '',
-          },
-        });
-        return;
-      }
-
-      Alert.alert('Debate ended', 'The debate has ended.');
-      router.back();
+      navigateToReview({
+        postId: postId ? String(postId) : '',
+        previewUrl,
+        videoUrl: draft?.video_url ?? '',
+        hasRecording: videoBlob ? '1' : '0',
+        recordingError: capturedRecordingError ?? '',
+      });
     } catch (e) {
-      endingRef.current = false;
-      Alert.alert('Error', e instanceof Error ? e.message : 'Could not end debate');
-    } finally {
-      setEnding(false);
+      navigateToReview({
+        postId: '',
+        previewUrl: '',
+        videoUrl: '',
+        hasRecording: '0',
+        recordingError: capturedRecordingError ?? '',
+        uploadError: e instanceof Error ? e.message : 'Could not end debate',
+      });
     }
   }
 
@@ -398,12 +437,30 @@ export function DebateScreen() {
       </View>
 
       <View style={styles.main}>
-        <JitsiEmbed
-          roomId={debate.id}
-          displayName={user?.username ?? user?.first_name ?? 'Host'}
-          isHost={isHost}
-          onApiReady={handleJitsiApi}
-        />
+        {!ending ? (
+          <JitsiEmbed
+            roomId={debate.id}
+            displayName={user?.username ?? user?.first_name ?? 'Host'}
+            isHost={isHost}
+            onApiReady={handleJitsiApi}
+          />
+        ) : null}
+
+        {ending ? (
+          <View style={styles.endingOverlay}>
+            <ActivityIndicator size="large" color={colors.brand} />
+            <Text style={styles.recordingTitle}>
+              {endingPhase === 'closing'
+                ? 'Closing video room…'
+                : endingPhase === 'recording'
+                  ? 'Saving recording…'
+                  : 'Uploading draft…'}
+            </Text>
+            <Text style={styles.recordingHint}>
+              Hang tight — you will review your debate next.
+            </Text>
+          </View>
+        ) : null}
 
         {isHost && Platform.OS === 'web' && recordingPromptOpen ? (
           <View style={styles.recordingOverlay}>

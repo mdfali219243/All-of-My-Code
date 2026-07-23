@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { JitsiApi, JitsiParticipant } from './JitsiEmbed';
-import { confirmDestructive } from '../shared/confirm';
+import { confirmDestructive, showAlert } from '../shared/confirm';
 import { colors, radius, spacing } from '../shared/theme';
 
 type Props = {
@@ -77,13 +77,13 @@ export function DebateHostPanel({
 
   function runCommand(label: string, command: string, ...args: unknown[]) {
     if (!jitsiApi) {
-      Alert.alert('Host controls', 'Join the video room first (web) or use Jitsi toolbar on mobile.');
+      showAlert('Host controls', 'Join the video room first (web) or use Jitsi toolbar on mobile.');
       return;
     }
     try {
       jitsiApi.executeCommand(command, ...args);
     } catch (e) {
-      Alert.alert(label, e instanceof Error ? e.message : 'Command failed');
+      showAlert(label, e instanceof Error ? e.message : 'Command failed');
     }
   }
 

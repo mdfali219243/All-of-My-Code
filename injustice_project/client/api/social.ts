@@ -99,6 +99,10 @@ export async function publishPost(postId: number, caption?: string): Promise<Pos
   return normalizePost(data.post);
 }
 
+export async function deletePost(postId: number): Promise<void> {
+  await apiRequest(`/posts/${postId}/`, { method: 'DELETE' });
+}
+
 export async function sendHostHeartbeat(roomId: number): Promise<void> {
   await apiRequest(`/debates/${roomId}/host-heartbeat/`, { method: 'POST' });
 }

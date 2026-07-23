@@ -313,13 +313,17 @@ def drafts_view(request):
     return Response({'drafts': serializer.data})
 
 
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def update_post_view(request, post_id):
     post = get_object_or_404(VideoPost, id=post_id)
 
     if post.user != request.user:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == 'DELETE':
+        post.delete()
+        return Response({'status': 'ok'})
 
     caption = request.data.get('caption')
     if caption is not None:
