@@ -366,11 +366,12 @@ export function DebateScreen() {
     };
   }, [jitsiApi, isHost, roomId, recordingSupported]);
 
-  // Open the mandatory gate as soon as Jitsi is ready (join events can race past listeners).
+  // Open the mandatory gate once the host is in-conference (or Jitsi API is ready as a fallback).
   useEffect(() => {
-    if (!mustRecord || recording || ending || !jitsiApi) return;
+    if (!mustRecord || recording || ending) return;
+    if (!hostInConference && !jitsiApi) return;
     setRecordingGateOpen(true);
-  }, [mustRecord, jitsiApi, recording, ending]);
+  }, [mustRecord, hostInConference, jitsiApi, recording, ending]);
 
   useEffect(() => {
     return () => {
@@ -482,13 +483,23 @@ export function DebateScreen() {
     if (!roomId) return;
 
     if (mustRecord && !recording) {
-      setRecordingGateOpen(true);
-      const proceed = await confirmDestructive(
-        'No recording yet',
-        'This debate has no active recording. End without a video, or cancel and tap Start screen recording.',
-        'End without recording',
-      );
-      if (!proceed) return;
+      const backup = await loadRecordingBackup(roomId);
+      if (!backup || backup.size === 0) {
+        setRecordingGateOpen(true);
+        if (!recordingError) {
+          showAlert(
+            'Recording required',
+            'Start screen recording before ending. Tap “Start screen recording”, choose This tab, and enable Share tab audio.',
+          );
+          return;
+        }
+        const proceed = await confirmDestructive(
+          'End without a usable recording?',
+          'Screen capture failed or was denied. Ending now will close the debate with no video. Retry recording if you can.',
+          'End without video',
+        );
+        if (!proceed) return;
+      }
     }
 
     setEnding(true);

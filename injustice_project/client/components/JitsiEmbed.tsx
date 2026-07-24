@@ -6,7 +6,9 @@ import { WebView } from 'react-native-webview';
 
 import { colors, spacing } from '../shared/theme';
 
-const JITSI_DOMAIN = 'meet.jit.si';
+// meet.jit.si requires OAuth login to become moderator; lobby cannot be disabled client-side.
+// jitsi.riot.im grants moderator to the first joiner without Jitsi login (matches Django debate_room.html).
+const JITSI_DOMAIN = process.env.EXPO_PUBLIC_JITSI_DOMAIN ?? 'jitsi.riot.im';
 
 const HOST_TOOLBAR = [
   'microphone',
@@ -28,23 +30,59 @@ export function getJitsiRoomName(roomId: number) {
   return `InjusticeDebate${roomId}`;
 }
 
-export function getJitsiUrl(roomId: number, isHost = false, displayName?: string) {
-  const room = getJitsiRoomName(roomId);
+function buildConfigOverwrite(isHost: boolean) {
+  return {
+    prejoinPageEnabled: false,
+    prejoinConfig: { enabled: false },
+    requireDisplayName: false,
+    enableWelcomePage: false,
+    enableLobby: false,
+    lobby: { enabled: false, autoKnock: false, enableChat: false },
+    enableLobbyChat: false,
+    hideLobbyButton: true,
+    disableDeepLinking: true,
+    enableUserRolesBasedOnToken: false,
+    startWithAudioMuted: !isHost,
+    startWithVideoMuted: !isHost,
+    disableReactions: !isHost,
+  };
+}
+
+function buildInterfaceConfigOverwrite(isHost: boolean) {
+  return {
+    TOOLBAR_BUTTONS: isHost ? HOST_TOOLBAR : SPECTATOR_TOOLBAR,
+    SHOW_JITSI_WATERMARK: false,
+    SHOW_WATERMARK_FOR_GUESTS: false,
+    HIDE_INVITE_MORE_HEADER: true,
+    DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+  };
+}
+
+function configToHashParams(isHost: boolean) {
+  const config = buildConfigOverwrite(isHost);
   const muted = isHost ? 'false' : 'true';
-  const nameParam = displayName ? `&userInfo.displayName="${encodeURIComponent(displayName)}"` : '';
   return (
-    `https://${JITSI_DOMAIN}/${room}` +
     `#config.prejoinPageEnabled=false` +
     `&config.prejoinConfig.enabled=false` +
     `&config.requireDisplayName=false` +
     `&config.enableWelcomePage=false` +
     `&config.enableLobby=false` +
     `&config.lobby.enabled=false` +
-    `&config.startAudioMuted=${muted}` +
+    `&config.lobby.autoKnock=false` +
+    `&config.enableLobbyChat=false` +
+    `&config.hideLobbyButton=true` +
+    `&config.disableDeepLinking=true` +
+    `&config.enableUserRolesBasedOnToken=false` +
+    `&config.startWithAudioMuted=${muted}` +
     `&config.startWithVideoMuted=${muted}` +
-    `&config.disableReactions=${isHost ? 'false' : 'true'}` +
-    nameParam
+    `&config.disableReactions=${isHost ? 'false' : 'true'}`
   );
+}
+
+export function getJitsiUrl(roomId: number, isHost = false, displayName?: string) {
+  const room = getJitsiRoomName(roomId);
+  const nameParam = displayName ? `&userInfo.displayName="${encodeURIComponent(displayName)}"` : '';
+  return `https://${JITSI_DOMAIN}/${room}${configToHashParams(isHost)}${nameParam}`;
 }
 
 export type JitsiParticipant = {
@@ -68,6 +106,31 @@ declare global {
   }
 }
 
+function activateHostRoom(api: JitsiApi) {
+  const disableLobby = () => {
+    try {
+      api.executeCommand('toggleLobby', false);
+    } catch {
+      /* lobby may already be off or user not yet moderator */
+    }
+  };
+
+  disableLobby();
+
+  const myId = api.getMyUserId?.();
+  if (myId) {
+    try {
+      api.executeCommand('grantModerator', myId);
+    } catch {
+      /* grantModerator requires moderator rights on some servers */
+    }
+  }
+
+  // Retry after role assignment settles (first joiner on community servers).
+  window.setTimeout(disableLobby, 500);
+  window.setTimeout(disableLobby, 2000);
+}
+
 function buildJitsiOptions(
   roomId: number,
   parentNode: HTMLElement,
@@ -80,22 +143,8 @@ function buildJitsiOptions(
     width: '100%',
     height: '100%',
     userInfo: displayName ? { displayName } : undefined,
-    configOverwrite: {
-      prejoinPageEnabled: false,
-      prejoinConfig: { enabled: false },
-      requireDisplayName: false,
-      enableWelcomePage: false,
-      enableLobby: false,
-      lobby: { enabled: false, autoKnock: false, enableChat: false },
-      startWithAudioMuted: !isHost,
-      startWithVideoMuted: !isHost,
-      disableReactions: !isHost,
-    },
-    interfaceConfigOverwrite: {
-      TOOLBAR_BUTTONS: isHost ? HOST_TOOLBAR : SPECTATOR_TOOLBAR,
-      SHOW_JITSI_WATERMARK: false,
-      SHOW_WATERMARK_FOR_GUESTS: false,
-    },
+    configOverwrite: buildConfigOverwrite(isHost),
+    interfaceConfigOverwrite: buildInterfaceConfigOverwrite(isHost),
   };
 }
 
@@ -133,15 +182,9 @@ function WebJitsiEmbed({ roomId, displayName, isHost = false, onApiReady }: Prop
       apiRef.current = api;
 
       if (isHost) {
-        const startRoom = () => {
-          try {
-            api.executeCommand('toggleLobby', false);
-          } catch {
-            /* lobby may already be off */
-          }
-        };
-        api.addEventListener('videoConferenceJoined', startRoom);
-        api.addEventListener('readyToClose', startRoom);
+        const onHostReady = () => activateHostRoom(api);
+        api.addEventListener('videoConferenceJoined', onHostReady);
+        api.addEventListener('participantRoleChanged', onHostReady);
       }
 
       onApiReadyRef.current?.(api);

@@ -10,12 +10,42 @@ def debate_recording_caption(room: DebateRoom) -> str:
     return topic or 'Live debate'
 
 
+# Convert synchronously only for short clips so Render/gunicorn do not time out
+# on long debates. Longer WebM files are kept as-is and can be converted offline.
+_SYNC_CONVERT_MAX_BYTES = 40 * 1024 * 1024
+
+
+def _uploaded_size(video_file) -> int:
+    size = getattr(video_file, 'size', None)
+    if isinstance(size, int) and size >= 0:
+        return size
+    try:
+        pos = video_file.tell()
+        video_file.seek(0, os.SEEK_END)
+        size = video_file.tell()
+        video_file.seek(pos)
+        return int(size or 0)
+    except Exception:
+        return 0
+
+
 def _save_recording_file(room: DebateRoom, video_file) -> None:
-    prepared = prepare_video_upload(video_file)
-    filename = os.path.basename(prepared.name or 'debate_recording.mp4')
+    """Persist the host recording. Prefer keeping the upload even if MP4 convert fails."""
+    name = os.path.basename(getattr(video_file, 'name', None) or 'debate_recording.webm')
+    prepared = video_file
+    size = _uploaded_size(video_file)
+
+    if size and size <= _SYNC_CONVERT_MAX_BYTES:
+        try:
+            prepared = prepare_video_upload(video_file)
+            name = os.path.basename(prepared.name or name)
+        except Exception:
+            prepared = video_file
+            name = os.path.basename(getattr(video_file, 'name', None) or 'debate_recording.webm')
+
     if room.recording_file:
         room.recording_file.delete(save=False)
-    room.recording_file.save(filename, prepared, save=True)
+    room.recording_file.save(name, prepared, save=True)
 
 
 def save_debate_recording_draft(

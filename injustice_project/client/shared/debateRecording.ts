@@ -42,7 +42,7 @@ export function isDebateRecordingSupported(): boolean {
   return true;
 }
 
-function pickMimeType(): string {
+function pickMimeType(): string | undefined {
   const candidates = [
     'video/webm;codecs=vp9,opus',
     'video/webm;codecs=vp8,opus',
@@ -51,7 +51,20 @@ function pickMimeType(): string {
     'video/webm',
     'video/mp4',
   ];
-  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? 'video/webm';
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+function createMediaRecorder(stream: MediaStream): { recorder: MediaRecorder; mimeType: string } {
+  const mimeType = pickMimeType();
+  try {
+    const recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_500_000 })
+      : new MediaRecorder(stream, { videoBitsPerSecond: 2_500_000 });
+    return { recorder, mimeType: recorder.mimeType || mimeType || 'video/webm' };
+  } catch {
+    const recorder = new MediaRecorder(stream);
+    return { recorder, mimeType: recorder.mimeType || 'video/webm' };
+  }
 }
 
 function openRecordingDb(): Promise<IDBDatabase> {
@@ -214,14 +227,11 @@ export async function startDebateRecording(roomId?: number): Promise<DebateRecor
 
     const displayStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
     const { stream, cleanup } = await buildRecordingStream(displayStream);
-    const mimeType = pickMimeType();
-    const recorder = new MediaRecorder(stream, {
-      mimeType,
-      videoBitsPerSecond: 2_500_000,
-    });
+    const { recorder, mimeType } = createMediaRecorder(stream);
     const chunks: Blob[] = [];
     let stoppedCallback: (() => void) | null = null;
     let backupTimer: ReturnType<typeof setInterval> | null = null;
+    let finalized = false;
 
     const persistBackup = () => {
       if (roomId == null || !chunks.length) return;
@@ -232,6 +242,10 @@ export async function startDebateRecording(roomId?: number): Promise<DebateRecor
     recorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
         chunks.push(event.data);
+        // Persist promptly so a mid-session crash still leaves a usable draft.
+        if (roomId != null && chunks.length % 5 === 0) {
+          persistBackup();
+        }
       }
     };
 
@@ -253,10 +267,17 @@ export async function startDebateRecording(roomId?: number): Promise<DebateRecor
       };
     }
 
+    // Timeslice keeps chunks flowing so IndexedDB backups are never empty.
     recorder.start(1000);
     backupTimer = setInterval(persistBackup, 5000);
 
     const finalize = (): Blob | null => {
+      if (finalized) {
+        if (!chunks.length) return null;
+        const existing = new Blob(chunks, { type: mimeType });
+        return existing.size > 0 ? existing : null;
+      }
+      finalized = true;
       if (backupTimer) {
         clearInterval(backupTimer);
         backupTimer = null;

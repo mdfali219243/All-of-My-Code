@@ -14,13 +14,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { deletePost, publishDebate, publishPost, updatePostCaption } from '../api/social';
+import { deletePost, endDebate, publishDebate, publishPost, updatePostCaption } from '../api/social';
 import { Button } from '../components/Button';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { confirmDestructive, showAlert } from '../shared/confirm';
-import { recordingErrorMessage, type DebateRecordingError } from '../shared/debateRecording';
+import {
+  clearRecordingBackup,
+  loadRecordingBackup,
+  recordingErrorMessage,
+  type DebateRecordingError,
+} from '../shared/debateRecording';
 import { radius, spacing, type ThemeColors } from '../shared/theme';
 
 function makeStyles(colors: ThemeColors) {
@@ -135,10 +140,15 @@ export function DebateReviewScreen() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
+  const [retryingUpload, setRetryingUpload] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [localPostId, setLocalPostId] = useState<string | null>(postId ?? null);
+  const [localUploadError, setLocalUploadError] = useState<string | null>(uploadError ?? null);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(videoUrl ?? null);
 
-  const playbackUrl = previewUrl || videoUrl || null;
+  const playbackUrl = localPreviewUrl || previewUrl || localVideoUrl || videoUrl || null;
   const numericRoomId = roomId ? Number(roomId) : null;
-  const numericPostId = postId ? Number(postId) : null;
+  const numericPostId = localPostId ? Number(localPostId) : null;
   const hasVideo = Boolean(playbackUrl);
   const recordingWasDenied = recordingError === 'denied';
   const recordingFailed =
@@ -155,14 +165,63 @@ export function DebateReviewScreen() {
     };
   }, [previewUrl]);
 
+  useEffect(() => {
+    let createdUrl: string | null = null;
+    let cancelled = false;
+
+    async function hydrateFromBackup() {
+      // Only hydrate when navigation did not already provide a playable URL.
+      if (!numericRoomId || previewUrl || videoUrl || Platform.OS !== 'web') return;
+      const blob = await loadRecordingBackup(numericRoomId);
+      if (cancelled || !blob?.size || typeof URL === 'undefined') return;
+      createdUrl = URL.createObjectURL(blob);
+      setLocalPreviewUrl(createdUrl);
+    }
+
+    void hydrateFromBackup();
+
+    return () => {
+      cancelled = true;
+      if (createdUrl) {
+        URL.revokeObjectURL(createdUrl);
+        setLocalPreviewUrl((current) => (current === createdUrl ? null : current));
+      }
+    };
+  }, [numericRoomId, previewUrl, videoUrl]);
+
+  async function handleRetryUpload() {
+    if (!numericRoomId) return;
+    setRetryingUpload(true);
+    try {
+      const blob = await loadRecordingBackup(numericRoomId);
+      if (!blob?.size) {
+        showAlert('No local recording', 'There is no backed-up recording in this browser to upload.');
+        return;
+      }
+      const result = await endDebate(numericRoomId, blob);
+      const draft = result.draft;
+      if (draft?.id) setLocalPostId(String(draft.id));
+      if (draft?.video_url) setLocalVideoUrl(draft.video_url);
+      setLocalUploadError(null);
+      void clearRecordingBackup(numericRoomId);
+      showAlert('Uploaded', 'Your debate recording was saved as a draft.');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Upload failed';
+      setLocalUploadError(message);
+      showAlert('Upload failed', message);
+    } finally {
+      setRetryingUpload(false);
+    }
+  }
+
   function handleBack() {
     if (router.canGoBack()) router.back();
     else router.replace('/(app)');
   }
 
   function noticeMessage(): string {
-    if (uploadError) {
-      return `The debate ended, but uploading the recording failed: ${uploadError}. You can still write a caption and discard, or try again from your drafts later if a partial save exists.`;
+    if (localUploadError) {
+      return `The debate ended, but uploading the recording failed: ${localUploadError}. If you see a preview below, retry the upload — the video is still saved in this browser.`;
     }
     if (recordingWasDenied) {
       return recordingErrorMessage('denied');
@@ -263,10 +322,18 @@ export function DebateReviewScreen() {
           {numericPostId ? <Text style={styles.draftBadge}>DRAFT</Text> : null}
           <Text style={styles.subtitle}>{noticeMessage()}</Text>
 
-          {uploadError ? (
+          {localUploadError ? (
             <View style={styles.noticeCard}>
               <Text style={styles.noticeTitle}>Upload issue</Text>
-              <Text style={styles.noticeText}>{uploadError}</Text>
+              <Text style={styles.noticeText}>{localUploadError}</Text>
+              {numericRoomId && Platform.OS === 'web' ? (
+                <Button
+                  title="Retry upload from this browser"
+                  onPress={() => void handleRetryUpload()}
+                  loading={retryingUpload}
+                  disabled={saving || publishing || discarding}
+                />
+              ) : null}
             </View>
           ) : null}
 

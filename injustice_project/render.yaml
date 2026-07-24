@@ -8,7 +8,8 @@ services:
     runtime: python
     rootDir: injustice_project/injustice
     buildCommand: pip install -r ../requirements.txt && python manage.py migrate
-    startCommand: gunicorn injustice.wsgi:application --bind 0.0.0.0:$PORT
+    # Longer timeout for large debate recording uploads (default 30s is too short).
+    startCommand: gunicorn injustice.wsgi:application --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"

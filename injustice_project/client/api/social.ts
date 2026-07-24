@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import { getAccessToken } from './storage';
+import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './storage';
 import { API_BASE_URL } from './config';
 import { normalizePost } from '../shared/mediaUrl';
 import type { Comment, Debate, DebateMessage, Post, ShareContact } from '../shared/types';
@@ -32,25 +32,74 @@ export async function sendDebateMessage(roomId: number, message: string): Promis
   return data.message;
 }
 
+async function postEndDebateForm(
+  roomId: number,
+  form: FormData,
+  token: string | null,
+): Promise<Response> {
+  return fetch(`${API_BASE_URL}/debates/${roomId}/end/`, {
+    method: 'POST',
+    // Do not set Content-Type — browser must add multipart boundary.
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+}
+
 export async function endDebate(
   roomId: number,
   videoBlob?: Blob | null,
 ): Promise<{ status: string; post_id?: number; draft?: Post }> {
-  const token = await getAccessToken();
-
-  if (videoBlob) {
+  if (videoBlob && videoBlob.size > 0) {
+    const mime = videoBlob.type || 'video/webm';
+    const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+    const filename = `debate_recording.${ext}`;
     const form = new FormData();
-    const ext = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
-    form.append('video_file', videoBlob, `debate_recording.${ext}`);
+    // Prefer File so Django receives a stable filename + content-type.
+    const file =
+      typeof File !== 'undefined'
+        ? new File([videoBlob], filename, { type: mime })
+        : videoBlob;
+    form.append('video_file', file, filename);
 
-    const response = await fetch(`${API_BASE_URL}/debates/${roomId}/end/`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: form,
-    });
+    let token = await getAccessToken();
+    let response = await postEndDebateForm(roomId, form, token);
+
+    if (response.status === 401) {
+      // Rebuild FormData — a consumed body cannot be resent.
+      const retryForm = new FormData();
+      const retryFile =
+        typeof File !== 'undefined'
+          ? new File([videoBlob], filename, { type: mime })
+          : videoBlob;
+      retryForm.append('video_file', retryFile, filename);
+      const refresh = await getRefreshToken();
+      if (refresh) {
+        const refreshRes = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh }),
+        });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          await saveTokens({ access: data.access, refresh });
+          token = data.access;
+          response = await postEndDebateForm(roomId, retryForm, token);
+        } else {
+          await clearTokens();
+        }
+      }
+    }
 
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.detail ?? 'Failed to end debate');
+    if (!response.ok) {
+      const detail =
+        typeof data.detail === 'string'
+          ? data.detail
+          : response.status === 413
+            ? 'Recording too large for the server to accept.'
+            : 'Failed to end debate / upload recording';
+      throw new Error(detail);
+    }
     return {
       ...(data as { status: string; post_id?: number; draft?: Post }),
       draft: data.draft ? normalizePost(data.draft as Post) : undefined,
