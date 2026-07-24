@@ -216,6 +216,7 @@ export function DebateScreen() {
   const [recordingError, setRecordingError] = useState<DebateRecordingError | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const recorderRef = useRef<DebateRecorder | null>(null);
+  const recordingBusyRef = useRef(false);
   const endingRef = useRef(false);
   const presenceGenerationRef = useRef(0);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -305,13 +306,18 @@ export function DebateScreen() {
     [showToast],
   );
 
-  /** Must be invoked from a button click (user gesture) — browsers block getDisplayMedia otherwise. */
+  /**
+   * Start tab capture. Auto-invoked on videoConferenceJoined; browsers that require a
+   * user gesture will deny — then the blocking "Recording required" modal + Retry owns recovery.
+   */
   const beginRecording = useCallback(async () => {
     if (!isHost || !recordingSupported || !roomId) return;
-    if (recordingBusy) return;
+    if (recordingBusyRef.current) return;
 
+    recordingBusyRef.current = true;
     setRecordingBusy(true);
     setRecordingError(null);
+    setRecordingGateOpen(true);
 
     // Stop any prior half-dead recorder before retrying.
     if (recorderRef.current) {
@@ -321,28 +327,34 @@ export function DebateScreen() {
         /* ignore */
       }
       recorderRef.current = null;
+      setRecording(false);
     }
 
     const result = await startDebateRecording(roomId);
     if (result.recorder) {
       attachRecorder(result.recorder);
-    } else if (result.error) {
-      setRecordingError(result.error);
+    } else {
       setRecording(false);
+      setRecordingError(result.error ?? 'failed');
+      // Never continue silently — keep the host behind the mandatory gate.
       setRecordingGateOpen(true);
     }
+    recordingBusyRef.current = false;
     setRecordingBusy(false);
-  }, [isHost, roomId, recordingBusy, attachRecorder, recordingSupported]);
+  }, [isHost, roomId, attachRecorder, recordingSupported]);
+
+  const beginRecordingRef = useRef(beginRecording);
+  beginRecordingRef.current = beginRecording;
 
   useEffect(() => {
     if (!jitsiApi || !isHost || !roomId || !recordingSupported) return;
 
     const onJoined = () => {
       setHostInConference(true);
-      // Open mandatory gate — do NOT auto-call getDisplayMedia (needs user gesture).
-      if (!recorderRef.current) {
-        setRecordingGateOpen(true);
-      }
+      if (recorderRef.current || endingRef.current) return;
+      // Immediate capture attempt; on deny/fail the blocking Retry gate stays up.
+      setRecordingGateOpen(true);
+      void beginRecordingRef.current();
     };
     const onLeft = () => {
       setHostInConference(false);
@@ -366,12 +378,11 @@ export function DebateScreen() {
     };
   }, [jitsiApi, isHost, roomId, recordingSupported]);
 
-  // Open the mandatory gate once the host is in-conference (or Jitsi API is ready as a fallback).
+  // Keep the mandatory gate open whenever a web host is in-conference without an active recorder.
   useEffect(() => {
-    if (!mustRecord || recording || ending) return;
-    if (!hostInConference && !jitsiApi) return;
+    if (!mustRecord || recording || ending || !hostInConference) return;
     setRecordingGateOpen(true);
-  }, [mustRecord, hostInConference, jitsiApi, recording, ending]);
+  }, [mustRecord, hostInConference, recording, ending]);
 
   useEffect(() => {
     return () => {
@@ -486,19 +497,11 @@ export function DebateScreen() {
       const backup = await loadRecordingBackup(roomId);
       if (!backup || backup.size === 0) {
         setRecordingGateOpen(true);
-        if (!recordingError) {
-          showAlert(
-            'Recording required',
-            'Start screen recording before ending. Tap “Start screen recording”, choose This tab, and enable Share tab audio.',
-          );
-          return;
-        }
-        const proceed = await confirmDestructive(
-          'End without a usable recording?',
-          'Screen capture failed or was denied. Ending now will close the debate with no video. Retry recording if you can.',
-          'End without video',
+        showAlert(
+          'Recording required',
+          'Start screen recording before ending. Tap “Retry screen recording”, choose This tab, and enable Share tab audio.',
         );
-        if (!proceed) return;
+        return;
       }
     }
 
@@ -625,14 +628,18 @@ export function DebateScreen() {
             <Ionicons name="videocam" size={40} color="#f87171" />
             <Text style={styles.recordingTitle}>Recording required</Text>
             <Text style={styles.recordingHint}>
-              Every host debate must be recorded. Tap the button below, then choose{' '}
+              Every host debate must be recorded. When the browser prompt appears, choose{' '}
               <Text style={{ fontWeight: '800', color: '#fff' }}>This tab</Text>
-              {' '}(or this Chrome Tab) and turn on{' '}
+              {' '}(or Chrome Tab) and turn on{' '}
               <Text style={{ fontWeight: '800', color: '#fff' }}>Share tab audio</Text>
-              {' '}so the meeting is saved.
+              {' '}— then click Share / Allow. Do not leave until a red REC badge shows.
             </Text>
             {recordingError ? (
               <Text style={styles.recordingErrorText}>{recordingErrorMessage(recordingError)}</Text>
+            ) : recordingBusy ? (
+              <Text style={styles.recordingErrorText}>
+                Waiting for the browser screen-share prompt…
+              </Text>
             ) : null}
             <Pressable
               style={[styles.recordingPrimaryBtn, recordingBusy && styles.recordingPrimaryBtnDisabled]}
@@ -648,7 +655,7 @@ export function DebateScreen() {
               )}
             </Pressable>
             <Text style={styles.recordingSecondaryBtnText}>
-              Browsers only show the capture prompt after you click this button.
+              If no prompt appeared, click the button above — browsers require a click to share this tab.
             </Text>
           </View>
         ) : null}

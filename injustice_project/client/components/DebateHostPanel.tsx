@@ -175,11 +175,23 @@ export function DebateHostPanel({
           ) : null}
 
           <Pressable
-            style={[styles.endBtn, ending && styles.endBtnDisabled]}
-            disabled={ending}
-            onPress={() => void confirmEnd()}
+            style={[styles.endBtn, (ending || recordingRequired) && styles.endBtnDisabled]}
+            disabled={ending || Boolean(recordingRequired)}
+            onPress={() => {
+              if (recordingRequired) {
+                onRetryRecording?.();
+                showAlert(
+                  'Recording required',
+                  'Start screen recording first, then end the debate to upload your video.',
+                );
+                return;
+              }
+              void confirmEnd();
+            }}
           >
-            <Text style={styles.endBtnText}>{ending ? 'Ending…' : 'End debate for everyone'}</Text>
+            <Text style={styles.endBtnText}>
+              {ending ? 'Ending…' : recordingRequired ? 'Recording required to end' : 'End debate for everyone'}
+            </Text>
           </Pressable>
         </ScrollView>
       ) : null}

@@ -202,9 +202,37 @@ async function buildRecordingStream(displayStream: MediaStream): Promise<{
   };
 }
 
+async function requestDisplayStream(): Promise<MediaStream> {
+  const preferred: DisplayMediaOptions = {
+    video: {
+      displaySurface: 'browser',
+      frameRate: 30,
+    } as MediaTrackConstraints,
+    audio: true,
+    preferCurrentTab: true,
+    selfBrowserSurface: 'include',
+    systemAudio: 'include',
+    monitorTypeSurfaces: 'exclude',
+    surfaceSwitching: 'exclude',
+  };
+
+  try {
+    return await navigator.mediaDevices.getDisplayMedia(preferred);
+  } catch (err) {
+    // Some browsers reject the richer Chrome-only constraints — retry minimal options.
+    if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+      throw err;
+    }
+    return navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: true,
+    });
+  }
+}
+
 /**
  * Capture the debate tab (video) + tab/system audio, mixed with the host mic when available.
- * Must be called from a user gesture (button click) or browsers will deny getDisplayMedia.
+ * Prefer calling from a user gesture; some browsers deny getDisplayMedia otherwise.
  */
 export async function startDebateRecording(roomId?: number): Promise<DebateRecordingResult> {
   if (!isDebateRecordingSupported()) {
@@ -212,20 +240,7 @@ export async function startDebateRecording(roomId?: number): Promise<DebateRecor
   }
 
   try {
-    const displayMediaOptions: DisplayMediaOptions = {
-      video: {
-        displaySurface: 'browser',
-        frameRate: 30,
-      } as MediaTrackConstraints,
-      audio: true,
-      preferCurrentTab: true,
-      selfBrowserSurface: 'include',
-      systemAudio: 'include',
-      monitorTypeSurfaces: 'exclude',
-      surfaceSwitching: 'exclude',
-    };
-
-    const displayStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+    const displayStream = await requestDisplayStream();
     const { stream, cleanup } = await buildRecordingStream(displayStream);
     const { recorder, mimeType } = createMediaRecorder(stream);
     const chunks: Blob[] = [];
