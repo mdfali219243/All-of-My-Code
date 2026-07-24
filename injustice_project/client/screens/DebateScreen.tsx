@@ -213,7 +213,7 @@ export function DebateScreen() {
   const [recordingPaused, setRecordingPaused] = useState(false);
   const [recordingGateOpen, setRecordingGateOpen] = useState(false);
   const [recordingBusy, setRecordingBusy] = useState(false);
-  const [recordingError, setRecordingError] = useState<DebateRecordingError | null>(null);
+  const [recordingRequiredError, setRecordingRequiredError] = useState<DebateRecordingError | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const recorderRef = useRef<DebateRecorder | null>(null);
   const recordingBusyRef = useRef(false);
@@ -288,18 +288,14 @@ export function DebateScreen() {
         if (endingRef.current) return;
         setRecording(false);
         setRecordingPaused(false);
-        setRecordingError('failed');
+        setRecordingRequiredError('stopped');
         recorderRef.current = null;
         setRecordingGateOpen(true);
-        showAlert(
-          'Recording stopped',
-          'Screen sharing ended. You must start recording again before ending the debate, or your session will have no video.',
-        );
       });
       recorderRef.current = recorder;
       setRecording(true);
       setRecordingPaused(false);
-      setRecordingError(null);
+      setRecordingRequiredError(null);
       setRecordingGateOpen(false);
       showToast('Recording started — keep this tab selected');
     },
@@ -316,7 +312,7 @@ export function DebateScreen() {
 
     recordingBusyRef.current = true;
     setRecordingBusy(true);
-    setRecordingError(null);
+    setRecordingRequiredError(null);
     setRecordingGateOpen(true);
 
     // Stop any prior half-dead recorder before retrying.
@@ -335,7 +331,7 @@ export function DebateScreen() {
       attachRecorder(result.recorder);
     } else {
       setRecording(false);
-      setRecordingError(result.error ?? 'failed');
+      setRecordingRequiredError(result.error ?? 'failed');
       // Never continue silently — keep the host behind the mandatory gate.
       setRecordingGateOpen(true);
     }
@@ -513,7 +509,7 @@ export function DebateScreen() {
     setRecordingGateOpen(false);
     disposeJitsi();
 
-    const capturedRecordingError = recordingError;
+    const capturedRecordingError = recordingRequiredError;
 
     try {
       setEndingPhase('recording');
@@ -626,7 +622,7 @@ export function DebateScreen() {
         {showRecordingGate ? (
           <View style={styles.recordingOverlay}>
             <Ionicons name="videocam" size={40} color="#f87171" />
-            <Text style={styles.recordingTitle}>Recording required</Text>
+            <Text style={styles.recordingTitle}>Recording required — share this tab</Text>
             <Text style={styles.recordingHint}>
               Every host debate must be recorded. When the browser prompt appears, choose{' '}
               <Text style={{ fontWeight: '800', color: '#fff' }}>This tab</Text>
@@ -634,8 +630,8 @@ export function DebateScreen() {
               <Text style={{ fontWeight: '800', color: '#fff' }}>Share tab audio</Text>
               {' '}— then click Share / Allow. Do not leave until a red REC badge shows.
             </Text>
-            {recordingError ? (
-              <Text style={styles.recordingErrorText}>{recordingErrorMessage(recordingError)}</Text>
+            {recordingRequiredError ? (
+              <Text style={styles.recordingErrorText}>{recordingErrorMessage(recordingRequiredError)}</Text>
             ) : recordingBusy ? (
               <Text style={styles.recordingErrorText}>
                 Waiting for the browser screen-share prompt…
@@ -650,7 +646,7 @@ export function DebateScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.recordingPrimaryBtnText}>
-                  {recordingError ? 'Retry screen recording' : 'Start screen recording'}
+                  {recordingRequiredError ? 'Retry' : 'Start screen recording'}
                 </Text>
               )}
             </Pressable>
@@ -664,18 +660,12 @@ export function DebateScreen() {
           <DebateHostPanel
             jitsiApi={jitsiApi}
             onEndDebate={handleEndDebate}
-            onRetryRecording={
-              mustRecord && !recording ? () => {
-                setRecordingGateOpen(true);
-              } : recordingError ? () => {
-                setRecordingGateOpen(true);
-              } : undefined
-            }
+            onRetryRecording={mustRecord && !recording ? () => void beginRecording() : undefined}
             onToggleRecordingPause={recording ? handleToggleRecordingPause : undefined}
             ending={ending}
             recording={recording}
             recordingPaused={recordingPaused}
-            recordingError={recordingError ? recordingErrorMessage(recordingError) : undefined}
+            recordingError={recordingRequiredError ? recordingErrorMessage(recordingRequiredError) : undefined}
             recordingRequired={mustRecord && !recording}
           />
         ) : null}

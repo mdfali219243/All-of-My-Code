@@ -131,7 +131,7 @@ export function DebateHostPanel({
 
           {(recordingError || recordingRequired) && onRetryRecording ? (
             <Pressable style={styles.btn} onPress={onRetryRecording}>
-              <Text style={styles.btnText}>Start / retry recording</Text>
+              <Text style={styles.btnText}>Retry</Text>
             </Pressable>
           ) : null}
 

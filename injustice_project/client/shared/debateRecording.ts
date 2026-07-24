@@ -10,7 +10,7 @@ export type DebateRecorder = {
   onStopped: (callback: () => void) => void;
 };
 
-export type DebateRecordingError = 'unsupported' | 'denied' | 'failed' | 'empty';
+export type DebateRecordingError = 'unsupported' | 'denied' | 'failed' | 'empty' | 'stopped';
 
 export type DebateRecordingResult = {
   recorder: DebateRecorder | null;
@@ -282,6 +282,12 @@ export async function startDebateRecording(roomId?: number): Promise<DebateRecor
       };
     }
 
+    for (const track of displayStream.getAudioTracks()) {
+      track.onended = () => {
+        stoppedCallback?.();
+      };
+    }
+
     // Timeslice keeps chunks flowing so IndexedDB backups are never empty.
     recorder.start(1000);
     backupTimer = setInterval(persistBackup, 5000);
@@ -362,6 +368,8 @@ export function recordingErrorMessage(error: DebateRecordingError): string {
       return 'Screen capture is required. Click “Start screen recording”, choose This tab / this browser tab, and enable “Share tab audio” (or Allow).';
     case 'empty':
       return 'Recording started but captured no video data. Retry screen capture and keep this tab selected until you end the debate.';
+    case 'stopped':
+      return 'Screen sharing stopped. Click Retry, choose This tab, and enable Share tab audio to continue recording.';
     default:
       return 'Could not start recording. Use Chrome or Edge on desktop, click Start screen recording, and allow capture of this tab with audio.';
   }
