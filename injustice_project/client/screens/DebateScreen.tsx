@@ -219,6 +219,7 @@ export function DebateScreen() {
   const recordingBusyRef = useRef(false);
   const endingRef = useRef(false);
   const presenceGenerationRef = useRef(0);
+  const handleEndDebateRef = useRef<(() => Promise<void>) | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Evaluate in-component (not module scope) so SSR / first paint cannot permanently disable capture.
   const recordingSupported = isDebateRecordingSupported();
@@ -242,8 +243,20 @@ export function DebateScreen() {
   }, []);
 
   useEffect(() => {
-    if (id) fetchDebate(Number(id)).then(setDebate);
-  }, [id]);
+    if (!id) return;
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) {
+      showAlert('Invalid debate', 'This debate link is not valid.');
+      router.replace('/(app)');
+      return;
+    }
+    fetchDebate(numericId)
+      .then(setDebate)
+      .catch((e) => {
+        showAlert('Debate', e instanceof Error ? e.message : 'Could not load debate');
+        router.replace('/(app)');
+      });
+  }, [id, router]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -251,9 +264,11 @@ export function DebateScreen() {
   }, [roomId]);
 
   useEffect(() => {
+    // Never bounce away while the host is ending / uploading — that would skip the review screen.
     if (debate && !debate.is_active && !endingRef.current) {
       showAlert('Debate ended', 'This live debate has ended.');
-      router.back();
+      if (router.canGoBack()) router.back();
+      else router.replace('/(app)');
     }
   }, [debate, router]);
 
@@ -357,6 +372,11 @@ export function DebateScreen() {
       if (endingRef.current) return;
       presenceGenerationRef.current += 1;
       void clearHostPresence(roomId).catch(() => {});
+      // Host hung up via Jitsi — still take them to review/upload so they are not stranded.
+      if (isHost && (recorderRef.current || recording)) {
+        void handleEndDebateRef.current?.();
+        return;
+      }
       if (recorderRef.current) {
         showAlert(
           'Save recording?',
@@ -372,7 +392,7 @@ export function DebateScreen() {
       jitsiApi.removeEventListener('videoConferenceJoined', onJoined);
       jitsiApi.removeEventListener('videoConferenceLeft', onLeft);
     };
-  }, [jitsiApi, isHost, roomId, recordingSupported]);
+  }, [jitsiApi, isHost, roomId, recordingSupported, recording]);
 
   // Keep the mandatory gate open whenever a web host is in-conference without an active recorder.
   useEffect(() => {
@@ -420,8 +440,10 @@ export function DebateScreen() {
   }
 
   function navigateToReview(params: Record<string, string>) {
+    // Use a top-level route (not /debate/review) so expo-router does not treat
+    // "review" as debate/[id] and strand the host on a blank loading screen.
     router.replace({
-      pathname: '/(app)/debate/review',
+      pathname: '/(app)/debate-review',
       params: {
         roomId: String(roomId),
         topic: debate?.topic ?? '',
@@ -445,12 +467,33 @@ export function DebateScreen() {
     setJitsiApi(null);
   }
 
+  async function stopRecorderWithTimeout(ms = 8_000): Promise<Blob | null> {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (!recorder) return null;
+    try {
+      return await Promise.race([
+        recorder.stop(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+      ]);
+    } catch {
+      return null;
+    }
+  }
+
   async function finishEndDebate(videoBlob: Blob | null, capturedRecordingError: DebateRecordingError | null) {
     if (!roomId) return;
 
     setEndingPhase('uploading');
+    const uploadTimeoutMs = 90_000;
+
     try {
-      const result = await endDebate(roomId, videoBlob);
+      const result = await Promise.race([
+        endDebate(roomId, videoBlob),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Upload timed out. You can retry from the review screen.')), uploadTimeoutMs),
+        ),
+      ]);
       const draft = result.draft;
       const postId = draft?.id ?? result.post_id;
       const previewUrl =
@@ -470,7 +513,7 @@ export function DebateScreen() {
         recordingError: capturedRecordingError ?? '',
       });
     } catch (e) {
-      // Keep local backup so review can still play the blob URL we create.
+      // Keep local backup so review can still play / re-upload the video.
       const previewUrl =
         Platform.OS === 'web' && videoBlob && typeof URL !== 'undefined'
           ? URL.createObjectURL(videoBlob)
@@ -487,7 +530,7 @@ export function DebateScreen() {
   }
 
   async function handleEndDebate() {
-    if (!roomId) return;
+    if (!roomId || endingRef.current) return;
 
     if (mustRecord && !recording) {
       const backup = await loadRecordingBackup(roomId);
@@ -513,8 +556,7 @@ export function DebateScreen() {
 
     try {
       setEndingPhase('recording');
-      let videoBlob = recorderRef.current ? await recorderRef.current.stop() : null;
-      recorderRef.current = null;
+      let videoBlob = await stopRecorderWithTimeout();
       setRecording(false);
       setRecordingPaused(false);
 
@@ -539,6 +581,8 @@ export function DebateScreen() {
       });
     }
   }
+
+  handleEndDebateRef.current = handleEndDebate;
 
   function handleToggleRecordingPause() {
     const recorder = recorderRef.current;

@@ -247,7 +247,7 @@ export function ProfileScreen() {
 
   function openDraftReview(post: Post) {
     router.push({
-      pathname: '/(app)/debate/review',
+      pathname: '/(app)/debate-review',
       params: {
         postId: String(post.id),
         topic: post.caption ?? '',
