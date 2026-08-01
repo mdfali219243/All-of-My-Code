@@ -1,11 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View, ViewStyle } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { normalizeMediaUrl } from '../shared/mediaUrl';
-import { colors, radius } from '../shared/theme';
+import { mp4FallbackUrl, normalizeMediaUrl } from '../shared/mediaUrl';
+import { useTheme } from '../contexts/ThemeContext';
+import { radius, type ThemeColors } from '../shared/theme';
 
 type Props = {
   uri: string;
@@ -21,6 +31,56 @@ function objectFit(resizeMode: ResizeMode = ResizeMode.CONTAIN) {
   return resizeMode === ResizeMode.COVER ? 'cover' : 'contain';
 }
 
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    wrap: {
+      backgroundColor: colors.bgSecondary,
+      overflow: 'hidden',
+      borderRadius: radius.md,
+      position: 'relative',
+      width: '100%',
+    },
+    fill: {
+      width: '100%',
+      height: '100%',
+    },
+    webview: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.bgSecondary,
+    },
+    videoFill: {
+      width: '100%',
+      height: '100%',
+    },
+    loadingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2,
+      backgroundColor: colors.overlay,
+    },
+    errorBox: {
+      flex: 1,
+      minHeight: 220,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      padding: 16,
+    },
+    errorText: {
+      color: colors.textDim,
+      fontSize: 14,
+    },
+    errorLink: {
+      color: colors.brandLight,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+  });
+}
+
 export function VideoPlayer({
   uri,
   style,
@@ -30,38 +90,77 @@ export function VideoPlayer({
   nativeControls = true,
   resizeMode = ResizeMode.CONTAIN,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const videoRef = useRef<Video>(null);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const src = normalizeMediaUrl(uri) ?? uri;
+  const [playbackSrc, setPlaybackSrc] = useState<string | null>(null);
+  const triedFallback = useRef(false);
+  const normalized = normalizeMediaUrl(uri) ?? uri;
   const fit = objectFit(resizeMode);
 
   useEffect(() => {
     setFailed(false);
     setLoading(true);
-  }, [src]);
+    setPlaybackSrc(normalized);
+    triedFallback.current = false;
+  }, [normalized]);
+
+  function handleError() {
+    const fallback = mp4FallbackUrl(playbackSrc ?? normalized);
+    if (!triedFallback.current && fallback && fallback !== playbackSrc) {
+      triedFallback.current = true;
+      setLoading(true);
+      setPlaybackSrc(fallback);
+      return;
+    }
+    setLoading(false);
+    setFailed(true);
+  }
 
   if (Platform.OS === 'web') {
+    const isLocalBlob = (playbackSrc ?? normalized).startsWith('blob:') || (playbackSrc ?? normalized).startsWith('data:');
     return (
-      <View style={[styles.wrap, style, styles.fill]}>
-        <video
-          src={src}
-          autoPlay={autoPlay}
-          loop={loop}
-          muted={muted || autoPlay}
-          controls={nativeControls}
-          playsInline
-          onLoadedData={() => setLoading(false)}
-          onError={() => setLoading(false)}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: fit,
-            backgroundColor: colors.bgSecondary,
-            display: 'block',
-          }}
-        />
-        {loading ? (
+      <View style={[styles.wrap, style]}>
+        {!failed ? (
+          <video
+            key={playbackSrc ?? normalized}
+            src={playbackSrc ?? normalized}
+            autoPlay={autoPlay}
+            loop={loop}
+            muted={muted || autoPlay}
+            controls={nativeControls}
+            playsInline
+            preload="metadata"
+            // crossOrigin breaks some blob: previews and is unnecessary for local blobs.
+            {...(isLocalBlob ? {} : { crossOrigin: 'anonymous' as const })}
+            onLoadedData={() => setLoading(false)}
+            onCanPlay={() => setLoading(false)}
+            onError={handleError}
+            style={{
+              width: '100%',
+              height: '100%',
+              minHeight: 220,
+              objectFit: fit,
+              backgroundColor: colors.bgSecondary,
+              display: 'block',
+            }}
+          />
+        ) : (
+          <View style={styles.errorBox}>
+            <Ionicons name="videocam-off-outline" size={32} color={colors.textDim} />
+            <Text style={styles.errorText}>Video could not load</Text>
+            {!isLocalBlob ? (
+              <Pressable onPress={() => Linking.openURL(playbackSrc ?? normalized)}>
+                <Text style={styles.errorLink}>Open video file</Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.errorText}>Try Upload recording — the file is still on this device.</Text>
+            )}
+          </View>
+        )}
+        {loading && !failed ? (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator color={colors.brandLight} />
           </View>
@@ -69,6 +168,8 @@ export function VideoPlayer({
       </View>
     );
   }
+
+  const src = playbackSrc ?? normalized;
 
   if (Platform.OS === 'ios' || failed) {
     const html = `
@@ -115,7 +216,7 @@ export function VideoPlayer({
           mediaPlaybackRequiresUserAction={false}
           javaScriptEnabled
           onLoadEnd={() => setLoading(false)}
-          onError={() => setLoading(false)}
+          onError={() => handleError()}
         />
       </View>
     );
@@ -138,41 +239,8 @@ export function VideoPlayer({
         isMuted={muted}
         shouldPlay={autoPlay}
         onLoad={() => setLoading(false)}
-        onError={() => {
-          setLoading(false);
-          setFailed(true);
-        }}
+        onError={() => handleError()}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: colors.bgSecondary,
-    overflow: 'hidden',
-    borderRadius: radius.md,
-    position: 'relative',
-  },
-  fill: {
-    width: '100%',
-    height: '100%',
-  },
-  webview: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.bgSecondary,
-  },
-  videoFill: {
-    width: '100%',
-    height: '100%',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-});

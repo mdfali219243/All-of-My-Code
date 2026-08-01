@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { deletePost, endDebate, publishDebate, publishPost, updatePostCaption } from '../api/social';
+import { deletePost, publishDebate, publishPost, updatePostCaption, uploadDebateRecording } from '../api/social';
 import { Button } from '../components/Button';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useAuth } from '../contexts/AuthContext';
@@ -155,11 +155,17 @@ export function DebateReviewScreen() {
   const [localPostId, setLocalPostId] = useState<string | null>(postId ?? null);
   const [localUploadError, setLocalUploadError] = useState<string | null>(uploadError ?? null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(videoUrl ?? null);
+  const [hydrating, setHydrating] = useState(Platform.OS === 'web');
 
-  const playbackUrl = localPreviewUrl || previewUrl || localVideoUrl || videoUrl || null;
+  const playbackUrl =
+    localPreviewUrl ||
+    (typeof previewUrl === 'string' && previewUrl.startsWith('blob:') ? previewUrl : null) ||
+    localVideoUrl ||
+    (typeof videoUrl === 'string' && videoUrl ? videoUrl : null) ||
+    null;
   const numericRoomId = roomId ? Number(roomId) : null;
   const numericPostId = localPostId ? Number(localPostId) : null;
-  const hasVideo = Boolean(playbackUrl);
+  const hasVideo = Boolean(playbackUrl) || hasRecording === '1';
   const recordingWasDenied = recordingError === 'denied';
   const recordingFailed =
     recordingError === 'failed' ||
@@ -168,24 +174,44 @@ export function DebateReviewScreen() {
   const noRecordingCaptured = hasRecording !== '1' && !hasVideo;
 
   useEffect(() => {
-    return () => {
-      if (previewUrl?.startsWith('blob:') && typeof URL !== 'undefined') {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  useEffect(() => {
     let createdUrl: string | null = null;
     let cancelled = false;
 
     async function hydrateFromBackup() {
-      // Only hydrate when navigation did not already provide a playable URL.
-      if (!numericRoomId || previewUrl || videoUrl || Platform.OS !== 'web') return;
-      const blob = await loadRecordingBackup(numericRoomId);
-      if (cancelled || !blob?.size || typeof URL === 'undefined') return;
-      createdUrl = URL.createObjectURL(blob);
-      setLocalPreviewUrl(createdUrl);
+      if (Platform.OS !== 'web' || typeof URL === 'undefined') {
+        setHydrating(false);
+        return;
+      }
+      if (!numericRoomId) {
+        setHydrating(false);
+        return;
+      }
+
+      try {
+        // Always prefer IndexedDB backup for a stable local preview.
+        const blob = await loadRecordingBackup(numericRoomId);
+        if (cancelled) return;
+        if (blob?.size) {
+          createdUrl = URL.createObjectURL(blob);
+          setLocalPreviewUrl(createdUrl);
+          return;
+        }
+
+        if (typeof previewUrl === 'string' && previewUrl.startsWith('blob:')) {
+          try {
+            const res = await fetch(previewUrl);
+            const fromParam = await res.blob();
+            if (!cancelled && fromParam.size > 0) {
+              createdUrl = URL.createObjectURL(fromParam);
+              setLocalPreviewUrl(createdUrl);
+            }
+          } catch {
+            /* preview param may already be revoked */
+          }
+        }
+      } finally {
+        if (!cancelled) setHydrating(false);
+      }
     }
 
     void hydrateFromBackup();
@@ -197,9 +223,9 @@ export function DebateReviewScreen() {
         setLocalPreviewUrl((current) => (current === createdUrl ? null : current));
       }
     };
-  }, [numericRoomId, previewUrl, videoUrl]);
+  }, [numericRoomId, previewUrl]);
 
-  const needsUpload = hasVideo && !numericPostId;
+  const needsUpload = Boolean((playbackUrl || hasRecording === '1') && !numericPostId);
 
   async function resolveLocalBlob(): Promise<Blob | null> {
     if (Platform.OS !== 'web') return null;
@@ -207,7 +233,7 @@ export function DebateReviewScreen() {
       const backup = await loadRecordingBackup(numericRoomId);
       if (backup?.size) return backup;
     }
-    const url = localPreviewUrl || previewUrl;
+    const url = localPreviewUrl || (typeof previewUrl === 'string' ? previewUrl : null);
     if (url?.startsWith('blob:') && typeof fetch !== 'undefined') {
       try {
         const res = await fetch(url);
@@ -229,13 +255,16 @@ export function DebateReviewScreen() {
     if (!blob?.size) {
       throw new Error('No local recording found in this browser to upload.');
     }
-    const result = await endDebate(numericRoomId, blob);
+    const result = await uploadDebateRecording(numericRoomId, blob);
     const draft = result.draft;
     const id = draft?.id ?? result.post_id ?? null;
     if (id) setLocalPostId(String(id));
     if (draft?.video_url) setLocalVideoUrl(draft.video_url);
     setLocalUploadError(null);
-    void clearRecordingBackup(numericRoomId);
+    // Keep backup until we confirm a playable server URL exists.
+    if (draft?.video_url) {
+      void clearRecordingBackup(numericRoomId);
+    }
     return id;
   }
 
@@ -431,8 +460,13 @@ export function DebateReviewScreen() {
 
           <View style={styles.previewCard}>
             <Text style={styles.previewLabel}>Recording preview</Text>
-            {hasVideo ? (
-              <VideoPlayer uri={playbackUrl!} style={styles.previewPlayer} nativeControls />
+            {hydrating ? (
+              <View style={[styles.previewPlayer, styles.previewPlaceholder]}>
+                <ActivityIndicator size="large" color={colors.brand} />
+                <Text style={styles.noticeText}>Loading recording from this device…</Text>
+              </View>
+            ) : playbackUrl ? (
+              <VideoPlayer uri={playbackUrl} style={styles.previewPlayer} nativeControls />
             ) : (
               <View style={[styles.previewPlayer, styles.previewPlaceholder]}>
                 <Ionicons name="videocam-off-outline" size={40} color={colors.textDim} />
@@ -441,7 +475,7 @@ export function DebateReviewScreen() {
                     ? 'Screen capture was not allowed.'
                     : noRecordingCaptured
                       ? 'No recording available for preview.'
-                      : 'Video preview unavailable.'}
+                      : 'Video preview unavailable. If you still have the recording, tap Upload recording.'}
                 </Text>
               </View>
             )}

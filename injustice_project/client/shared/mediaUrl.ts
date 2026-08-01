@@ -4,6 +4,11 @@ import { API_BASE_URL } from '../api/config';
 export function normalizeMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null;
 
+  // Local blob / data URLs must never be rewritten — that breaks debate recording preview.
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+
   const base = API_BASE_URL.replace(/\/api\/?$/, '');
 
   if (url.startsWith('/media/')) {
@@ -15,7 +20,7 @@ export function normalizeMediaUrl(url: string | null | undefined): string | null
     return `${base}${url.slice(mediaIndex)}`;
   }
 
-  if (url.startsWith('videos/') || url.startsWith('photos/')) {
+  if (url.startsWith('videos/') || url.startsWith('photos/') || url.startsWith('debate_recordings/')) {
     return `${base}/media/${url}`;
   }
 
@@ -25,10 +30,21 @@ export function normalizeMediaUrl(url: string | null | undefined): string | null
 
   try {
     const parsed = new URL(url);
-    return `${base}${parsed.pathname}`;
+    // Keep same-origin absolute media URLs on the API host.
+    if (parsed.pathname.includes('/media/')) {
+      return `${base}${parsed.pathname}${parsed.search}`;
+    }
+    return url;
   } catch {
     return url;
   }
+}
+
+export function mp4FallbackUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith('blob:') || url.startsWith('data:')) return null;
+  if (/\.webm(\?|$)/i.test(url)) return url.replace(/\.webm(\?.*)?$/i, '.mp4$1');
+  return null;
 }
 
 export function normalizePost<T extends { image_url?: string | null; video_url?: string | null }>(post: T): T {

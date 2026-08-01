@@ -19,6 +19,7 @@ urlpatterns = [
     path('debates/<int:room_id>/', api_views.debate_detail_view, name='api_debate_detail'),
     path('debates/<int:room_id>/messages/', api_views.debate_messages_view, name='api_debate_messages'),
     path('debates/<int:room_id>/end/', api_views.end_debate_view, name='api_end_debate'),
+    path('debates/<int:room_id>/recording/', api_views.upload_debate_recording_view, name='api_upload_debate_recording'),
     path('debates/<int:room_id>/publish/', api_views.publish_debate_view, name='api_publish_debate'),
     path('debates/<int:room_id>/host-heartbeat/', api_views.host_heartbeat_view, name='api_host_heartbeat'),
     path('debates/<int:room_id>/host-leave/', api_views.host_leave_view, name='api_host_leave'),

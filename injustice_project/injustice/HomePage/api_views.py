@@ -282,6 +282,34 @@ def end_debate_view(request, room_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_debate_recording_view(request, room_id):
+    """Upload / replace the host recording for an ended (or active) debate as a draft."""
+    room = get_object_or_404(DebateRoom, id=room_id)
+
+    if request.user != room.creator:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    video_file = request.FILES.get('video_file')
+    if not video_file:
+        return Response({'detail': 'video_file is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Ensure the room is closed when the host is uploading after the fact.
+    DebateRoom.objects.filter(id=room.id, creator=request.user).update(
+        is_active=False,
+        host_online=False,
+    )
+
+    post = save_debate_recording_draft(room, video_file=video_file)
+    if not post:
+        return Response({'detail': 'Could not save recording.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = PostSerializer(post, context={'request': request})
+    return Response({'status': 'ok', 'post_id': post.id, 'draft': serializer.data})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def publish_debate_view(request, room_id):
     room = get_object_or_404(DebateRoom, id=room_id)
 

@@ -501,7 +501,7 @@ export function DebateScreen() {
           ? URL.createObjectURL(videoBlob)
           : draft?.video_url ?? '';
 
-      if (videoBlob) {
+      if (videoBlob && draft?.video_url) {
         void clearRecordingBackup(roomId);
       }
 
@@ -511,6 +511,7 @@ export function DebateScreen() {
         videoUrl: draft?.video_url ?? '',
         hasRecording: videoBlob ? '1' : '0',
         recordingError: capturedRecordingError ?? '',
+        ...(postId ? {} : { uploadError: videoBlob ? 'Recording upload did not finish. Tap Upload recording to retry.' : '' }),
       });
     } catch (e) {
       // Keep local backup so review can still play / re-upload the video.

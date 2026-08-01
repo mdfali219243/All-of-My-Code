@@ -32,64 +32,109 @@ export async function sendDebateMessage(roomId: number, message: string): Promis
   return data.message;
 }
 
+async function postMultipart(
+  path: string,
+  form: FormData,
+  token: string | null,
+): Promise<Response> {
+  try {
+    return await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      // Do not set Content-Type — browser must add multipart boundary.
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+  } catch (e) {
+    const message =
+      e instanceof TypeError
+        ? 'Network error while uploading (server may be waking up or the file is too large). Tap Upload recording to retry.'
+        : e instanceof Error
+          ? e.message
+          : 'Upload failed';
+    throw new Error(message);
+  }
+}
+
 async function postEndDebateForm(
   roomId: number,
   form: FormData,
   token: string | null,
 ): Promise<Response> {
-  return fetch(`${API_BASE_URL}/debates/${roomId}/end/`, {
-    method: 'POST',
-    // Do not set Content-Type — browser must add multipart boundary.
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: form,
-  });
+  return postMultipart(`/debates/${roomId}/end/`, form, token);
+}
+
+async function uploadDebateRecordingForm(
+  roomId: number,
+  form: FormData,
+  token: string | null,
+): Promise<Response> {
+  return postMultipart(`/debates/${roomId}/recording/`, form, token);
+}
+
+function buildVideoForm(videoBlob: Blob): { form: FormData; filename: string; mime: string } {
+  const mime = videoBlob.type || 'video/webm';
+  const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+  const filename = `debate_recording.${ext}`;
+  const form = new FormData();
+  const file =
+    typeof File !== 'undefined' ? new File([videoBlob], filename, { type: mime }) : videoBlob;
+  form.append('video_file', file, filename);
+  return { form, filename, mime };
+}
+
+async function withAuthRetry(
+  videoBlob: Blob,
+  send: (form: FormData, token: string | null) => Promise<Response>,
+): Promise<Response> {
+  const { form } = buildVideoForm(videoBlob);
+  let token = await getAccessToken();
+  let response = await send(form, token);
+
+  if (response.status === 401) {
+    const retry = buildVideoForm(videoBlob);
+    const refresh = await getRefreshToken();
+    if (refresh) {
+      const refreshRes = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        await saveTokens({ access: data.access, refresh });
+        token = data.access;
+        response = await send(retry.form, token);
+      } else {
+        await clearTokens();
+      }
+    }
+  }
+
+  return response;
 }
 
 export async function endDebate(
   roomId: number,
   videoBlob?: Blob | null,
 ): Promise<{ status: string; post_id?: number; draft?: Post }> {
-  if (videoBlob && videoBlob.size > 0) {
-    const mime = videoBlob.type || 'video/webm';
-    const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-    const filename = `debate_recording.${ext}`;
-    const form = new FormData();
-    // Prefer File so Django receives a stable filename + content-type.
-    const file =
-      typeof File !== 'undefined'
-        ? new File([videoBlob], filename, { type: mime })
-        : videoBlob;
-    form.append('video_file', file, filename);
+  // Always close the room with a lightweight request first so a large video
+  // upload cannot leave the debate "stuck live" if the network drops.
+  const closed = await apiRequest<{ status: string; post_id?: number; draft?: Post }>(
+    `/debates/${roomId}/end/`,
+    { method: 'POST' },
+  );
 
-    let token = await getAccessToken();
-    let response = await postEndDebateForm(roomId, form, token);
+  if (!videoBlob || videoBlob.size === 0) {
+    return {
+      ...closed,
+      draft: closed.draft ? normalizePost(closed.draft) : undefined,
+    };
+  }
 
-    if (response.status === 401) {
-      // Rebuild FormData — a consumed body cannot be resent.
-      const retryForm = new FormData();
-      const retryFile =
-        typeof File !== 'undefined'
-          ? new File([videoBlob], filename, { type: mime })
-          : videoBlob;
-      retryForm.append('video_file', retryFile, filename);
-      const refresh = await getRefreshToken();
-      if (refresh) {
-        const refreshRes = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh }),
-        });
-        if (refreshRes.ok) {
-          const data = await refreshRes.json();
-          await saveTokens({ access: data.access, refresh });
-          token = data.access;
-          response = await postEndDebateForm(roomId, retryForm, token);
-        } else {
-          await clearTokens();
-        }
-      }
-    }
-
+  try {
+    const response = await withAuthRetry(videoBlob, (form, token) =>
+      uploadDebateRecordingForm(roomId, form, token),
+    );
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const detail =
@@ -97,22 +142,49 @@ export async function endDebate(
           ? data.detail
           : response.status === 413
             ? 'Recording too large for the server to accept.'
-            : 'Failed to end debate / upload recording';
+            : response.status === 502 || response.status === 503
+              ? 'Server is temporarily unavailable. Tap Upload recording to retry.'
+              : 'Failed to upload recording';
       throw new Error(detail);
     }
     return {
-      ...(data as { status: string; post_id?: number; draft?: Post }),
-      draft: data.draft ? normalizePost(data.draft as Post) : undefined,
+      status: 'ok',
+      post_id: data.post_id ?? closed.post_id,
+      draft: data.draft ? normalizePost(data.draft as Post) : closed.draft ? normalizePost(closed.draft) : undefined,
     };
+  } catch (e) {
+    // Room is already ended — surface upload failure so the review screen can retry.
+    throw e instanceof Error ? e : new Error('Failed to upload recording');
   }
+}
 
-  const data = await apiRequest<{ status: string; post_id?: number; draft?: Post }>(
-    `/debates/${roomId}/end/`,
-    { method: 'POST' },
+/** Upload a local recording blob for a debate that already ended. */
+export async function uploadDebateRecording(
+  roomId: number,
+  videoBlob: Blob,
+): Promise<{ status: string; post_id?: number; draft?: Post }> {
+  if (!videoBlob.size) {
+    throw new Error('Recording file is empty.');
+  }
+  const response = await withAuthRetry(videoBlob, (form, token) =>
+    uploadDebateRecordingForm(roomId, form, token),
   );
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail =
+      typeof data.detail === 'string'
+        ? data.detail
+        : response.status === 413
+          ? 'Recording too large for the server to accept.'
+          : response.status === 502 || response.status === 503
+            ? 'Server is temporarily unavailable. Tap Upload recording to retry.'
+            : 'Failed to upload recording';
+    throw new Error(detail);
+  }
   return {
-    ...data,
-    draft: data.draft ? normalizePost(data.draft) : undefined,
+    status: 'ok',
+    post_id: data.post_id,
+    draft: data.draft ? normalizePost(data.draft as Post) : undefined,
   };
 }
 
