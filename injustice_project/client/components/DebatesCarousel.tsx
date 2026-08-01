@@ -6,18 +6,33 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { endDebate } from '../api/social';
 import { useTheme } from '../contexts/ThemeContext';
 import { confirmDestructive, showAlert } from '../shared/confirm';
+import { timeAgo } from '../shared/timeAgo';
 import type { Debate } from '../shared/types';
 import { radius, spacing, type ThemeColors } from '../shared/theme';
+import { EmptyState } from './EmptyState';
 
 type Props = {
   debates: Debate[];
   onChanged?: () => void;
   onRemove?: (debateId: number) => void;
+  onStartDebate?: () => void;
 };
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: { marginBottom: spacing.md },
+    sectionHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    sectionMeta: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
     card: {
       width: 240,
       backgroundColor: colors.surfaceHover,
@@ -45,7 +60,8 @@ function makeStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     topic: { color: colors.text, fontWeight: '700', fontSize: 15, marginBottom: 4 },
-    host: { color: colors.textDim, fontSize: 12, marginBottom: spacing.sm },
+    host: { color: colors.textDim, fontSize: 12, marginBottom: 2 },
+    started: { color: colors.textDim, fontSize: 11, marginBottom: spacing.sm },
     joinBtn: {
       backgroundColor: colors.brand,
       borderRadius: radius.sm,
@@ -56,12 +72,10 @@ function makeStyles(colors: ThemeColors) {
   });
 }
 
-export function DebatesCarousel({ debates, onChanged, onRemove }: Props) {
+export function DebatesCarousel({ debates, onChanged, onRemove, onStartDebate }: Props) {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  if (!debates.length) return null;
 
   async function handleDelete(debate: Debate) {
     const confirmed = await confirmDestructive(
@@ -81,37 +95,68 @@ export function DebatesCarousel({ debates, onChanged, onRemove }: Props) {
     }
   }
 
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wrap}>
-      {debates.map((debate) => (
-        <View key={debate.id} style={styles.card}>
-          <View style={styles.topRow}>
-            <View style={styles.liveRow}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveLabel}>LIVE DEBATE</Text>
-            </View>
-            {debate.is_host ? (
-              <Pressable
-                onPress={() => void handleDelete(debate)}
-                style={styles.deleteBtn}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={`End debate ${debate.topic}`}
-              >
-                <Ionicons name="trash-outline" size={18} color={colors.error} />
-              </Pressable>
-            ) : null}
-          </View>
-          <Text style={styles.topic} numberOfLines={2}>{debate.topic}</Text>
-          <Text style={styles.host}>Hosted by {debate.creator_display_name}</Text>
-          <Pressable
-            style={styles.joinBtn}
-            onPress={() => router.push(`/(app)/debate/${debate.id}`)}
-          >
-            <Text style={styles.joinText}>{debate.is_host ? 'Rejoin as host' : 'Join Debate'}</Text>
-          </Pressable>
+  if (!debates.length) {
+    return (
+      <View style={styles.wrap}>
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>Live Debates</Text>
         </View>
-      ))}
-    </ScrollView>
+        <EmptyState
+          compact
+          icon="mic-outline"
+          title="No live debates right now"
+          subtitle="Be the first to go live. Your session can be recorded and posted after you end it."
+          actionLabel="Start a Live Debate"
+          onAction={onStartDebate}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionTitle}>Live Debates</Text>
+        <Text style={styles.sectionMeta}>
+          {debates.length} live
+        </Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {debates.map((debate) => (
+          <View key={debate.id} style={styles.card}>
+            <View style={styles.topRow}>
+              <View style={styles.liveRow}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveLabel}>LIVE DEBATE</Text>
+              </View>
+              {debate.is_host ? (
+                <Pressable
+                  onPress={() => void handleDelete(debate)}
+                  style={styles.deleteBtn}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`End debate ${debate.topic}`}
+                >
+                  <Ionicons name="trash-outline" size={18} color={colors.error} />
+                </Pressable>
+              ) : null}
+            </View>
+            <Text style={styles.topic} numberOfLines={2}>{debate.topic}</Text>
+            <Text style={styles.host}>Hosted by {debate.creator_display_name}</Text>
+            {debate.created_at ? (
+              <Text style={styles.started}>Started {timeAgo(debate.created_at)}</Text>
+            ) : (
+              <View style={{ height: spacing.sm }} />
+            )}
+            <Pressable
+              style={styles.joinBtn}
+              onPress={() => router.push(`/(app)/debate/${debate.id}`)}
+            >
+              <Text style={styles.joinText}>{debate.is_host ? 'Rejoin as host' : 'Join Debate'}</Text>
+            </Pressable>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }

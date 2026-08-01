@@ -45,6 +45,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     display_name = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -60,7 +61,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoPost
         fields = [
-            'id', 'username', 'display_name', 'caption',
+            'id', 'user_id', 'username', 'display_name', 'caption',
             'image_url', 'video_url', 'created_at',
             'likes_count', 'comments_count', 'is_liked',
             'shared_from_username', 'is_published',

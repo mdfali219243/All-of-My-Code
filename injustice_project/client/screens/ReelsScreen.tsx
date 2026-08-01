@@ -2,10 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ResizeMode } from 'expo-av';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Platform,
   Pressable,
@@ -19,16 +18,24 @@ import {
 import { fetchReels } from '../api/posts';
 import { followUser, likePost } from '../api/social';
 import { Avatar } from '../components/Avatar';
+import { MenuButton } from '../components/MenuButton';
 import { ShareModal } from '../components/ShareModal';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { useTheme } from '../contexts/ThemeContext';
+import { showAlert } from '../shared/confirm';
 import type { Post } from '../shared/types';
-import { colors, spacing } from '../shared/theme';
+import { spacing } from '../shared/theme';
+
+type ReelTab = 'following' | 'foryou';
 
 export function ReelsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { height: windowHeight, width } = useWindowDimensions();
   const reelHeight = windowHeight;
   const [posts, setPosts] = useState<Post[]>([]);
+  const [followedIds, setFollowedIds] = useState<number[]>([]);
+  const [tab, setTab] = useState<ReelTab>('foryou');
   const [loading, setLoading] = useState(true);
   const [activePost, setActivePost] = useState<number | null>(null);
   const [sharePostId, setSharePostId] = useState<number | null>(null);
@@ -37,6 +44,7 @@ export function ReelsScreen() {
     const data = await fetchReels();
     const videos = data.posts.filter((p) => p.video_url);
     setPosts(videos);
+    setFollowedIds(data.followed_ids ?? []);
     if (videos.length > 0) {
       setActivePost(videos[0].id);
     }
@@ -45,6 +53,20 @@ export function ReelsScreen() {
   useEffect(() => {
     loadReels().finally(() => setLoading(false));
   }, [loadReels]);
+
+  const visiblePosts = useMemo(() => {
+    if (tab !== 'following') return posts;
+    const followed = new Set(followedIds);
+    return posts.filter((p) => (p.user_id != null ? followed.has(p.user_id) : false));
+  }, [posts, followedIds, tab]);
+
+  useEffect(() => {
+    if (visiblePosts.length > 0) {
+      setActivePost(visiblePosts[0].id);
+    } else {
+      setActivePost(null);
+    }
+  }, [tab, visiblePosts]);
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
 
@@ -70,14 +92,20 @@ export function ReelsScreen() {
           <Ionicons name="chevron-back" size={28} color={colors.white} />
         </Pressable>
         <View style={styles.headerTabs}>
-          <Text style={styles.tabMuted}>Following</Text>
-          <Text style={styles.tabActive}>For You</Text>
+          <Pressable onPress={() => setTab('following')}>
+            <Text style={tab === 'following' ? styles.tabActive : styles.tabMuted}>Following</Text>
+          </Pressable>
+          <Pressable onPress={() => setTab('foryou')}>
+            <Text style={tab === 'foryou' ? styles.tabActive : styles.tabMuted}>For You</Text>
+          </Pressable>
         </View>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 40 }}>
+          <MenuButton size={26} color={colors.white} />
+        </View>
       </View>
 
       <FlatList
-        data={posts}
+        data={visiblePosts}
         keyExtractor={(item) => String(item.id)}
         pagingEnabled
         showsVerticalScrollIndicator={false}
@@ -101,20 +129,57 @@ export function ReelsScreen() {
             onFollow={async () => {
               try {
                 const r = await followUser(item.username);
-                Alert.alert(r.following ? 'Following' : 'Unfollowed', `@${item.username}`);
+                showAlert(r.following ? 'Following' : 'Unfollowed', `@${item.username}`);
+                if (r.following && item.user_id != null) {
+                  setFollowedIds((prev) => (prev.includes(item.user_id!) ? prev : [...prev, item.user_id!]));
+                } else if (item.user_id != null) {
+                  setFollowedIds((prev) => prev.filter((id) => id !== item.user_id));
+                }
               } catch (e) {
-                Alert.alert('Error', e instanceof Error ? e.message : 'Failed');
+                showAlert('Error', e instanceof Error ? e.message : 'Failed');
               }
             }}
             onLike={async () => {
-              await likePost(item.source_id);
-              loadReels();
+              const wasLiked = item.is_liked;
+              setPosts((prev) =>
+                prev.map((p) =>
+                  p.id === item.id
+                    ? {
+                        ...p,
+                        is_liked: !wasLiked,
+                        likes_count: Math.max(0, p.likes_count + (wasLiked ? -1 : 1)),
+                      }
+                    : p,
+                ),
+              );
+              try {
+                await likePost(item.source_id);
+              } catch {
+                setPosts((prev) =>
+                  prev.map((p) =>
+                    p.id === item.id
+                      ? {
+                          ...p,
+                          is_liked: wasLiked,
+                          likes_count: Math.max(0, p.likes_count + (wasLiked ? 1 : -1)),
+                        }
+                      : p,
+                  ),
+                );
+              }
             }}
           />
         )}
         ListEmptyComponent={
           <View style={[styles.empty, { height: reelHeight }]}>
-            <Text style={styles.emptyText}>No video posts yet</Text>
+            <Text style={styles.emptyText}>
+              {tab === 'following'
+                ? 'No videos from people you follow yet'
+                : 'No video posts yet'}
+            </Text>
+            <Pressable style={styles.emptyBtn} onPress={() => router.push('/(app)/search')}>
+              <Text style={styles.emptyBtnText}>Find people</Text>
+            </Pressable>
           </View>
         }
       />
@@ -148,12 +213,13 @@ function ReelItem({
   onFollow: () => void;
   onLike: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={[styles.reel, { height: reelHeight, width: reelWidth }]}>
       {post.video_url ? (
         <VideoPlayer
           uri={post.video_url}
-          style={StyleSheet.absoluteFill}
+          style={StyleSheet.absoluteFillObject}
           autoPlay={isActive}
           loop
           muted
@@ -215,7 +281,7 @@ const styles = StyleSheet.create({
   },
   headerTabs: { flexDirection: 'row', gap: 20 },
   tabMuted: { color: 'rgba(255,255,255,0.6)', fontWeight: '700', fontSize: 16 },
-  tabActive: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  tabActive: { color: '#ffffff', fontWeight: '700', fontSize: 16 },
   reel: { backgroundColor: '#111', overflow: 'hidden' },
   gradient: {
     position: 'absolute',
@@ -233,21 +299,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   reelInfo: { flex: 1, paddingRight: 60 },
-  reelUser: { color: colors.white, fontWeight: '700', fontSize: 16, marginBottom: 8 },
-  reelCaption: { color: colors.white, fontSize: 14, lineHeight: 20 },
+  reelUser: { color: '#ffffff', fontWeight: '700', fontSize: 16, marginBottom: 8 },
+  reelCaption: { color: '#ffffff', fontSize: 14, lineHeight: 20 },
   reelActions: { alignItems: 'center', gap: 20 },
   reelAction: { alignItems: 'center' },
   followPill: {
     position: 'absolute',
     bottom: -6,
-    backgroundColor: colors.brand,
+    backgroundColor: '#6366f1',
     borderRadius: 10,
     width: 20,
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionLabel: { color: colors.white, fontSize: 12, marginTop: 4 },
-  empty: { alignItems: 'center', justifyContent: 'center' },
-  emptyText: { color: colors.textDim, fontSize: 16 },
+  actionLabel: { color: '#fff', fontSize: 12, marginTop: 4 },
+  empty: { alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 32 },
+  emptyText: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
+  emptyBtn: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  emptyBtnText: { color: '#fff', fontWeight: '700' },
 });

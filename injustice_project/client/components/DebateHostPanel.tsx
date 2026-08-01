@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { JitsiApi, JitsiParticipant } from './JitsiEmbed';
+import { useTheme } from '../contexts/ThemeContext';
 import { confirmDestructive, showAlert } from '../shared/confirm';
-import { colors, radius, spacing } from '../shared/theme';
+import { radius, spacing, type ThemeColors } from '../shared/theme';
 
 type Props = {
   jitsiApi: JitsiApi | null;
@@ -19,6 +20,71 @@ type Props = {
   recordingRequired?: boolean;
 };
 
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    wrap: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    toggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.brandDark,
+    },
+    toggleText: { color: colors.white, fontWeight: '700', fontSize: 14 },
+    panel: { maxHeight: 220 },
+    panelContent: { padding: spacing.md, gap: spacing.sm },
+    hint: { color: colors.textDim, fontSize: 12, lineHeight: 18 },
+    row: { flexDirection: 'row', gap: spacing.sm },
+    btn: {
+      flex: 1,
+      backgroundColor: colors.surfaceHover,
+      borderRadius: radius.md,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    btnText: { color: colors.text, fontWeight: '600', fontSize: 13 },
+    sectionTitle: {
+      color: colors.textDim,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      marginTop: spacing.xs,
+    },
+    participantBlock: { gap: spacing.xs },
+    participantRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      paddingVertical: 6,
+    },
+    participantName: { flex: 1, color: colors.text, fontSize: 14 },
+    participantActions: { flexDirection: 'row', gap: 6 },
+    smallBtn: {
+      backgroundColor: colors.surfaceHover,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    kickBtn: { backgroundColor: colors.error },
+    smallBtnText: { color: colors.white, fontSize: 12, fontWeight: '600' },
+    endBtn: {
+      backgroundColor: colors.error,
+      borderRadius: radius.md,
+      paddingVertical: 12,
+      alignItems: 'center',
+      marginTop: spacing.xs,
+    },
+    endBtnDisabled: { opacity: 0.6 },
+    endBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
+  });
+}
+
 export function DebateHostPanel({
   jitsiApi,
   onEndDebate,
@@ -30,6 +96,8 @@ export function DebateHostPanel({
   recordingError,
   recordingRequired,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [open, setOpen] = useState(false);
   const [participants, setParticipants] = useState<JitsiParticipant[]>([]);
 
@@ -131,7 +199,7 @@ export function DebateHostPanel({
 
           {(recordingError || recordingRequired) && onRetryRecording ? (
             <Pressable style={styles.btn} onPress={onRetryRecording}>
-              <Text style={styles.btnText}>Retry</Text>
+              <Text style={styles.btnText}>Retry recording</Text>
             </Pressable>
           ) : null}
 
@@ -160,7 +228,7 @@ export function DebateHostPanel({
                       style={styles.smallBtn}
                       onPress={() => runCommand('Mute', 'muteParticipant', p.id)}
                     >
-                      <Text style={styles.smallBtnText}>Mute</Text>
+                      <Text style={[styles.smallBtnText, { color: colors.text }]}>Mute</Text>
                     </Pressable>
                     <Pressable
                       style={[styles.smallBtn, styles.kickBtn]}
@@ -198,66 +266,3 @@ export function DebateHostPanel({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  toggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    backgroundColor: '#4338ca',
-  },
-  toggleText: { color: colors.white, fontWeight: '700', fontSize: 14 },
-  panel: { maxHeight: 220 },
-  panelContent: { padding: spacing.md, gap: spacing.sm },
-  hint: { color: colors.textDim, fontSize: 12, lineHeight: 18 },
-  row: { flexDirection: 'row', gap: spacing.sm },
-  btn: {
-    flex: 1,
-    backgroundColor: colors.surfaceHover,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  btnText: { color: colors.text, fontWeight: '600', fontSize: 13 },
-  sectionTitle: {
-    color: colors.textDim,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginTop: spacing.xs,
-  },
-  participantBlock: { gap: spacing.xs },
-  participantRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    paddingVertical: 6,
-  },
-  participantName: { flex: 1, color: colors.text, fontSize: 14 },
-  participantActions: { flexDirection: 'row', gap: 6 },
-  smallBtn: {
-    backgroundColor: colors.surfaceHover,
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  kickBtn: { backgroundColor: '#7f1d1d' },
-  smallBtnText: { color: colors.white, fontSize: 12, fontWeight: '600' },
-  endBtn: {
-    backgroundColor: '#dc2626',
-    borderRadius: radius.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  endBtnDisabled: { opacity: 0.6 },
-  endBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
-});

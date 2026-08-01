@@ -92,6 +92,12 @@ function makeStyles(colors: ThemeColors) {
       minHeight: 120,
       textAlignVertical: 'top',
     },
+    captionCount: {
+      color: colors.textDim,
+      fontSize: 12,
+      textAlign: 'right',
+      marginTop: 6,
+    },
     actions: { gap: spacing.sm, marginTop: spacing.sm },
     draftBadge: {
       alignSelf: 'flex-start',
@@ -364,6 +370,7 @@ export function DebateReviewScreen() {
             multiline
             maxLength={500}
           />
+          <Text style={styles.captionCount}>{caption.length}/500</Text>
 
           <View style={styles.actions}>
             <Button

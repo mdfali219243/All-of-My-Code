@@ -141,6 +141,34 @@ function makeStyles(colors: ThemeColors) {
       fontSize: 15,
       width: '100%',
     },
+    draftBadge: {
+      position: 'absolute',
+      top: 8,
+      left: 8,
+      zIndex: 2,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      color: '#fcd34d',
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.4,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    draftCaption: {
+      position: 'absolute',
+      left: 6,
+      right: 6,
+      bottom: 6,
+      zIndex: 2,
+      color: colors.white,
+      fontSize: 11,
+      fontWeight: '600',
+      textShadowColor: 'rgba(0,0,0,0.8)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
   });
 }
 
@@ -224,6 +252,7 @@ export function ProfileScreen() {
         postId: String(post.id),
         topic: post.caption ?? '',
         videoUrl: post.video_url ?? '',
+        hasRecording: post.video_url ? '1' : '0',
       },
     });
   }
@@ -280,6 +309,13 @@ export function ProfileScreen() {
 
         {tab === 'posts' && (
           <View style={styles.tabContent}>
+            {profile.posts.length === 0 ? (
+              <Text style={styles.emptyTab}>
+                {profile.is_own_profile
+                  ? 'No posts yet. Share a photo, video, or publish a debate recording.'
+                  : 'No posts yet'}
+              </Text>
+            ) : null}
             {profile.posts.map((post) => (
               <PostCard key={post.id} post={post} onUpdate={load} />
             ))}
@@ -289,7 +325,9 @@ export function ProfileScreen() {
         {tab === 'drafts' && profile.is_own_profile ? (
           <View style={styles.grid}>
             {(profile.draft_posts ?? []).length === 0 ? (
-              <Text style={styles.emptyTab}>No draft recordings yet</Text>
+              <Text style={styles.emptyTab}>
+                No draft recordings yet. End a live debate from Host controls to save one here.
+              </Text>
             ) : null}
             {(profile.draft_posts ?? []).map((post) =>
               post.video_url ? (
@@ -309,6 +347,11 @@ export function ProfileScreen() {
                   <View style={styles.videoGridOverlay}>
                     <Ionicons name="create-outline" size={28} color={colors.white} />
                   </View>
+                  {post.caption ? (
+                    <Text style={styles.draftCaption} numberOfLines={2}>
+                      {post.caption}
+                    </Text>
+                  ) : null}
                 </Pressable>
               ) : null,
             )}

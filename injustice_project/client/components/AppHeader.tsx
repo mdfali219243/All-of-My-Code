@@ -3,58 +3,83 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Avatar } from './Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { useInboxBadge } from '../contexts/InboxBadgeContext';
+import { useTheme } from '../contexts/ThemeContext';
 import type { AppTab } from '../shared/types';
-import { colors, spacing } from '../shared/theme';
+import { spacing } from '../shared/theme';
+import { Avatar } from './Avatar';
+import { MenuButton } from './MenuButton';
 
 type Props = {
   activeTab: AppTab;
 };
 
 export function AppHeader({ activeTab }: Props) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { colors } = useTheme();
+  const { unreadTotal } = useInboxBadge();
   const router = useRouter();
 
-  const tabs: { key: AppTab; href: '/(app)' | '/(app)/inbox' | '/(app)/reels'; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { key: 'feed', href: '/(app)', icon: 'chatbubbles' },
-    { key: 'inbox', href: '/(app)/inbox', icon: 'chatbox-ellipses-outline' },
-    { key: 'reels', href: '/(app)/reels', icon: 'videocam-outline' },
+  const tabs: {
+    key: AppTab;
+    href: '/(app)' | '/(app)/inbox' | '/(app)/reels';
+    icon: keyof typeof Ionicons.glyphMap;
+    activeIcon: keyof typeof Ionicons.glyphMap;
+  }[] = [
+    { key: 'feed', href: '/(app)', icon: 'home-outline', activeIcon: 'home' },
+    { key: 'inbox', href: '/(app)/inbox', icon: 'chatbubble-ellipses-outline', activeIcon: 'chatbubble-ellipses' },
+    { key: 'reels', href: '/(app)/reels', icon: 'play-circle-outline', activeIcon: 'play-circle' },
   ];
 
-  async function handleLogout() {
-    await logout();
-    router.replace('/login');
-  }
-
   return (
-    <SafeAreaView edges={['top']} style={styles.safe}>
+    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <View style={styles.bar}>
-        <Pressable style={styles.left} onPress={() => router.push('/(app)')}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>In</Text>
-          </View>
-        </Pressable>
+        <View style={styles.left}>
+          <MenuButton />
+          <Pressable onPress={() => router.push('/(app)')}>
+            <View style={[styles.logoBadge, { backgroundColor: colors.brand }]}>
+              <Text style={styles.logoText}>In</Text>
+            </View>
+          </Pressable>
+        </View>
 
         <View style={styles.tabs}>
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
+            const showBadge = tab.key === 'inbox' && unreadTotal > 0;
             return (
               <Pressable
                 key={tab.key}
                 onPress={() => router.push(tab.href)}
                 style={[styles.tabBtn, active && styles.tabBtnActive]}
+                accessibilityLabel={tab.key === 'inbox' && showBadge ? `Inbox, ${unreadTotal} unread` : tab.key}
               >
-                <Ionicons name={tab.icon} size={26} color={active ? colors.brandLight : colors.textDim} />
-                {active ? <View style={styles.tabIndicator} /> : null}
+                <View>
+                  <Ionicons
+                    name={active ? tab.activeIcon : tab.icon}
+                    size={26}
+                    color={active ? colors.brandLight : colors.textDim}
+                  />
+                  {showBadge ? (
+                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                      <Text style={styles.badgeText}>{unreadTotal > 99 ? '99+' : unreadTotal}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {active ? <View style={[styles.tabIndicator, { backgroundColor: colors.brand }]} /> : null}
               </Pressable>
             );
           })}
         </View>
 
         <View style={styles.right}>
-          <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Logout</Text>
+          <Pressable
+            onPress={() => router.push('/(app)/search')}
+            style={[styles.iconBtn, { backgroundColor: colors.surfaceHover }]}
+            accessibilityLabel="Search"
+          >
+            <Ionicons name="search" size={22} color={colors.text} />
           </Pressable>
           <Pressable onPress={() => user && router.push(`/(app)/profile/${user.username}`)}>
             <Avatar name={user?.username ?? 'U'} size={36} />
@@ -67,9 +92,7 @@ export function AppHeader({ activeTab }: Props) {
 
 const styles = StyleSheet.create({
   safe: {
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   bar: {
     height: 56,
@@ -81,17 +104,17 @@ const styles = StyleSheet.create({
   left: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 2,
   },
   logoBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: {
-    color: colors.white,
+    color: '#fff',
     fontWeight: '800',
     fontSize: 16,
   },
@@ -116,24 +139,35 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: 3,
-    backgroundColor: colors.brand,
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   right: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  logoutBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceHover,
-  },
-  logoutText: {
-    color: colors.text,
-    fontWeight: '600',
-    fontSize: 13,
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -13,6 +13,7 @@ export type AuthTokens = {
 
 export type Post = {
   id: number;
+  user_id?: number;
   username: string;
   display_name: string;
   caption: string;
