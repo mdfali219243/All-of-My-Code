@@ -99,6 +99,7 @@ function makeStyles(colors: ThemeColors) {
       marginTop: 6,
     },
     actions: { gap: spacing.sm, marginTop: spacing.sm },
+    actionHint: { color: colors.textDim, fontSize: 13, lineHeight: 18, marginBottom: 4 },
     draftBadge: {
       alignSelf: 'flex-start',
       color: '#fcd34d',
@@ -108,7 +109,10 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 8,
+      overflow: 'hidden',
     },
+    secondaryRow: { flexDirection: 'row', gap: spacing.sm },
+    secondaryBtn: { flex: 1 },
     discardBtn: {
       alignItems: 'center',
       paddingVertical: spacing.sm,
@@ -195,28 +199,95 @@ export function DebateReviewScreen() {
     };
   }, [numericRoomId, previewUrl, videoUrl]);
 
-  async function handleRetryUpload() {
+  const needsUpload = hasVideo && !numericPostId;
+
+  async function resolveLocalBlob(): Promise<Blob | null> {
+    if (Platform.OS !== 'web') return null;
+    if (numericRoomId) {
+      const backup = await loadRecordingBackup(numericRoomId);
+      if (backup?.size) return backup;
+    }
+    const url = localPreviewUrl || previewUrl;
+    if (url?.startsWith('blob:') && typeof fetch !== 'undefined') {
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        if (blob?.size) return blob;
+      } catch {
+        /* ignore */
+      }
+    }
+    return null;
+  }
+
+  /** Upload the recorded video to the server as a draft. Returns post id when successful. */
+  async function uploadRecordingToServer(): Promise<number | null> {
+    if (!numericRoomId) {
+      throw new Error('Missing debate room id');
+    }
+    const blob = await resolveLocalBlob();
+    if (!blob?.size) {
+      throw new Error('No local recording found in this browser to upload.');
+    }
+    const result = await endDebate(numericRoomId, blob);
+    const draft = result.draft;
+    const id = draft?.id ?? result.post_id ?? null;
+    if (id) setLocalPostId(String(id));
+    if (draft?.video_url) setLocalVideoUrl(draft.video_url);
+    setLocalUploadError(null);
+    void clearRecordingBackup(numericRoomId);
+    return id;
+  }
+
+  async function handleUploadRecording() {
     if (!numericRoomId) return;
     setRetryingUpload(true);
     try {
-      const blob = await loadRecordingBackup(numericRoomId);
-      if (!blob?.size) {
-        showAlert('No local recording', 'There is no backed-up recording in this browser to upload.');
-        return;
+      const id = await uploadRecordingToServer();
+      if (!id) {
+        throw new Error('Upload finished but no draft was created.');
       }
-      const result = await endDebate(numericRoomId, blob);
-      const draft = result.draft;
-      if (draft?.id) setLocalPostId(String(draft.id));
-      if (draft?.video_url) setLocalVideoUrl(draft.video_url);
-      setLocalUploadError(null);
-      void clearRecordingBackup(numericRoomId);
-      showAlert('Uploaded', 'Your debate recording was saved as a draft.');
+      if (caption.trim()) {
+        await updatePostCaption(id, caption.trim());
+      }
+      showAlert('Recording uploaded', 'Your video is saved as a draft. You can post it now or keep it in Profile → Drafts.');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Upload failed';
       setLocalUploadError(message);
       showAlert('Upload failed', message);
     } finally {
       setRetryingUpload(false);
+    }
+  }
+
+  async function handleDownloadRecording() {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+      showAlert('Download', 'Downloading the recording file is available on desktop web.');
+      return;
+    }
+
+    try {
+      let href = playbackUrl;
+      let revoke: string | null = null;
+      const blob = await resolveLocalBlob();
+      if (blob?.size) {
+        href = URL.createObjectURL(blob);
+        revoke = href;
+      }
+      if (!href) {
+        showAlert('No recording', 'There is no video file to download yet.');
+        return;
+      }
+
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = `injustice-debate-${numericRoomId ?? 'recording'}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (revoke) URL.revokeObjectURL(revoke);
+    } catch (e) {
+      showAlert('Download failed', e instanceof Error ? e.message : 'Could not download recording');
     }
   }
 
@@ -227,7 +298,7 @@ export function DebateReviewScreen() {
 
   function noticeMessage(): string {
     if (localUploadError) {
-      return `The debate ended, but uploading the recording failed: ${localUploadError}. If you see a preview below, retry the upload — the video is still saved in this browser.`;
+      return 'The debate ended, but the recording is still on this device. Tap “Upload recording” below to save it to your account.';
     }
     if (recordingWasDenied) {
       return recordingErrorMessage('denied');
@@ -236,25 +307,36 @@ export function DebateReviewScreen() {
       return recordingErrorMessage(recordingError as DebateRecordingError);
     }
     if (noRecordingCaptured) {
-      return 'No video was captured for this debate. You can still save a caption as a draft note, or discard and return to the feed.';
+      return 'No video was captured for this debate. Discard and start a new debate with screen capture enabled.';
     }
-    return 'Preview your debate, write a caption, then save for later or post to the feed when you are ready.';
+    if (needsUpload) {
+      return 'Your recording is ready below. Upload it to your account, then post it or save it as a draft.';
+    }
+    return 'Your recording is uploaded. Write a caption, then post it to the feed or keep it as a draft.';
+  }
+
+  async function ensureDraftUploaded(): Promise<number | null> {
+    if (numericPostId) return numericPostId;
+    if (!hasVideo || !numericRoomId) return null;
+    return uploadRecordingToServer();
   }
 
   async function handleSaveForLater() {
-    if (!numericPostId) {
-      showAlert('Saved', 'Your debate has ended. No recording was saved, but you can start a new debate anytime.');
-      router.replace(`/(app)/profile/${user?.username ?? ''}`);
-      return;
-    }
-
     setSaving(true);
     try {
-      await updatePostCaption(numericPostId, caption.trim());
-      showAlert('Saved', 'Your debate recording was saved as a draft. You can post it anytime from your profile.');
+      const id = await ensureDraftUploaded();
+      if (!id) {
+        showAlert(
+          'Nothing to save',
+          'No recording was captured for this debate. Start a new debate and allow screen capture to save a video.',
+        );
+        return;
+      }
+      await updatePostCaption(id, caption.trim());
+      showAlert('Recording saved', 'Saved to Profile → Drafts. Open it anytime to post.');
       router.replace(`/(app)/profile/${user?.username ?? ''}`);
     } catch (e) {
-      showAlert('Error', e instanceof Error ? e.message : 'Could not save draft');
+      showAlert('Error', e instanceof Error ? e.message : 'Could not save recording');
     } finally {
       setSaving(false);
     }
@@ -272,12 +354,18 @@ export function DebateReviewScreen() {
     setPublishing(true);
     try {
       const trimmed = caption.trim();
-      if (numericRoomId && numericPostId) {
+      let id = numericPostId;
+      if (!id) {
+        id = await ensureDraftUploaded();
+      }
+      if (!id) {
+        throw new Error('Could not upload the recording before posting.');
+      }
+
+      if (numericRoomId) {
         await publishDebate(numericRoomId, trimmed);
-      } else if (numericPostId) {
-        await publishPost(numericPostId, trimmed);
       } else {
-        throw new Error('Missing debate or post id');
+        await publishPost(id, trimmed);
       }
       showAlert('Posted', 'Your debate recording is now on the feed.');
       router.replace('/(app)');
@@ -328,18 +416,16 @@ export function DebateReviewScreen() {
           {numericPostId ? <Text style={styles.draftBadge}>DRAFT</Text> : null}
           <Text style={styles.subtitle}>{noticeMessage()}</Text>
 
-          {localUploadError ? (
+          {localUploadError || needsUpload ? (
             <View style={styles.noticeCard}>
-              <Text style={styles.noticeTitle}>Upload issue</Text>
-              <Text style={styles.noticeText}>{localUploadError}</Text>
-              {numericRoomId && Platform.OS === 'web' ? (
-                <Button
-                  title="Retry upload from this browser"
-                  onPress={() => void handleRetryUpload()}
-                  loading={retryingUpload}
-                  disabled={saving || publishing || discarding}
-                />
-              ) : null}
+              <Text style={styles.noticeTitle}>
+                {localUploadError ? 'Recording not uploaded yet' : 'Ready to upload'}
+              </Text>
+              <Text style={styles.noticeText}>
+                {localUploadError
+                  ? localUploadError
+                  : 'Your recorded video is on this device. Upload it to save it to your Injustice account.'}
+              </Text>
             </View>
           ) : null}
 
@@ -373,29 +459,54 @@ export function DebateReviewScreen() {
           <Text style={styles.captionCount}>{caption.length}/500</Text>
 
           <View style={styles.actions}>
+            <Text style={styles.actionHint}>
+              {hasVideo
+                ? 'Choose what to do with this recording:'
+                : 'No recording is available for this session.'}
+            </Text>
+
+            {needsUpload || localUploadError ? (
+              <Button
+                title="Upload recording"
+                onPress={() => void handleUploadRecording()}
+                loading={retryingUpload}
+                disabled={!hasVideo || saving || publishing || discarding}
+              />
+            ) : null}
+
             <Button
-              title="Post to feed"
+              title="Post recording to feed"
               onPress={() => void handlePublish()}
               loading={publishing}
-              disabled={saving || discarding || (!hasVideo && !numericPostId)}
+              disabled={(!hasVideo && !numericPostId) || saving || discarding || retryingUpload}
             />
             <Button
-              title="Save for later"
+              title="Save recording as draft"
               variant="secondary"
               onPress={() => void handleSaveForLater()}
               loading={saving}
-              disabled={publishing || discarding}
+              disabled={(!hasVideo && !numericPostId) || publishing || discarding || retryingUpload}
             />
+
+            {hasVideo && Platform.OS === 'web' ? (
+              <Button
+                title="Download recording to my device"
+                variant="ghost"
+                onPress={() => void handleDownloadRecording()}
+                disabled={saving || publishing || discarding || retryingUpload}
+              />
+            ) : null}
+
             <Pressable
               style={styles.discardBtn}
               onPress={() => void handleDiscard()}
-              disabled={saving || publishing || discarding}
+              disabled={saving || publishing || discarding || retryingUpload}
             >
               {discarding ? (
                 <ActivityIndicator size="small" color="#f87171" />
               ) : (
                 <Text style={styles.discardText}>
-                  {numericPostId ? 'Discard recording' : 'Leave without posting'}
+                  {numericPostId || hasVideo ? 'Discard recording' : 'Leave without posting'}
                 </Text>
               )}
             </Pressable>

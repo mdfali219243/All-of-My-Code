@@ -59,12 +59,23 @@ def save_debate_recording_draft(
 
     if video_file:
         _save_recording_file(room, video_file)
+        room.refresh_from_db()
 
     if room.recording_post_id:
         post = room.recording_post
+        update_fields = []
         if caption is not None:
             post.caption = caption
-            post.save(update_fields=['caption'])
+            update_fields.append('caption')
+        if video_file and room.recording_file:
+            post.video_file.save(
+                os.path.basename(room.recording_file.name),
+                room.recording_file,
+                save=False,
+            )
+            update_fields.append('video_file')
+        if update_fields:
+            post.save(update_fields=update_fields)
         return post
 
     if not room.recording_file:
