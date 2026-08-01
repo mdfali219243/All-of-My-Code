@@ -152,10 +152,12 @@ export function DebateReviewScreen() {
   const [discarding, setDiscarding] = useState(false);
   const [retryingUpload, setRetryingUpload] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [localBlob, setLocalBlob] = useState<Blob | null>(null);
   const [localPostId, setLocalPostId] = useState<string | null>(postId ?? null);
   const [localUploadError, setLocalUploadError] = useState<string | null>(uploadError ?? null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(videoUrl ?? null);
   const [hydrating, setHydrating] = useState(Platform.OS === 'web');
+  const [downloading, setDownloading] = useState(false);
 
   const playbackUrl =
     localPreviewUrl ||
@@ -193,6 +195,7 @@ export function DebateReviewScreen() {
         if (cancelled) return;
         if (blob?.size) {
           createdUrl = URL.createObjectURL(blob);
+          setLocalBlob(blob);
           setLocalPreviewUrl(createdUrl);
           return;
         }
@@ -203,6 +206,7 @@ export function DebateReviewScreen() {
             const fromParam = await res.blob();
             if (!cancelled && fromParam.size > 0) {
               createdUrl = URL.createObjectURL(fromParam);
+              setLocalBlob(fromParam);
               setLocalPreviewUrl(createdUrl);
             }
           } catch {
@@ -229,16 +233,23 @@ export function DebateReviewScreen() {
 
   async function resolveLocalBlob(): Promise<Blob | null> {
     if (Platform.OS !== 'web') return null;
+    if (localBlob?.size) return localBlob;
     if (numericRoomId) {
       const backup = await loadRecordingBackup(numericRoomId);
-      if (backup?.size) return backup;
+      if (backup?.size) {
+        setLocalBlob(backup);
+        return backup;
+      }
     }
     const url = localPreviewUrl || (typeof previewUrl === 'string' ? previewUrl : null);
     if (url?.startsWith('blob:') && typeof fetch !== 'undefined') {
       try {
         const res = await fetch(url);
         const blob = await res.blob();
-        if (blob?.size) return blob;
+        if (blob?.size) {
+          setLocalBlob(blob);
+          return blob;
+        }
       } catch {
         /* ignore */
       }
@@ -289,34 +300,93 @@ export function DebateReviewScreen() {
     }
   }
 
+  function triggerBrowserDownload(blob: Blob, filename: string) {
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Revoking immediately cancels many browser downloads — wait until save starts.
+    window.setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(href);
+    }, 60_000);
+  }
+
   async function handleDownloadRecording() {
     if (Platform.OS !== 'web' || typeof document === 'undefined') {
       showAlert('Download', 'Downloading the recording file is available on desktop web.');
       return;
     }
 
+    setDownloading(true);
     try {
-      let href = playbackUrl;
-      let revoke: string | null = null;
-      const blob = await resolveLocalBlob();
-      if (blob?.size) {
-        href = URL.createObjectURL(blob);
-        revoke = href;
+      let blob = localBlob;
+      if (!blob?.size) {
+        blob = await resolveLocalBlob();
       }
-      if (!href) {
-        showAlert('No recording', 'There is no video file to download yet.');
+
+      // If we only have a remote server URL, fetch it as a blob so download= works cross-origin.
+      if ((!blob || !blob.size) && localVideoUrl && typeof fetch !== 'undefined') {
+        const res = await fetch(localVideoUrl);
+        if (!res.ok) {
+          throw new Error('Could not download the recording from the server.');
+        }
+        blob = await res.blob();
+        setLocalBlob(blob);
+      }
+
+      if (!blob?.size) {
+        showAlert(
+          'No recording',
+          'There is no video file to download yet. Wait for the preview to load, or upload first.',
+        );
         return;
       }
 
-      const a = document.createElement('a');
-      a.href = href;
-      a.download = `injustice-debate-${numericRoomId ?? 'recording'}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      if (revoke) URL.revokeObjectURL(revoke);
+      const mime = blob.type || 'video/webm';
+      const ext = mime.includes('mp4') ? 'mp4' : mime.includes('webm') ? 'webm' : 'webm';
+      const filename = `injustice-debate-${numericRoomId ?? 'recording'}.${ext}`;
+
+      // Chrome/Edge: native save dialog (most reliable).
+      const anyWindow = window as unknown as {
+        showSaveFilePicker?: (options: {
+          suggestedName?: string;
+          types?: Array<{ description: string; accept: Record<string, string[]> }>;
+        }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+      };
+      if (typeof anyWindow.showSaveFilePicker === 'function') {
+        try {
+          const handle = await anyWindow.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: 'Video',
+                accept: { [mime || 'video/webm']: [`.${ext}`] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          showAlert('Downloaded', `Saved ${filename} to your computer.`);
+          return;
+        } catch (e) {
+          // User cancelled the picker — don't fall through as an error.
+          if (e instanceof DOMException && e.name === 'AbortError') return;
+          // Fall back to anchor download below.
+        }
+      }
+
+      triggerBrowserDownload(blob, filename);
+      showAlert('Download started', `Saving ${filename}. Check your Downloads folder.`);
     } catch (e) {
       showAlert('Download failed', e instanceof Error ? e.message : 'Could not download recording');
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -525,9 +595,10 @@ export function DebateReviewScreen() {
             {hasVideo && Platform.OS === 'web' ? (
               <Button
                 title="Download recording to my device"
-                variant="ghost"
+                variant="secondary"
                 onPress={() => void handleDownloadRecording()}
-                disabled={saving || publishing || discarding || retryingUpload}
+                loading={downloading}
+                disabled={saving || publishing || discarding || retryingUpload || hydrating}
               />
             ) : null}
 
