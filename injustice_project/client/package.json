@@ -33,7 +33,16 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export --platform web",
-    "preview:web": "npx serve dist"
+    "preview:web": "npx serve dist",
+    "eas:login": "eas login",
+    "eas:configure": "eas build:configure",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:ios:preview": "eas build --platform ios --profile preview",
+    "build:android": "eas build --platform android --profile production",
+    "build:ios": "eas build --platform ios --profile production",
+    "build:all": "eas build --platform all --profile production",
+    "submit:android": "eas submit --platform android --profile production --latest",
+    "submit:ios": "eas submit --platform ios --profile production --latest"
   },
   "private": true
 }

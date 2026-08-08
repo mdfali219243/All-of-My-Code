@@ -1,35 +1,64 @@
 {
   "expo": {
-    "name": "Injustice",
+    "name": "Project Injustice",
     "slug": "injustice",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
+    "scheme": "injustice",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f1117"
+    },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.projectinjustice.app",
+      "buildNumber": "1",
       "infoPlist": {
+        "NSCameraUsageDescription": "Project Injustice needs camera access so you can join live video debates.",
+        "NSMicrophoneUsageDescription": "Project Injustice needs microphone access so you can speak in live debates.",
+        "NSPhotoLibraryUsageDescription": "Project Injustice needs photo library access so you can share photos and videos.",
+        "NSPhotoLibraryAddUsageDescription": "Project Injustice needs permission to save media to your library.",
+        "UIBackgroundModes": ["remote-notification"],
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true,
+          "NSAllowsArbitraryLoads": false,
           "NSAllowsLocalNetworking": true
         }
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
+      "package": "com.projectinjustice.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0f1117",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "usesCleartextTraffic": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "POST_NOTIFICATIONS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "usesCleartextTraffic": false,
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "static"
     },
-    "scheme": "injustice",
     "plugins": [
       "expo-router",
       [
@@ -43,7 +72,15 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Allow Injustice to access your microphone for live debates."
+          "microphonePermission": "Allow Project Injustice to access your microphone for live debates.",
+          "cameraPermission": "Allow Project Injustice to access your camera for live debates."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Project Injustice to access your photos so you can share posts.",
+          "cameraPermission": "Allow Project Injustice to use your camera for posts and debates."
         }
       ]
     ]

@@ -21,12 +21,13 @@ type MenuItem = {
   key: string;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  href: '/(app)/about' | '/(app)/faq' | '/(app)/feedback' | '/(app)/theme';
+  href: '/(app)/about' | '/(app)/faq' | '/(app)/feedback' | '/(app)/theme' | '/(app)/privacy';
 };
 
 const MENU_ITEMS: MenuItem[] = [
   { key: 'about', label: 'About', icon: 'information-circle-outline', href: '/(app)/about' },
   { key: 'faq', label: 'Q&A', icon: 'help-circle-outline', href: '/(app)/faq' },
+  { key: 'privacy', label: 'Privacy', icon: 'shield-checkmark-outline', href: '/(app)/privacy' },
   { key: 'feedback', label: 'Feedback', icon: 'chatbox-outline', href: '/(app)/feedback' },
   { key: 'theme', label: 'Theme', icon: 'color-palette-outline', href: '/(app)/theme' },
 ];
